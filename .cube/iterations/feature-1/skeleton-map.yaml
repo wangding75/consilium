@@ -1,0 +1,56 @@
+files:
+  - path: types/index.ts
+    type: interface
+    tasks:
+      - "Task-01：扩展 Session 类型（添加 idle 阶段、status、modelStrategyId 字段）"
+
+  - path: types/api.ts
+    type: interface
+    tasks:
+      - "Task-02：新增 CreateSessionParams 和 CreateSessionResult 类型"
+
+  - path: data/model-strategies.ts
+    type: constant
+    tasks:
+      - "Task-03：定义 ModelStrategy 数据常量"
+
+  - path: server/repositories/session.repository.ts
+    type: interface
+    tasks:
+      - "Task-04：扩展 SessionRepository 接口（添加 findRecent 方法）"
+
+  - path: server/repositories/mock/mock-session.repository.ts
+    type: class
+    tasks:
+      - "Task-05：实现 MockSessionRepository 内存存储与 findRecent"
+
+  - path: server/services/session.service.ts
+    type: class
+    tasks:
+      - "Task-06：实现 SessionService.createSession"
+      - "Task-07：实现 SessionService.getRecentSessions"
+
+  - path: server/services/services.test.ts
+    type: class
+    tasks:
+      - "Task-11：更新现有测试兼容性（services.test.ts 构造器参数）"
+
+  - path: app/api/sessions/route.ts
+    type: class
+    tasks:
+      - "Task-08：实现 POST /api/sessions 路由"
+
+  - path: app/api/sessions/recent/route.ts
+    type: class
+    tasks:
+      - "Task-09：实现 GET /api/sessions/recent 路由"
+
+  - path: modules/home/index.tsx
+    type: class
+    tasks:
+      - "Task-10：实现 HomeModule 首页完整 UI"
+
+  - path: tests/utils/mock-factories.ts
+    type: class
+    tasks:
+      - "Task-01：扩展 Session 类型（添加 idle 阶段、status、modelStrategyId 字段）"

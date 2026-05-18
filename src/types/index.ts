@@ -1,6 +1,6 @@
 // Core domain types for consilium — 智囊团 multi-agent discussion platform
 
-export type DiscussionStage = 'opening' | 'developing' | 'climax' | 'closing'
+export type DiscussionStage = 'idle' | 'opening' | 'developing' | 'climax' | 'closing'
 
 export interface DiscussionState {
   stage: DiscussionStage
@@ -54,6 +54,8 @@ export interface Session {
   id: string
   templateId: string
   topic: string
+  status: 'active' | 'completed' | 'archived'
+  modelStrategyId?: string
   state: DiscussionState
   messages: Message[]
   createdAt: number
