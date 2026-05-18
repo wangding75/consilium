@@ -1,0 +1,11 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /home/wangding/git/consilium
+
+ ✓ src/engine/engine.test.ts (2 tests) 2ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  16:22:05
+   Duration  917ms (transform 49ms, setup 0ms, collect 47ms, tests 2ms, environment 392ms, prepare 259ms)
+

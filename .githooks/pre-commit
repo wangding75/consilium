@@ -14,6 +14,37 @@ SAFE_BRANCH="${BRANCH//\//-}"
 STATE_FILE="$REPO_ROOT/.cube/iterations/$SAFE_BRANCH/state.yaml"
 WORKFLOW_FILE="$REPO_ROOT/.cube/config/workflow.yaml"
 
+# Convert glob pattern to a regex (only * and ? are treated as wildcards)
+glob_to_regex() {
+  local pattern="$1"
+  echo "$pattern" \
+    | sed -E 's/[.+^${}()|[\]\\]/\\&/g' \
+    | sed -E 's/\\\*/[^/]*/g' \
+    | sed -E 's/\\\?/[^/]/g'
+}
+
+file_matches_pattern() {
+  local file="$1"
+  local pattern="$2"
+  [ -z "$pattern" ] && return 0  # no pattern = match all
+  local regex
+  regex="$(glob_to_regex "$pattern")"
+  local basename
+  basename="$(basename "$file")"
+  echo "$basename" | grep -qE "^${regex}$"
+}
+
+get_state_test_pattern() {
+  [ -f "$WORKFLOW_FILE" ] || echo ""
+  grep -E '^[[:space:]]*test_file_pattern:' "$WORKFLOW_FILE" \
+    | head -1 \
+    | sed -E 's/^[[:space:]]*test_file_pattern:[[:space:]]*//g' \
+    | sed -E 's/[[:space:]]+#.*$//g' \
+    | sed -E 's/^"(.*)"$/\1/g' \
+    | sed -E "s/^'(.*)'$/\\1/g" \
+    | xargs
+}
+
 get_locked_dirs_from_state() {
   [ -f "$STATE_FILE" ] || return 0
   [ -f "$WORKFLOW_FILE" ] || return 0
@@ -44,26 +75,33 @@ if [ -d "$LOCK_DIR" ]; then
     [ -z "$TESTS_DIR" ] && continue
     TESTS_DIR="${TESTS_DIR%/}"
     TESTS_DIR="${TESTS_DIR//\\//}"
-    LOCKED_DIRS="$LOCKED_DIRS
-$TESTS_DIR"
+    LOCK_PATTERN=$(grep "^pattern=" "$lock_file" | cut -d= -f2-)
+    for staged_file in $STAGED; do
+      case "$staged_file" in
+        "$TESTS_DIR"|"$TESTS_DIR"/*)
+          if file_matches_pattern "$staged_file" "$LOCK_PATTERN"; then
+            BLOCKED="$BLOCKED $staged_file"
+          fi
+          ;;
+      esac
+    done
   done
 fi
 
 STATE_LOCKED_DIRS="$(get_locked_dirs_from_state)"
-if [ -n "$STATE_LOCKED_DIRS" ]; then
-  LOCKED_DIRS="$LOCKED_DIRS
-$STATE_LOCKED_DIRS"
-fi
+STATE_TEST_PATTERN="$(get_state_test_pattern)"
 
-if [ -n "$LOCKED_DIRS" ]; then
-  for tests_dir in $LOCKED_DIRS; do
+if [ -n "$STATE_LOCKED_DIRS" ]; then
+  for tests_dir in $STATE_LOCKED_DIRS; do
     tests_dir="${tests_dir%/}"
     tests_dir="${tests_dir//\\//}"
     [ -z "$tests_dir" ] && continue
     for staged_file in $STAGED; do
       case "$staged_file" in
         "$tests_dir"|"$tests_dir"/*)
-          BLOCKED="$BLOCKED $staged_file"
+          if file_matches_pattern "$staged_file" "$STATE_TEST_PATTERN"; then
+            BLOCKED="$BLOCKED $staged_file"
+          fi
           ;;
       esac
     done

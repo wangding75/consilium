@@ -96,7 +96,11 @@ tasks:
     test_total: 5
   - task: "Task-13：创建引擎模块骨架（src/engine/）"
     test_file: src/engine/engine.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 16:22"
+    completed_at: "2026-05-18 16:22"
+    test_passed: 2
+    test_total: 2
   - task: "Task-14：创建 LLM Provider Adapter 骨架（src/llm/providers/base.provider.ts）"
     test_file: src/llm/providers/base.provider.test.ts
     phase: done
