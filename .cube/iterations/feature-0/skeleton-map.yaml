@@ -1,0 +1,218 @@
+task: feature/0
+generated: "2026-05-18"
+
+files:
+  # Task-01: Project initialization
+  - path: package.json
+    task: Task-01
+    type: config
+  - path: tsconfig.json
+    task: Task-01
+    type: config
+  - path: next.config.ts
+    task: Task-01
+    type: config
+  - path: vitest.config.ts
+    task: Task-01
+    type: config
+  - path: tailwind.config.ts
+    task: Task-01
+    type: config
+  - path: postcss.config.js
+    task: Task-01
+    type: config
+  - path: .env.local.example
+    task: Task-01
+    type: config
+  - path: next-env.d.ts
+    task: Task-01
+    type: config
+
+  # Task-02: Core domain types
+  - path: src/types/index.ts
+    task: Task-02
+    type: library
+
+  # Task-03: API response types + config
+  - path: src/types/api.ts
+    task: Task-03
+    type: library
+  - path: src/config/types.ts
+    task: Task-03
+    type: library
+  - path: src/config/index.ts
+    task: Task-03
+    type: library
+
+  # Task-04: ServiceError base class
+  - path: src/server/errors.ts
+    task: Task-04
+    type: library
+
+  # Task-05: App Shell layout
+  - path: src/app/globals.css
+    task: Task-05
+    type: ui
+  - path: src/app/layout.tsx
+    task: Task-05
+    type: ui
+  - path: src/components/layout/AppShell.tsx
+    task: Task-05
+    type: ui
+
+  # Task-06: Bottom navigation
+  - path: src/components/mobile/BottomNav.tsx
+    task: Task-06
+    type: ui
+
+  # Task-07: 5 page skeletons + modules
+  - path: src/app/page.tsx
+    task: Task-07
+    type: ui
+  - path: src/app/discussion/[sessionId]/page.tsx
+    task: Task-07
+    type: ui
+  - path: src/app/sessions/page.tsx
+    task: Task-07
+    type: ui
+  - path: src/app/templates/page.tsx
+    task: Task-07
+    type: ui
+  - path: src/app/settings/page.tsx
+    task: Task-07
+    type: ui
+  - path: src/modules/home/index.tsx
+    task: Task-07
+    type: ui
+  - path: src/modules/discussion/index.tsx
+    task: Task-07
+    type: ui
+  - path: src/modules/sessions/index.tsx
+    task: Task-07
+    type: ui
+  - path: src/modules/templates/index.tsx
+    task: Task-07
+    type: ui
+  - path: src/modules/settings/index.tsx
+    task: Task-07
+    type: ui
+
+  # Task-08: UI component skeletons
+  - path: src/components/ui/Button.tsx
+    task: Task-08
+    type: ui
+  - path: src/components/ui/Input.tsx
+    task: Task-08
+    type: ui
+  - path: src/components/ui/Textarea.tsx
+    task: Task-08
+    type: ui
+  - path: src/components/ui/Card.tsx
+    task: Task-08
+    type: ui
+  - path: src/components/ui/Tag.tsx
+    task: Task-08
+    type: ui
+  - path: src/components/ui/Sheet.tsx
+    task: Task-08
+    type: ui
+  - path: src/components/ui/Modal.tsx
+    task: Task-08
+    type: ui
+  - path: src/components/ui/Toast.tsx
+    task: Task-08
+    type: ui
+
+  # Task-09: GET /api/health
+  - path: src/app/api/health/route.ts
+    task: Task-09
+    type: web-e2e
+  - path: src/server/services/health.service.ts
+    task: Task-09
+    type: library
+
+  # Task-10: Repository interfaces + mock implementations
+  - path: src/server/repositories/template.repository.ts
+    task: Task-10
+    type: library
+  - path: src/server/repositories/session.repository.ts
+    task: Task-10
+    type: library
+  - path: src/server/repositories/discussion.repository.ts
+    task: Task-10
+    type: library
+  - path: src/server/repositories/mock/mock-template.repository.ts
+    task: Task-10
+    type: library
+  - path: src/server/repositories/mock/mock-session.repository.ts
+    task: Task-10
+    type: library
+  - path: src/server/repositories/mock/mock-discussion.repository.ts
+    task: Task-10
+    type: library
+
+  # Task-11: Service layer skeletons
+  - path: src/server/services/template.service.ts
+    task: Task-11
+    type: library
+  - path: src/server/services/session.service.ts
+    task: Task-11
+    type: library
+  - path: src/server/services/discussion.service.ts
+    task: Task-11
+    type: library
+  - path: src/server/services/llm.service.ts
+    task: Task-11
+    type: library
+
+  # Task-12: API route skeletons
+  - path: src/app/api/templates/route.ts
+    task: Task-12
+    type: web-e2e
+  - path: src/app/api/sessions/route.ts
+    task: Task-12
+    type: web-e2e
+  - path: src/app/api/discussions/route.ts
+    task: Task-12
+    type: web-e2e
+  - path: src/app/api/llm/providers/route.ts
+    task: Task-12
+    type: web-e2e
+
+  # Task-13: Engine module skeletons
+  - path: src/engine/orchestrator.ts
+    task: Task-13
+    type: library
+  - path: src/engine/scheduler.ts
+    task: Task-13
+    type: library
+  - path: src/engine/state-machine.ts
+    task: Task-13
+    type: library
+  - path: src/engine/director.ts
+    task: Task-13
+    type: library
+  - path: src/engine/intent.ts
+    task: Task-13
+    type: library
+  - path: src/engine/events.ts
+    task: Task-13
+    type: library
+  - path: src/engine/rhythm.ts
+    task: Task-13
+    type: library
+
+  # Task-14: LLM provider adapter
+  - path: src/llm/providers/base.provider.ts
+    task: Task-14
+    type: library
+
+  # Task-15: Mock three-kingdoms template data
+  - path: src/data/templates/three-kingdoms.ts
+    task: Task-15
+    type: data
+
+  # Task-16: Test utility functions
+  - path: src/tests/utils/mock-factories.ts
+    task: Task-16
+    type: library

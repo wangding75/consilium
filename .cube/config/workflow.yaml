@@ -1,0 +1,34 @@
+project:
+  name: consilium
+  language: typescript
+  structure: single-module
+  features:
+    - web-api
+
+stages:
+  - id: 01-prd
+    name: PRD
+  - id: 02-design
+    name: Design
+  - id: 03-test-cases
+    name: Test Cases
+  - id: 04-development
+    name: Development
+    on_enter:
+      - create_status_yaml
+      - lock_tests
+  - id: 05-testing
+    name: Testing
+
+paths:
+  source_dir: src
+  test_dir: src
+
+language_config:
+  build_tool: vitest
+  compile_command: "npx tsc --noEmit"
+  test_command: "npx vitest run"
+  red_test_command: "npx vitest run"
+  green_test_command: "npx vitest run"
+  test_command_single: "npx vitest run {{class}}"
+  test_file_pattern: "*.test.ts"
