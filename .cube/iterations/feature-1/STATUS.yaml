@@ -19,16 +19,32 @@ tasks:
     test_total: 6
   - task: "Task-02：新增 CreateSessionParams 和 CreateSessionResult 类型"
     test_file: session-types.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:26"
+    completed_at: "2026-05-18 18:26"
+    test_passed: 6
+    test_total: 6
   - task: "Task-03：定义 ModelStrategy 数据常量"
     test_file: model-strategies.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:26"
+    completed_at: "2026-05-18 18:26"
+    test_passed: 7
+    test_total: 7
   - task: "Task-04：扩展 SessionRepository 接口（添加 findRecent 方法）"
     test_file: session-repo.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:26"
+    completed_at: "2026-05-18 18:26"
+    test_passed: 7
+    test_total: 7
   - task: "Task-05：实现 MockSessionRepository 内存存储与 findRecent"
     test_file: session-repo.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:26"
+    completed_at: "2026-05-18 18:26"
+    test_passed: 7
+    test_total: 7
   - task: "Task-06：实现 SessionService.createSession"
     test_file: session-service.test.ts
     phase: locked
