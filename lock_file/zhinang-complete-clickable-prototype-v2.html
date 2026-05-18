@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智囊团 · 完整可点击 UI 原型</title>
+  <style>
+    :root{
+      --primary:#1677ff;
+      --primary-2:#2aabee;
+      --primary-soft:#eaf3ff;
+      --bg:#f6f8fb;
+      --surface:#ffffff;
+      --surface-2:#f8fafc;
+      --surface-3:#f1f5f9;
+      --line:#e5eaf0;
+      --line-strong:#d5dde7;
+      --text:#111827;
+      --text-2:#334155;
+      --muted:#64748b;
+      --subtle:#94a3b8;
+      --green:#16a36b;
+      --amber:#d97706;
+      --red:#ef4444;
+      --violet:#7c3aed;
+      --shadow:0 10px 28px rgba(15,23,42,.07);
+      --radius:14px;
+      --rail:172px;
+      --side:292px;
+      --right:292px;
+      --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Arial,sans-serif;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{font-family:var(--font);color:var(--text);background:var(--bg);overflow:hidden;line-height:1.45}
+    button,input,textarea,select{font:inherit}
+    button{border:0;cursor:pointer;background:none;color:inherit}
+    .app{height:100vh;display:grid;grid-template-columns:var(--rail) var(--side) minmax(0,1fr);background:var(--bg)}
+    .rail{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:18px 12px 16px;min-width:0}
+    .brand{display:flex;gap:10px;align-items:center;margin:0 4px 24px}.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#0f68ff,#2aabee);color:#fff;display:grid;place-items:center;font-weight:900;font-size:20px;box-shadow:0 8px 22px rgba(22,119,255,.22)}.brand h1{margin:0;font-size:18px;letter-spacing:-.02em}.brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+    .nav{display:grid;gap:6px}.nav-btn{height:48px;padding:0 12px;border-radius:12px;display:flex;align-items:center;gap:12px;color:var(--text-2);font-weight:650}.nav-btn:hover{background:var(--surface-2)}.nav-btn.active{background:var(--primary-soft);color:var(--primary)}.nav-icon{width:22px;text-align:center;font-size:19px}.profile{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:14px}.profile:hover{background:var(--surface-2)}.photo{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#f2c7a7,#8b5cf6);display:grid;place-items:center;color:#fff;font-weight:800}.profile strong{font-size:13px}.online{font-size:12px;color:var(--muted)}.online::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:5px}
+    .side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-width:0}.side-head{height:74px;display:flex;align-items:center;gap:10px;padding:16px;border-bottom:1px solid var(--line)}.search{height:40px;border:1px solid var(--line-strong);background:var(--surface-2);border-radius:12px;display:flex;align-items:center;gap:8px;padding:0 12px;flex:1;color:var(--subtle)}.search input{width:100%;border:0;outline:0;background:transparent;color:var(--text)}.icon-btn{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;border:1px solid var(--line);background:#fff;color:var(--primary);font-weight:800}.icon-btn:hover{background:var(--primary-soft)}
+    .side-scroll{overflow:auto;padding:12px}.sec-title{display:flex;justify-content:space-between;align-items:center;margin:10px 2px 8px;color:var(--text-2);font-size:13px;font-weight:750}.side-card{width:100%;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:10px;padding:10px;border:1px solid var(--line);border-radius:14px;background:#fff;text-align:left;margin-bottom:8px}.side-card:hover,.side-card.active{border-color:#afd0ff;background:#f4f9ff}.side-card .thumb{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#b9dbff,#1677ff);color:#fff;font-weight:900}.side-card .ttl{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.side-card .desc{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.side-card .time{font-size:11px;color:var(--subtle)}.side-link{height:36px;border-radius:12px;width:100%;color:var(--primary);font-weight:750}.side-link:hover{background:var(--primary-soft)}
+    .main{min-width:0;height:100vh;display:flex;flex-direction:column}.topbar{height:74px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px;gap:14px}.top-title{min-width:0}.top-title h2{font-size:24px;line-height:1.15;margin:0;letter-spacing:-.035em}.top-title p{margin:5px 0 0;color:var(--muted);font-size:13px}.top-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.btn{height:38px;border-radius:12px;padding:0 14px;font-size:13px;font-weight:780;border:1px solid transparent;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn.primary{background:var(--primary);color:#fff}.btn.primary:hover{background:#0f63d8}.btn.soft{background:var(--primary-soft);color:var(--primary);border-color:#cfe2ff}.btn.soft:hover{background:#dcebff}.btn.line{background:#fff;border-color:var(--line-strong);color:var(--text-2)}.btn.line:hover{border-color:#b5c3d5;background:var(--surface-2)}.btn.danger{background:#fff1f2;color:var(--red);border-color:#fecdd3}.btn.success{background:#eafaf3;color:var(--green);border-color:#c8f0dc}.btn:disabled{opacity:.45;cursor:not-allowed}.page{display:none;min-height:0;flex:1;overflow:auto;padding:20px 22px}.page.active{display:block}.layout-2{display:grid;grid-template-columns:minmax(0,1fr) var(--right);gap:18px}.grid{display:grid;gap:14px}.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:0 1px 0 rgba(15,23,42,.02)}.card.hover:hover{box-shadow:var(--shadow);border-color:#cad7e8}.card h3{margin:0 0 8px;font-size:16px}.card p{margin:0;color:var(--muted);font-size:13px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:18px 0 10px}.section-head h3{margin:0;font-size:17px}.muted{color:var(--muted)}.small{font-size:12px;color:var(--muted)}.tag{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);font-size:12px;color:var(--text-2);white-space:nowrap}.tag.blue{background:var(--primary-soft);border-color:#cfe2ff;color:var(--primary)}.tag.green{background:#ecfdf5;border-color:#bbf7d0;color:var(--green)}.tag.red{background:#fff1f2;border-color:#fecdd3;color:var(--red)}.divider{height:1px;background:var(--line);margin:12px 0}.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}.row:last-child{border-bottom:0}.row strong{font-size:13px}.metric{display:flex;gap:12px;align-items:center}.metric-icon{width:42px;height:42px;border-radius:12px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:900;font-size:19px}.hero{background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid #cfe2ff;border-radius:18px;padding:22px;box-shadow:var(--shadow)}.hero h2{font-size:26px;margin:0 0 8px;letter-spacing:-.04em}.topic-box{margin-top:16px;border:1px solid var(--line-strong);background:#fff;border-radius:16px;padding:12px;display:grid;grid-template-columns:1fr auto;gap:12px}.topic-box textarea{border:0;outline:0;resize:none;min-height:72px;background:transparent;color:var(--text);font-size:15px}.template-picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}.template-choice{border:1px solid var(--line);border-radius:14px;background:#fff;padding:10px;display:flex;gap:10px;align-items:center;text-align:left}.template-choice:hover,.template-choice.active{border-color:#9cc7ff;background:#f3f8ff;box-shadow:0 0 0 3px rgba(22,119,255,.06)}.template-choice strong{font-size:13px}.template-choice p{font-size:12px;color:var(--muted);margin:2px 0 0}.runtime-summary{margin-top:10px;border:1px solid var(--line);border-radius:14px;background:#fff;padding:10px;display:flex;justify-content:space-between;gap:12px;align-items:center}.runtime-summary .label{font-size:12px;color:var(--muted);font-weight:800}.runtime-summary strong{font-size:13px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.chip{height:32px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--text-2);padding:0 12px;font-size:12px;font-weight:700}.chip:hover,.chip.active{background:var(--primary-soft);border-color:#cfe2ff;color:var(--primary)}
+    .chat-page{height:calc(100vh - 74px);display:grid!important;grid-template-columns:minmax(0,1fr) 292px;padding:0;overflow:hidden}.chat-main{min-width:0;display:flex;flex-direction:column;background:radial-gradient(circle at top left,rgba(22,119,255,.08),transparent 35%),var(--bg)}.chat-head{padding:16px 18px;background:#fff;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px}.role-strip{display:flex;gap:10px;overflow:auto;padding:12px 18px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.78);backdrop-filter:blur(10px)}.role-pill{min-width:142px;display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;background:#fff;padding:8px 10px}.role-pill.active{border-color:#a8ccff;background:#f3f8ff}.mini{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:900;background:#e2e8f0;color:var(--text-2)}.mini.blue{background:#eaf3ff;color:var(--primary)}.mini.orange{background:#fff7ed;color:#c2410c}.mini.violet{background:#f3e8ff;color:var(--violet)}.mini.green{background:#ecfdf5;color:var(--green)}.role-pill strong{font-size:13px}.role-pill span{font-size:11px;color:var(--muted)}.messages{flex:1;overflow:auto;padding:18px}.msg{display:flex;gap:10px;margin:12px 0;align-items:flex-end}.msg.user{justify-content:flex-end}.bubble{max-width:min(760px,78%);background:#fff;border:1px solid var(--line);border-radius:16px 16px 16px 5px;padding:10px 12px;box-shadow:0 2px 8px rgba(15,23,42,.03)}.msg.user .bubble{background:#dff3ff;border-color:#c8ebff;border-radius:16px 16px 5px 16px}.speaker{font-size:12px;color:var(--primary);font-weight:850;margin-bottom:4px}.bubble p{margin:0;font-size:14px;color:var(--text-2)}.time{font-size:11px;color:var(--subtle);text-align:right;margin-top:5px}.event-card{max-width:820px;margin:14px auto;border:1px solid #cfe2ff;background:#fff;border-radius:16px;box-shadow:var(--shadow);overflow:hidden}.event-card header{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.event-card h3{margin:0;font-size:14px}.event-body{padding:14px;color:var(--text-2);font-size:14px}.vote-bars{display:grid;gap:10px}.vote-row{display:grid;grid-template-columns:190px 1fr 60px;align-items:center;gap:10px}.bar{height:8px;border-radius:999px;background:#e2e8f0;overflow:hidden}.bar>span{display:block;height:100%;background:var(--primary);border-radius:999px}.composer{padding:12px 18px 16px;background:rgba(255,255,255,.9);border-top:1px solid var(--line);backdrop-filter:blur(10px)}.compose-box{border:1px solid #b8d5ff;background:#fff;border-radius:16px;padding:10px}.compose-box textarea{width:100%;min-height:58px;resize:none;border:0;outline:0;background:transparent}.compose-bottom{display:flex;justify-content:space-between;gap:12px;align-items:center}.right-panel{background:#fff;border-left:1px solid var(--line);padding:14px;overflow:auto}.stepper{display:flex;align-items:center;justify-content:space-between;margin-top:10px}.step{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:800}.step.done,.step.active{background:var(--primary);border-color:var(--primary);color:#fff}.step-line{height:1px;flex:1;background:var(--line)}
+    .template-main{display:grid;grid-template-columns:260px minmax(0,1fr) 280px;gap:18px}.template-list .template-item{display:grid;grid-template-columns:68px 1fr;gap:10px;padding:10px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;background:#fff}.template-item.active{background:#f3f8ff;border-color:#a8ccff}.cover{width:68px;height:68px;border-radius:12px;background:linear-gradient(135deg,#cc9a60,#1e293b);display:grid;place-items:center;color:#fff;font-weight:900}.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-top:16px}.tab{height:42px;padding:0 14px;font-weight:800;color:var(--muted);border-bottom:2px solid transparent}.tab.active{color:var(--primary);border-color:var(--primary)}.tab-panel{display:none}.tab-panel.active{display:block}.role-card{border:1px solid var(--line);background:#fff;border-radius:16px;padding:14px;display:grid;gap:12px}.role-card:hover{border-color:#a8ccff;box-shadow:var(--shadow)}.role-top{display:flex;gap:10px;align-items:flex-start}.role-top .grow{flex:1}.role-top h4{margin:0;font-size:15px}.role-field{border:1px solid var(--line);background:var(--surface-2);border-radius:12px;padding:9px 10px;font-size:12px;display:flex;justify-content:space-between;gap:8px}.accord{display:grid;gap:8px}.accord-row{border:1px solid var(--line);border-radius:14px;background:#fff;padding:14px;display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .role-config{height:calc(100vh - 74px);display:grid!important;grid-template-columns:250px minmax(0,1fr) 292px;padding:0;overflow:hidden}.role-left{background:#fff;border-right:1px solid var(--line);padding:16px;overflow:auto}.template-summary{border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:16px}.role-list{display:grid;gap:8px}.role-list-btn{width:100%;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:14px;text-align:left;background:#fff}.role-list-btn:hover,.role-list-btn.active{background:#f3f8ff;border-color:#a8ccff}.role-form{padding:20px;overflow:auto}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field{display:grid;gap:7px}.field label{font-size:12px;color:var(--muted);font-weight:800}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line-strong);border-radius:12px;background:#fff;outline:0;color:var(--text);padding:10px 12px}.field textarea{min-height:92px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:#9cc7ff;box-shadow:0 0 0 3px rgba(22,119,255,.1)}.wide{grid-column:1/-1}.switch-row{display:flex;gap:12px}.choice{flex:1;border:1px solid var(--line);border-radius:14px;padding:12px;background:#fff;text-align:left}.choice.active{border-color:#9cc7ff;background:#f4f9ff;box-shadow:0 0 0 3px rgba(22,119,255,.06)}.range-row{display:grid;grid-template-columns:1fr 70px;gap:10px;align-items:center}.range-row input[type=range]{accent-color:var(--primary)}.prompt-editor{min-height:420px!important;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;font-size:13px;line-height:1.65}.preview-panel{background:#fff;border-left:1px solid var(--line);padding:14px;overflow:auto}.preview-chat{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff}.preview-chat .prompt{background:#f4f9ff;padding:14px;border-bottom:1px solid var(--line);font-size:13px;color:var(--text-2)}.preview-output{padding:14px}.preview-role{display:flex;gap:10px;align-items:center;margin-bottom:10px}.ai-text{border:1px solid var(--line);background:var(--surface-2);border-radius:14px;padding:12px;color:var(--text-2);font-size:13px;white-space:pre-line}.toggle{width:46px;height:26px;border-radius:999px;background:#cbd5e1;position:relative;display:inline-flex}.toggle:after{content:"";width:20px;height:20px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:.18s}.toggle.on{background:var(--primary)}.toggle.on:after{transform:translateX(20px)}
+    .table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}.table th,.table td{text-align:left;padding:13px 12px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}.table th{font-size:12px;color:var(--muted);background:var(--surface-2)}.table tr:hover td{background:#fbfdff}.table tr.selected td{background:#f3f8ff}.actions{display:flex;gap:6px;align-items:center}.mini-btn{width:30px;height:30px;border:1px solid var(--line);border-radius:9px;display:grid;place-items:center;color:var(--muted);background:#fff}.mini-btn:hover{color:var(--primary);border-color:#a8ccff;background:var(--primary-soft)}.provider-list{display:grid;gap:10px}.provider{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);background:#fff;border-radius:14px;padding:12px}.provider.active{border-color:#9cc7ff;background:#f3f8ff}.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--green);margin-right:5px}.status-dot.gray{background:#94a3b8}.modal-backdrop,.drawer-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.36);display:none;z-index:50}.modal-backdrop.show,.drawer-backdrop.show{display:grid}.modal-backdrop{place-items:center}.modal{width:620px;max-width:92vw;background:#fff;border-radius:18px;border:1px solid var(--line);box-shadow:var(--shadow);overflow:hidden}.modal header,.drawer header{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.modal-body{padding:18px}.drawer-backdrop{background:rgba(15,23,42,.18)}.drawer{position:absolute;right:0;top:0;width:440px;max-width:92vw;height:100%;background:#fff;box-shadow:var(--shadow);border-left:1px solid var(--line);overflow:auto}.drawer-body{padding:18px}.toast{position:fixed;right:20px;bottom:20px;background:#111827;color:#fff;border-radius:999px;padding:11px 16px;font-size:13px;box-shadow:var(--shadow);opacity:0;transform:translateY(12px);transition:.2s;z-index:80}.toast.show{opacity:1;transform:translateY(0)}.empty{border:1px dashed #cbd5e1;background:#fff;border-radius:16px;padding:28px;text-align:center;color:var(--muted)}
+    .notice{border:1px dashed #cbd5e1;background:#fff;border-radius:16px;padding:14px;color:var(--text-2);font-size:13px}.notice strong{display:block;margin-bottom:6px}.notice ul{margin:8px 0 0;padding-left:18px}.notice li{margin:4px 0}
+
+    .chat-page:not(.active), .role-config:not(.active){display:none!important}
+    @media(max-width:1320px){.app{grid-template-columns:150px 270px minmax(0,1fr)}.layout-2,.chat-page,.template-main{grid-template-columns:minmax(0,1fr)}.right-panel,.template-main>aside,.preview-panel{display:none}.role-config{grid-template-columns:230px minmax(0,1fr)}}
+    @media(max-width:900px){body{overflow:auto}.app{height:auto;min-height:100vh;display:block}.rail{position:sticky;top:0;z-index:20;flex-direction:row;align-items:center;padding:10px;overflow:auto}.brand{margin:0 12px 0 0}.brand p{display:none}.nav{grid-auto-flow:column;grid-auto-columns:max-content}.profile,.side{display:none}.main{height:auto;min-height:calc(100vh - 64px)}.topbar{height:auto;padding:14px;align-items:flex-start}.page{padding:14px}.cols-2,.cols-3,.cols-4,.form-grid,.template-picker{grid-template-columns:1fr}.chat-page,.role-config{height:auto;display:block!important}.chat-main{min-height:740px}.role-left{border-right:0;border-bottom:1px solid var(--line)}.topic-box{grid-template-columns:1fr}.runtime-summary{display:grid}.vote-row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="rail">
+      <div class="brand"><div class="logo">C</div><div><h1>智囊团</h1><p>AI 多角色讨论室</p></div></div>
+      <nav class="nav">
+        <button type="button" class="nav-btn active" data-page="home"><span class="nav-icon">⌂</span>首页</button>
+        <button type="button" class="nav-btn" data-page="discussion"><span class="nav-icon">◌</span>讨论</button>
+        <button type="button" class="nav-btn" data-page="templates"><span class="nav-icon">▣</span>模板</button>
+        <button type="button" class="nav-btn" data-page="sessions"><span class="nav-icon">☷</span>会话</button>
+        <button type="button" class="nav-btn" data-page="models"><span class="nav-icon">⬡</span>模型</button>
+        <button type="button" class="nav-btn" data-page="settings"><span class="nav-icon">⚙</span>设置</button>
+      </nav>
+      <button type="button" class="profile" data-action="打开用户菜单"><div class="photo">张</div><div><strong>张晓明</strong><div class="online">在线</div></div><span style="margin-left:auto;color:var(--subtle)">⌄</span></button>
+    </aside>
+
+    <aside class="side">
+      <div class="side-head">
+        <label class="search">⌕<input id="sideSearch" placeholder="搜索讨论或会话" /></label>
+        <button type="button" class="icon-btn" data-open-modal="newDiscussion" title="新建讨论">✎</button>
+      </div>
+      <div class="side-scroll">
+        <div class="sec-title"><span>置顶会话</span><span class="small">2</span></div>
+        <button type="button" class="side-card" data-page="discussion"><div class="thumb">📁</div><div><div class="ttl">产品规划讨论</div><div class="desc">产品团队 · 8 条新消息</div></div><div class="time">11:28</div></button>
+        <button type="button" class="side-card" data-page="discussion"><div class="thumb" style="background:linear-gradient(135deg,#ff6b6b,#1677ff)">🎯</div><div><div class="ttl">年度战略复盘</div><div class="desc">管理层 · 3 条新消息</div></div><div class="time">昨天</div></button>
+        <div class="sec-title"><span>最近讨论</span><button type="button" class="small" data-action="筛选最近讨论">全部⌄</button></div>
+        <button type="button" class="side-card active" data-page="discussion"><div class="thumb">📁</div><div><div class="ttl">完整版本优先建设能力</div><div class="desc">从用户价值、技术可行性...</div></div><div class="time">11:23</div></button>
+        <button type="button" class="side-card" data-page="discussion"><div class="thumb" style="background:linear-gradient(135deg,#6ee7b7,#16a36b)">📈</div><div><div class="ttl">如何提升新用户 7 日留存？</div><div class="desc">留存的关键在于价值感知...</div></div><div class="time">昨日</div></button>
+        <button type="button" class="side-card" data-page="discussion"><div class="thumb" style="background:linear-gradient(135deg,#c4b5fd,#7c3aed)">🧠</div><div><div class="ttl">AI 能否替代产品经理？</div><div class="desc">AI 是能力放大器...</div></div><div class="time">昨天</div></button>
+        <button type="button" class="side-link" data-page="sessions">查看全部会话 ›</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="top-title"><h2 id="pageTitle">首页</h2><p id="pageSub">开启一场多角色讨论，获得更全面的洞察</p></div>
+        <div class="top-actions">
+          <button type="button" class="btn line" data-action="打开新手引导">📘 新手引导</button>
+          <button type="button" class="btn soft" data-page="roleConfig">角色配置</button>
+          <button type="button" class="btn primary" data-open-modal="newDiscussion">＋ 新建讨论</button>
+          <button type="button" class="icon-btn" data-action="打开通知">🔔</button>
+        </div>
+      </header>
+
+      <section class="page active" id="home">
+        <div class="layout-2">
+          <div>
+            <div class="hero">
+              <h2>开启一场多角色讨论</h2>
+              <p class="muted">提出问题，邀请不同角色共同探讨。系统会基于模板、角色模型、提示词与 Director 规则组织观点碰撞。</p>
+              <div class="topic-box">
+                <textarea id="homeTopic">这个产品的完整版本应该优先建设哪些能力？</textarea>
+                <button type="button" class="btn primary" id="startHomeDiscussion">🚀 开始讨论</button>
+              </div>
+              <div class="runtime-summary">
+                <div><span class="label">当前讨论模板</span><br><strong id="selectedTemplateLabel">三国军师团</strong> <span class="tag blue" id="selectedTemplateBadge">官方模板</span></div>
+                <div><span class="label">模板配置</span><br><span class="small" id="selectedTemplateSummary">角色 5 个 · 事件 4 个 · 节奏 4 阶段 · 默认使用角色专属模型</span></div>
+                <button type="button" class="btn line" data-page="templates">查看模板配置</button>
+              </div>
+              <div class="template-picker" aria-label="选择讨论模板">
+                <button type="button" class="template-choice active" data-select-template="sanguo"><div class="cover">三</div><div><strong>三国军师团</strong><p>5 角色 · 站队/投票/反转</p></div></button>
+                <button type="button" class="template-choice" data-select-template="board"><div class="cover" style="background:linear-gradient(135deg,#d6b48e,#475569)">董</div><div><strong>创业董事会</strong><p>CEO/CFO/CTO 多方评估</p></div></button>
+                <button type="button" class="template-choice" data-select-template="debate"><div class="cover" style="background:linear-gradient(135deg,#fde68a,#d97706)">辩</div><div><strong>学习辩论室</strong><p>正反论证 + 评审总结</p></div></button>
+              </div>
+              <div class="chips">
+                <button type="button" class="chip" data-fill-topic="评估新功能优先级">评估新功能优先级</button>
+                <button type="button" class="chip" data-fill-topic="制定市场进入策略">制定市场进入策略</button>
+                <button type="button" class="chip" data-fill-topic="分析用户增长方案">分析用户增长方案</button>
+                <button type="button" class="chip" data-fill-topic="优化定价策略">优化定价策略</button>
+              </div>
+            </div>
+            <div class="section-head"><h3>最近讨论</h3><button type="button" class="btn line" data-page="sessions">查看全部</button></div>
+            <div class="grid cols-4">
+              <div class="card hover"><div class="metric"><div class="metric-icon">📁</div><div><h3>完整版本能力</h3><p>8 条消息 · 11:23</p></div></div></div>
+              <div class="card hover"><div class="metric"><div class="metric-icon">📈</div><div><h3>7 日留存</h3><p>12 条消息 · 昨日</p></div></div></div>
+              <div class="card hover"><div class="metric"><div class="metric-icon">🧠</div><div><h3>AI 产品经理</h3><p>15 条消息 · 昨天</p></div></div></div>
+              <div class="card hover"><div class="metric"><div class="metric-icon">🎯</div><div><h3>KPI 复盘</h3><p>10 条消息 · 周二</p></div></div></div>
+            </div>
+            <div class="section-head"><h3>模板概览</h3><button type="button" class="btn line" data-page="templates">查看模板</button></div>
+            <div class="grid cols-3">
+              <div class="card hover"><div class="metric"><div class="cover">三</div><div><h3>三国军师团</h3><p>谋略对决，群策群力。</p></div></div><div class="chips"><span class="tag blue">诸葛亮</span><span class="tag blue">曹操</span><span class="tag">+3</span></div></div>
+              <div class="card hover"><div class="metric"><div class="cover" style="background:linear-gradient(135deg,#d6b48e,#475569)">董</div><div><h3>创业董事会</h3><p>CEO / CTO / CFO 多方评估。</p></div></div><div class="chips"><span class="tag blue">CEO</span><span class="tag blue">CFO</span><span class="tag">+2</span></div></div>
+              <div class="card hover"><div class="metric"><div class="cover" style="background:linear-gradient(135deg,#fde68a,#d97706)">辩</div><div><h3>学习辩论室</h3><p>正反观点与评审总结。</p></div></div><div class="chips"><span class="tag blue">正方</span><span class="tag blue">反方</span><span class="tag">+1</span></div></div>
+            </div>
+            <div class="section-head"><h3>产品能力总览</h3></div>
+            <div class="grid cols-3">
+              <div class="card"><div class="metric"><div class="metric-icon">👥</div><div><h3>多角色讨论</h3><p>多个 Agent 共同参与。</p></div></div></div>
+              <div class="card"><div class="metric"><div class="metric-icon">▦</div><div><h3>模板化角色配置</h3><p>角色属于模板，随模板进入会话。</p></div></div></div>
+              <div class="card"><div class="metric"><div class="metric-icon">⚙</div><div><h3>角色专属模型与提示词</h3><p>每个角色可独立覆盖全局模型。</p></div></div></div>
+            </div>
+          </div>
+          <aside class="grid">
+            <div class="card"><h3>今日概览</h3><div class="grid cols-2"><div><strong style="font-size:30px">12</strong><p>今日会话数</p><span class="tag green">↑20%</span></div><div><strong style="font-size:30px">5</strong><p>活跃模板</p><span class="tag green">↑25%</span></div></div></div>
+            <div class="card"><h3>最近摘要</h3><div class="row"><div><strong>完整版本能力</strong><br><span>建议优先建设核心链路...</span></div><span class="small">11:23</span></div><div class="row"><div><strong>7 日留存策略</strong><br><span>新手引导与价值快速达成...</span></div><span class="small">昨日</span></div><button type="button" class="btn line" data-page="sessions">查看全部摘要</button></div>
+            <div class="card"><h3>系统状态</h3><div class="row"><span><i class="status-dot"></i>服务状态</span><strong class="tag green">正常</strong></div><div class="row"><span><i class="status-dot"></i>模型服务</span><strong class="tag green">正常</strong></div><div class="row"><span><i class="status-dot"></i>文件存储</span><strong class="tag green">正常</strong></div></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="page chat-page" id="discussion">
+        <div class="chat-main">
+          <div class="chat-head">
+            <div><h2 id="discussionTopic" style="margin:0;font-size:22px">这个产品的完整版本应该优先建设哪些能力？ ✎</h2><p class="small" id="discussionMeta">模板：三国军师团 · 当前阶段：自由讨论 · 使用角色专属模型</p></div>
+            <div class="top-actions"><button type="button" class="btn primary" data-action="继续讨论">▶ 继续讨论</button><button type="button" class="btn line" data-page="templates">模板配置</button><button type="button" class="btn line" data-action="导出总结">⇩ 导出总结</button><button type="button" class="btn danger" data-action="结束讨论">⨯ 结束讨论</button></div>
+          </div>
+          <div class="role-strip">
+            <button type="button" class="role-pill active" data-role="host"><div class="mini">主</div><div><strong>主持人</strong><br><span>把控节奏</span></div></button>
+            <button type="button" class="role-pill" data-role="zhuge"><div class="mini green">葛</div><div><strong>诸葛亮</strong><br><span>战略谋士</span></div></button>
+            <button type="button" class="role-pill" data-role="caocao"><div class="mini orange">曹</div><div><strong>曹操</strong><br><span>魏武之主</span></div></button>
+            <button type="button" class="role-pill" data-role="sima"><div class="mini violet">懿</div><div><strong>司马懿</strong><br><span>深谋远虑</span></div></button>
+            <button type="button" class="role-pill" data-role="xunyu"><div class="mini blue">荀</div><div><strong>荀彧</strong><br><span>王佐之才</span></div></button>
+            <button type="button" class="btn line" data-action="邀请角色">＋ 邀请角色</button>
+          </div>
+          <div class="messages" id="messageList">
+            <div class="msg"><div class="mini">主</div><article class="bubble"><div class="speaker">主持人 · 开场 11:23</div><p>各位军师，今日议题是：这个产品的完整版本应该优先建设哪些能力？请从用户价值、技术可行性、商业回报与战略匹配角度发表高见。</p><div class="time">11:23</div></article></div>
+            <div class="msg"><div class="mini green">葛</div><article class="bubble"><div class="speaker">诸葛亮 · 观点 11:24</div><p>臣以为，当务之急当聚焦核心闭环：从「需求洞察 → 方案生成 → 价值验证 → 复盘优化」。先补齐需求洞察与方案生成两大能力，方能形成可验证的价值闭环。</p><div class="time">👍 12　💬 2</div></article></div>
+            <div class="msg"><div class="mini orange">曹</div><article class="bubble"><div class="speaker">曹操 · 观点 11:26</div><p>孤以为，先胜而后求全！应优先打造差异化与增长引擎：内容生成质量与分发增长系统。有用户、有流量，方有一切可能。</p><div class="time">👍 9　💬 1</div></article></div>
+            <div class="event-card"><header><h3>👍 站队 · 11:28</h3><button type="button" class="btn line" data-action="查看站队详情">查看详情</button></header><div class="event-body"><p>曹操发起站队：核心优先（补齐核心闭环） vs 增长优先（先胜后求全）</p><div class="vote-row"><strong>核心优先</strong><div class="bar"><span style="width:50%"></span></div><span>2 人</span></div><div class="vote-row"><strong>增长优先</strong><div class="bar"><span style="width:50%;background:var(--violet)"></span></div><span>2 人</span></div></div></div>
+            <div class="event-card" style="border-color:#fed7aa"><header><h3>🟠 邀请用户插话 · 11:30</h3><button type="button" class="btn soft" data-fill-message="我认为应先建设角色配置、模板配置和会话恢复，确保完整产品能力闭环。">插话发言</button></header><div class="event-body">主持人邀请你参与讨论，你可以发表观点或向角色提问。</div></div>
+            <div class="event-card" style="border-color:#ddd6fe"><header><h3>📊 投票结果 · 11:33</h3><button type="button" class="btn line" data-action="查看投票详情">查看详情</button></header><div class="event-body vote-bars"><div class="vote-row"><strong>核心闭环优先</strong><div class="bar"><span style="width:56%;background:var(--violet)"></span></div><span>56%</span></div><div class="vote-row"><strong>增长引擎优先</strong><div class="bar"><span style="width:25%;background:#a78bfa"></span></div><span>25%</span></div><div class="vote-row"><strong>并行推进</strong><div class="bar"><span style="width:19%;background:#c4b5fd"></span></div><span>19%</span></div></div></div>
+          </div>
+          <form class="composer" id="composer">
+            <div class="compose-box"><textarea id="messageInput" placeholder="在此输入你的观点，@角色或使用快捷命令..."></textarea><div class="compose-bottom"><div class="chips"><button type="button" class="chip" data-fill-message="我想插话：先听听司马懿的风险判断。">插话</button><button type="button" class="chip" data-fill-message="@诸葛亮 请给出三步实施方案。">点名角色</button><button type="button" class="chip" data-fill-message="请发起一次投票。">发起投票</button><button type="button" class="chip" data-fill-message="请主持人总结。">要求总结</button></div><button type="submit" class="btn primary">➤ 发送</button></div></div>
+          </form>
+        </div>
+        <aside class="right-panel">
+          <div class="card"><h3>讨论阶段</h3><div class="stepper"><span class="step done">✓</span><i class="step-line"></i><span class="step active">2</span><i class="step-line"></i><span class="step">3</span><i class="step-line"></i><span class="step">4</span></div><div class="chips"><span class="tag">开场</span><span class="tag blue">自由讨论</span><span class="tag">站队投票</span><span class="tag">总结决策</span></div></div>
+          <div class="card"><h3>Director 决策</h3><p>请从多维度充分讨论，形成分歧后通过站队与投票收敛观点。</p><button type="button" class="btn line" data-open-drawer="director">编辑决策指令</button></div>
+          <div class="card"><h3>当前模板</h3><div class="metric"><div class="cover">三</div><div><strong>三国军师团</strong><p>谋略对决，群策群力。</p></div></div></div>
+          <div class="card"><h3>讨论摘要</h3><ul class="small"><li>核心争议：核心闭环 vs 增长引擎。</li><li>目前形成两派观点，比分 2:2。</li><li>建议核心优先并行验证增长。</li></ul><button type="button" class="btn line" data-action="展开全部摘要">展开全部</button></div>
+        </aside>
+      </section>
+
+      <section class="page" id="templates">
+        <div class="template-main">
+          <aside class="template-list">
+            <div class="section-head"><h3>模板中心</h3><button type="button" class="btn line" data-action="筛选模板">筛选</button></div>
+            <label class="search" style="margin-bottom:12px">⌕<input placeholder="搜索模板名称或关键词" /></label>
+            <button type="button" class="template-item active" data-action="选择三国军师团"><div class="cover">三</div><div><strong>三国军师团</strong><p>官方模板 · 12.6k 次使用</p><span class="tag blue">官方模板</span></div></button>
+            <button type="button" class="template-item" data-action="选择创业董事会"><div class="cover" style="background:linear-gradient(135deg,#d6b48e,#475569)">董</div><div><strong>创业董事会</strong><p>多方视角，商业决策。</p><span class="tag blue">官方模板</span></div></button>
+            <button type="button" class="template-item" data-action="选择学习辩论室"><div class="cover" style="background:linear-gradient(135deg,#fde68a,#d97706)">辩</div><div><strong>学习辩论室</strong><p>正反论证，提升思辨。</p><span class="tag blue">官方模板</span></div></button>
+            <button type="button" class="btn soft" style="width:100%" data-action="新建模板">＋ 新建模板</button>
+          </aside>
+          <div>
+            <div class="card"><div class="metric"><div class="cover" style="width:116px;height:116px">三</div><div><h2 style="margin:0 0 6px">三国军师团 <span class="tag blue">官方模板</span></h2><p>集结三国顶级谋士，运筹帷幄，决胜千里，智谋对决。</p><div class="chips"><span class="tag">创建者：智囊团官方</span><span class="tag">版本 v1.2.3</span><span class="tag">使用量 12,643</span></div></div></div><div class="tabs"><button type="button" class="tab active" data-template-tab="overview">概览</button><button type="button" class="tab" data-template-tab="roles">角色</button><button type="button" class="tab" data-template-tab="events">事件</button><button type="button" class="tab" data-template-tab="rhythm">节奏</button><button type="button" class="tab" data-template-tab="models">推荐模型</button></div></div>
+            <div class="tab-panel active" id="tpl-overview"><div class="section-head"><h3>模板结构</h3></div><div class="accord"><div class="accord-row"><div><strong>世界观</strong><p>东汉末年，群雄逐鹿，天下三分。</p></div><button type="button" class="btn line" data-open-drawer="worldview">编辑</button></div><div class="accord-row"><div><strong>用户身份</strong><p>你是本次讨论发起者，扮演主公。</p></div><button type="button" class="btn line" data-open-drawer="identity">编辑</button></div><div class="accord-row"><div><strong>事件规则</strong><p>打脸、站队、投票、反转。</p></div><button type="button" class="btn line" data-template-tab-btn="events">查看</button></div></div></div>
+            <div class="tab-panel" id="tpl-roles"><div class="section-head"><div><h3>角色（5）</h3><p class="small">角色属于当前模板，每个角色包含专属模型与系统提示词。</p></div><button type="button" class="btn primary" data-page="roleConfig">＋ 添加角色</button></div><div class="grid cols-2">
+              <article class="role-card"><div class="role-top"><div class="mini">主</div><div class="grow"><h4>主持人 <span class="tag blue">主持</span></h4><p>引导全场讨论，控制节奏与流程。</p></div><button type="button" class="mini-btn" data-edit-role="host">✎</button></div><div class="role-field"><span>模型：GPT-4.1-mini</span><span class="tag green">已配置</span></div><div class="role-field"><span>提示词</span><span class="tag green">已配置</span></div></article>
+              <article class="role-card"><div class="role-top"><div class="mini green">葛</div><div class="grow"><h4>诸葛亮 <span class="tag blue">军师</span></h4><p>战略规划与全局分析，提出周密方案。</p></div><button type="button" class="mini-btn" data-edit-role="zhuge">✎</button></div><div class="role-field"><span>模型：GLM-4-Plus</span><span class="tag green">专属模型</span></div><div class="role-field"><span>提示词</span><span class="tag green">已配置</span></div></article>
+              <article class="role-card"><div class="role-top"><div class="mini orange">曹</div><div class="grow"><h4>曹操 <span class="tag blue">君主</span></h4><p>重视现实资源、执行力与风险收益。</p></div><button type="button" class="mini-btn" data-edit-role="caocao">✎</button></div><div class="role-field"><span>模型：DeepSeek-V3</span><span class="tag green">专属模型</span></div><div class="role-field"><span>提示词</span><span class="tag green">已配置</span></div></article>
+              <article class="role-card"><div class="role-top"><div class="mini violet">懿</div><div class="grow"><h4>司马懿 <span class="tag blue">谋士</span></h4><p>深谋远虑，提出反方风险与长期策略。</p></div><button type="button" class="mini-btn" data-edit-role="sima">✎</button></div><div class="role-field"><span>模型：Claude 3.5 Sonnet</span><span class="tag green">专属模型</span></div><div class="role-field"><span>提示词</span><span class="tag green">已配置</span></div></article>
+              <article class="role-card"><div class="role-top"><div class="mini blue">荀</div><div class="grow"><h4>荀彧 <span class="tag blue">谋士</span></h4><p>守正持重，擅长内政治理与资源配置。</p></div><button type="button" class="mini-btn" data-edit-role="xunyu">✎</button></div><div class="role-field"><span>模型：gpt-4o</span><span class="tag green">专属模型</span></div><div class="role-field"><span>提示词</span><span class="tag green">已配置</span></div></article>
+            </div></div>
+            <div class="tab-panel" id="tpl-events"><div class="grid cols-2"><div class="card"><h3>打脸</h3><p>角色用证据推翻另一角色判断。</p></div><div class="card"><h3>站队</h3><p>多角色围绕方向形成阵营。</p></div><div class="card"><h3>投票</h3><p>争议无法收敛时形成选择。</p></div><div class="card"><h3>反转</h3><p>引入变量改变讨论方向。</p></div></div></div>
+            <div class="tab-panel" id="tpl-rhythm"><div class="card"><h3>节奏配置</h3><div class="grid cols-4"><div><strong>阶段数</strong><p>4</p></div><div><strong>每阶段轮次</strong><p>2</p></div><div><strong>发言上限</strong><p>600 字</p></div><div><strong>允许追问</strong><p>是</p></div></div></div></div>
+            <div class="tab-panel" id="tpl-models"><div class="card"><h3>推荐模型</h3><p>默认使用角色级专属模型；没有覆盖时使用全局默认模型。</p><div class="chips"><span class="tag blue">GPT-4.1-mini</span><span class="tag blue">GLM-4-Plus</span><span class="tag blue">Claude 3.5 Sonnet</span><span class="tag blue">DeepSeek-V3</span></div></div></div>
+          </div>
+          <aside class="grid"><div class="card"><h3>模板统计</h3><div class="grid cols-2"><div><strong style="font-size:26px">12,643</strong><p>使用次数</p></div><div><strong style="font-size:26px">1,243</strong><p>收藏次数</p></div></div><div class="divider"></div><strong>4.9 / 5</strong><span style="color:#f59e0b"> ★★★★★</span></div><div class="card"><h3>模板操作</h3><div class="grid"><button type="button" class="btn line" data-action="编辑模板">✎ 编辑模板</button><button type="button" class="btn line" data-action="复制模板">⧉ 复制模板</button><button type="button" class="btn soft" data-action="发布新版本">↑ 发布新版本</button><button type="button" class="btn danger" data-action="删除模板">🗑 删除模板</button></div></div></aside>
+        </div>
+      </section>
+
+      <section class="page role-config" id="roleConfig">
+        <aside class="role-left">
+          <div class="small" style="margin-bottom:8px">模板 / 三国军师团 / 角色配置</div>
+          <div class="template-summary"><div class="metric"><div class="cover">三</div><div><strong>三国军师团</strong><p>角色 5 个 · 会话 12 次</p></div></div><button type="button" class="btn line" style="width:100%;margin-top:10px" data-page="templates">模板概览</button></div>
+          <div class="section-head"><h3>角色列表</h3><button type="button" class="btn line" data-action="新建角色">＋</button></div>
+          <div class="role-list">
+            <button type="button" class="role-list-btn" data-select-role="host"><div class="mini">主</div><div><strong>主持人</strong><p>主持人 · 引导者</p></div><span style="margin-left:auto;color:#f59e0b">♛</span></button>
+            <button type="button" class="role-list-btn active" data-select-role="zhuge"><div class="mini green">葛</div><div><strong>诸葛亮</strong><p>蜀汉丞相 · 智谋担当</p></div></button>
+            <button type="button" class="role-list-btn" data-select-role="caocao"><div class="mini orange">曹</div><div><strong>曹操</strong><p>魏武帝 · 霸道担当</p></div></button>
+            <button type="button" class="role-list-btn" data-select-role="sima"><div class="mini violet">懿</div><div><strong>司马懿</strong><p>魏国谋士 · 权谋担当</p></div></button>
+            <button type="button" class="role-list-btn" data-select-role="xunyu"><div class="mini blue">荀</div><div><strong>荀彧</strong><p>魏国谋士 · 后勤担当</p></div></button>
+          </div>
+        </aside>
+        <div class="role-form">
+          <div class="section-head" style="margin-top:0"><div><h2 id="roleTitle" style="margin:0">角色配置 - 诸葛亮 <span class="tag green">已启用</span></h2><p class="small">为该角色配置个性、能力、模型与提示词，决定他在讨论中的风格与表现。</p></div><div class="top-actions"><button type="button" class="btn line" id="restoreRole">↺ 恢复默认</button><button type="button" class="btn soft" id="previewRole">◎ 预览输出</button><button type="button" class="btn primary" id="saveRole">💾 保存角色</button></div></div>
+          <div class="grid cols-2">
+            <div class="card"><h3>角色基础设置</h3><div class="form-grid">
+              <div class="field"><label>角色名称</label><input id="roleName" value="诸葛亮" maxlength="20"></div>
+              <div class="field"><label>是否主持人</label><div style="display:flex;align-items:center;gap:12px;height:42px"><button type="button" class="toggle" id="hostToggle"></button><span class="small">主持人负责引导流程与轮次控制</span></div></div>
+              <div class="field wide"><label>性格设定</label><input id="rolePersonality" value="睿智冷静、洞察全局、鞠躬尽瘁、治国安邦。"></div>
+              <div class="field"><label>默认态度</label><select id="roleAttitude"><option>理性分析</option><option>强势推进</option><option>反方质疑</option><option>稳健治理</option></select></div>
+              <div class="field"><label>能力标签</label><input id="roleTags" value="战略规划、洞察局势、治国安邦、谋略"></div>
+              <div class="field"><label>口头禅</label><input id="roleCatchphrase" value="观其大略，察其细微。"></div>
+              <div class="field"><label>角色预览文案</label><input id="rolePreviewText" value="丞相诸葛亮，智绝千古。善用兵法、谋略与治国之道。"></div>
+              <div class="field wide"><label>生成参数</label><div class="range-row"><input type="range" id="roleTemp" min="0" max="1" step="0.1" value="0.6"><input id="roleTempValue" value="0.6"></div><p class="small">值越高越有创造性，值越低越稳定。</p></div>
+              <div class="field"><label>Max Tokens</label><input id="roleMaxTokens" value="1024"></div>
+              <div class="field"><label>Top P</label><input id="roleTopP" value="0.9"></div>
+            </div></div>
+            <div class="card"><h3>系统提示词</h3><p class="small">定义该角色的身份、行为规范和回答方式。支持变量：{{user}}、{{role}}、{{time}}。</p><div class="field" style="margin-top:10px"><textarea class="prompt-editor" id="rolePrompt">你是诸葛亮，蜀汉丞相，字孔明，智谋卓绝，洞察天下大势。
+
+# 身份定位
+- 你是蜀汉丞相，刘备的重要谋士与治国支柱。
+- 你以忠诚、谨慎、远见和缜密的思维著称。
+
+# 风格与语气
+- 语气沉稳、谦恭、有理有据，善于分析与推演。
+- 回答时多从全局出发，权衡利弊，提出可行之策。
+
+# 输出要求
+- 结构清晰，先结论，后分析，最后建议。
+- 若信息不足，主动提出需要的信息。</textarea></div><div class="row"><button type="button" class="btn line" id="restorePrompt">恢复默认提示词</button><span class="small" id="promptCount">369/4000</span></div></div>
+          </div>
+          <div class="card" style="margin-top:14px"><h3>模型配置</h3><p class="small">角色可以使用模板/全局默认模型，也可以设置角色专属 Provider、模型和参数。</p><div class="switch-row" style="margin-top:12px"><button type="button" class="choice active" id="useRoleModel"><strong>使用角色专属模型</strong><p>为该角色指定独立模型与参数</p></button><button type="button" class="choice" id="useGlobalModel"><strong>使用全局默认模型</strong><p>跟随模型设置中的全局配置</p></button></div><div class="form-grid" style="margin-top:14px"><div class="field"><label>Provider（模型提供商）</label><select id="roleProvider"><option>智谱 AI (ChatGLM)</option><option>OpenAI</option><option>Anthropic</option><option>Gemini</option><option>DeepSeek</option><option>自定义 Provider</option></select></div><div class="field"><label>专属模型（Override）</label><select id="roleModel"><option>GLM-4-Plus</option><option>gpt-4o</option><option>claude-3-5-sonnet</option><option>gemini-1.5-pro</option><option>deepseek-chat</option></select></div><div class="field wide"><label>Base URL</label><input id="roleBaseUrl" value="跟随全局（https://open.bigmodel.cn/api/paas/v4/）"></div><div class="field"><label>模型温度</label><div class="range-row"><input type="range" id="modelTemp" min="0" max="1" step="0.1" value="0.6"><input id="modelTempValue" value="0.6"></div></div><div class="field"><label>频率惩罚</label><input value="0"></div></div></div>
+        </div>
+        <aside class="preview-panel"><div class="section-head" style="margin-top:0"><h3>运行预览</h3><button type="button" class="btn line" id="clearPreview">清空</button></div><div class="preview-chat"><div class="prompt">请分析当前局势，给出应对之策。</div><div class="preview-output"><div class="preview-role"><div class="mini green" id="previewAvatar">葛</div><div><strong id="previewName">诸葛亮</strong><p class="small">示例输出</p></div></div><div class="ai-text" id="previewText">当下局势，魏强我弱，地势不利，民心固然未稳，然天时地利人和，尚可图之。
+
+先论大势：应以内修政理、外结盟友、择机而动为三端。凡事贵在谋定而后动，急则多败。愿主公明察时势，静待良机。</div><div class="chips"><button type="button" class="chip" data-action="复制预览">复制</button><button type="button" class="chip" data-action="点赞预览">👍</button><button type="button" class="chip" data-action="差评预览">👎</button></div></div></div><div class="notice" style="margin-top:14px"><strong>设计说明</strong><ul><li>角色配置从属于模板。</li><li>每个角色可独立配置系统提示词。</li><li>每个角色可覆盖全局模型配置。</li><li>预览区用于验证角色语气与输出风格。</li></ul></div></aside>
+      </section>
+
+      <section class="page" id="sessions">
+        <div class="section-head" style="margin-top:0"><div><h2 style="margin:0">会话中心</h2><p class="small">管理所有讨论会话，支持搜索、筛选、归档与导出。</p></div><div class="top-actions"><button type="button" class="btn primary" data-open-modal="newDiscussion">新建会话</button><button type="button" class="btn line" data-action="导入会话">导入会话</button></div></div>
+        <div class="chips"><button type="button" class="chip active" data-action="筛选全部会话">全部</button><button type="button" class="chip" data-action="筛选进行中">进行中</button><button type="button" class="chip" data-action="筛选已完成">已完成</button><button type="button" class="chip" data-action="筛选收藏">收藏</button><button type="button" class="chip" data-action="筛选归档">已归档</button></div>
+        <div style="height:14px"></div><table class="table"><thead><tr><th>议题</th><th>模板</th><th>当前阶段</th><th>参与角色</th><th>更新时间</th><th>最近摘要</th><th>操作</th></tr></thead><tbody><tr class="selected"><td>产品完整版本优先建设能力</td><td><span class="tag blue">产品路线图讨论</span></td><td><span class="tag blue">分析用户增长方案</span></td><td>👤👤👤 +6</td><td>今天 11:23<br><span class="small">15 条消息</span></td><td>建议优先建设核心链路...</td><td><div class="actions"><button type="button" class="mini-btn" data-page="discussion">💬</button><button type="button" class="mini-btn" data-action="查看摘要">▤</button><button type="button" class="mini-btn" data-action="导出会话">⇩</button><button type="button" class="mini-btn" data-action="归档会话">□</button></div></td></tr><tr><td>如何提升新用户 7 日留存？</td><td><span class="tag blue">增长黑客框架</span></td><td><span class="tag blue">进行中</span></td><td>👤👤👤 +5</td><td>昨天 18:41</td><td>留存关键在于价值感知...</td><td><div class="actions"><button type="button" class="mini-btn" data-page="discussion">💬</button><button type="button" class="mini-btn" data-action="查看摘要">▤</button><button type="button" class="mini-btn" data-action="导出会话">⇩</button><button type="button" class="mini-btn" data-action="归档会话">□</button></div></td></tr></tbody></table>
+        <div class="grid cols-4" style="margin-top:18px"><div class="card"><h3>会话概览</h3><div class="row"><span>当前阶段</span><strong>分析用户增长方案</strong></div><div class="row"><span>消息数量</span><strong>15 条</strong></div><div class="row"><span>收藏状态</span><strong>⭐ 已收藏</strong></div></div><div class="card"><h3>事件时间线</h3><p>创建会话 → 进入阶段 → 导师建议 → 用户体验专家发言。</p><button type="button" class="btn line" data-action="查看全部事件">查看全部事件</button></div><div class="card"><h3>最近执行决策</h3><p>优先建设用户体验核心链路。</p><button type="button" class="btn line" data-action="查看决策详情">查看详情</button></div><div class="empty"><h3>暂无归档的会话</h3><p>归档会话将在此处展示。</p><button type="button" class="btn line" data-action="查看已归档">查看已归档</button></div></div>
+      </section>
+
+      <section class="page" id="models">
+        <div class="layout-2"><div><div class="section-head" style="margin-top:0"><div><h2 style="margin:0">模型与系统设置</h2><p class="small">配置全局模型、Prompt Adapter 与角色专属模型覆盖。</p></div><button type="button" class="btn primary" data-action="保存模型配置">保存配置</button></div><div class="tabs"><button type="button" class="tab active" data-model-tab="provider">Provider</button><button type="button" class="tab" data-model-tab="default">默认模型</button><button type="button" class="tab" data-model-tab="adapter">Prompt Adapter</button><button type="button" class="tab" data-model-tab="security">存储与安全</button><button type="button" class="tab" data-model-tab="appearance">外观</button></div><div class="tab-panel active" id="model-provider"><div class="card"><h3>OpenAI <span class="tag green">已连接</span></h3><div class="form-grid"><div class="field"><label>API Key</label><input value="sk-••••••••••••••••"></div><div class="field"><label>默认模型（全局）</label><select><option>gpt-4o</option><option>gpt-4.1-mini</option></select></div><div class="field"><label>Base URL</label><input value="https://api.openai.com/v1"></div><div class="field"><label>超时时间</label><input value="60 秒"></div></div><div class="chips"><button type="button" class="btn soft" data-action="测试 OpenAI 连接">测试连接</button><button type="button" class="btn line" data-action="编辑 Provider">编辑</button></div></div><div class="card" style="margin-top:14px"><h3>角色专属模型（覆盖全局默认）</h3><table class="table"><thead><tr><th>角色</th><th>Provider</th><th>专属模型</th><th>状态</th><th>操作</th></tr></thead><tbody><tr><td>诸葛亮</td><td>智谱 AI</td><td>GLM-4-Plus</td><td><span class="tag green">启用</span></td><td><button type="button" class="mini-btn" data-edit-role="zhuge">✎</button></td></tr><tr><td>司马懿</td><td>Anthropic</td><td>Claude 3.5 Sonnet</td><td><span class="tag green">启用</span></td><td><button type="button" class="mini-btn" data-edit-role="sima">✎</button></td></tr><tr><td>曹操</td><td>DeepSeek</td><td>deepseek-chat</td><td><span class="tag green">启用</span></td><td><button type="button" class="mini-btn" data-edit-role="caocao">✎</button></td></tr></tbody></table><button type="button" class="btn soft" style="width:100%;margin-top:10px" data-page="roleConfig">＋ 添加角色专属模型覆盖</button></div></div><div class="tab-panel" id="model-default"><div class="card"><h3>全局默认模型</h3><p>当角色未设置专属模型时，使用这里的配置。</p><div class="form-grid"><div class="field"><label>首选 Provider</label><select><option>OpenAI</option><option>DeepSeek</option></select></div><div class="field"><label>默认模型</label><select><option>gpt-4o</option><option>gpt-4.1-mini</option></select></div></div></div></div><div class="tab-panel" id="model-adapter"><div class="grid cols-3"><div class="card"><h3>OpenAI 风格</h3><p>优化指令结构与角色扮演。</p></div><div class="card"><h3>Claude 风格</h3><p>强调清晰结构与长上下文。</p></div><div class="card"><h3>DeepSeek 风格</h3><p>简洁指令与输出控制。</p></div></div></div><div class="tab-panel" id="model-security"><div class="card"><h3>安全设置</h3><div class="row"><span>API Key 安全</span><span class="tag green">已加密存储</span></div><div class="row"><span>数据传输</span><span class="tag green">HTTPS</span></div></div></div><div class="tab-panel" id="model-appearance"><div class="card"><h3>外观</h3><div class="row"><span>深色模式</span><button type="button" class="toggle" id="darkToggle"></button></div><div class="row"><span>紧凑消息</span><button type="button" class="toggle on" data-action="切换紧凑消息"></button></div></div></div></div><aside class="grid"><div class="card"><h3>模型提供商</h3><div class="provider-list"><button type="button" class="provider active" data-action="选择 OpenAI"><span>OpenAI</span><span><i class="status-dot"></i>已连接</span></button><button type="button" class="provider" data-action="选择 Anthropic"><span>Anthropic</span><span><i class="status-dot"></i>已连接</span></button><button type="button" class="provider" data-action="选择 Gemini"><span>Gemini</span><span><i class="status-dot"></i>已连接</span></button><button type="button" class="provider" data-action="选择 DeepSeek"><span>DeepSeek</span><span><i class="status-dot"></i>已连接</span></button><button type="button" class="provider" data-action="配置自定义 Provider"><span>自定义 Provider</span><span><i class="status-dot gray"></i>未配置</span></button></div></div><div class="card"><h3>快速操作</h3><div class="grid"><button type="button" class="btn line" data-action="测试全部连接">测试全部连接</button><button type="button" class="btn line" data-action="导出配置备份">导出配置备份</button><button type="button" class="btn line" data-action="导入配置">导入配置</button></div></div></aside></div>
+      </section>
+
+      <section class="page" id="settings">
+        <div class="layout-2"><div class="grid cols-2"><div class="card"><h3>系统偏好</h3><div class="row"><span>自动保存会话</span><button type="button" class="toggle on" data-action="切换自动保存"></button></div><div class="row"><span>显示调试面板</span><button type="button" class="toggle on" data-action="切换调试面板"></button></div><div class="row"><span>消息动画</span><button type="button" class="toggle" data-action="切换消息动画"></button></div></div><div class="card"><h3>本地数据</h3><div class="row"><span>会话缓存</span><strong>12 个 Session</strong></div><div class="row"><span>模板缓存</span><strong>4 个模板</strong></div><div class="chips"><button type="button" class="btn line" data-action="导出全部数据">导出数据</button><button type="button" class="btn danger" data-action="清理缓存">清理缓存</button></div></div></div><aside class="card"><h3>版本信息</h3><p>智囊团 Web Prototype v1.0</p><button type="button" class="btn line" data-action="检查更新">检查更新</button></aside></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="newDiscussionModal">
+    <div class="modal"><header><h3>新建讨论</h3><button type="button" class="icon-btn" data-close-modal>×</button></header><div class="modal-body"><div class="form-grid"><div class="field wide"><label>讨论议题</label><textarea id="modalTopic">这个产品的完整版本应该优先建设哪些能力？</textarea></div><div class="field"><label>模板</label><select id="modalTemplate"><option value="sanguo">三国军师团</option><option value="board">创业董事会</option><option value="debate">学习辩论室</option></select></div><div class="field"><label>模型策略</label><select id="modalRuntime"><option>跟随模板角色专属模型</option><option>全部使用全局默认模型</option><option>本次讨论临时覆盖模型</option></select></div><div class="field wide"><label>模板摘要</label><div class="runtime-summary"><div><strong id="modalTemplateLabel">三国军师团</strong><br><span class="small" id="modalTemplateSummary">角色 5 个 · 事件 4 个 · 节奏 4 阶段 · 默认使用角色专属模型</span></div><button type="button" class="btn line" data-page="templates" data-close-modal>查看模板配置</button></div></div><div class="field"><label>初始阶段</label><select><option>开场</option><option>自由讨论</option></select></div><div class="field"><label>创建后动作</label><select><option>直接进入讨论</option><option>先预览角色</option><option>保存为草稿</option></select></div></div><div class="top-actions" style="justify-content:flex-end;margin-top:16px"><button type="button" class="btn line" data-close-modal>取消</button><button type="button" class="btn primary" id="createDiscussion">创建并进入讨论</button></div></div></div>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"><div class="drawer"><header><h3 id="drawerTitle">详情</h3><button type="button" class="icon-btn" data-close-drawer>×</button></header><div class="drawer-body"><div class="field"><label>内容</label><textarea id="drawerText" style="min-height:240px">这里展示对应配置内容，可编辑后保存。</textarea></div><div class="chips"><button type="button" class="btn primary" data-close-drawer data-action="保存抽屉配置">保存</button><button type="button" class="btn line" data-close-drawer>取消</button></div></div></div></div>
+
+  <div class="toast" id="toast">操作完成</div>
+
+  <script>
+    const qs=(s,root=document)=>root.querySelector(s); const qsa=(s,root=document)=>Array.from(root.querySelectorAll(s));
+    const pageMeta={
+      home:['首页','开启一场多角色讨论，获得更全面的洞察'],
+      discussion:['讨论','多角色讨论流、站队事件、用户插话与 Director 调度'],
+      templates:['模板中心','模板包含角色、世界观、事件规则、节奏与推荐模型'],
+      roleConfig:['角色配置','角色属于模板，每个角色可独立配置模型和系统提示词'],
+      sessions:['会话中心','管理所有讨论会话，支持恢复、导出和归档'],
+      models:['模型与系统设置','全局模型、角色专属模型覆盖与 Prompt Adapter'],
+      settings:['设置','系统偏好、本地数据和版本信息']
+    };
+    const roles={
+      host:{avatar:'主',name:'主持人',personality:'稳健克制、善于控场、引导分歧并收束结论。',attitude:'理性分析',tags:'控场、总结、邀请用户、阶段推进',catchphrase:'诸位稍安，容我梳理。',preview:'主持人负责引导讨论流程与结论收束。',provider:'OpenAI',model:'GPT-4.1-mini',base:'跟随全局（https://api.openai.com/v1）',temp:'0.4',max:'1200',topP:'0.8',isHost:true,prompt:'你是智囊团主持人。你的职责是控制讨论节奏、邀请角色发言、识别分歧、触发事件，并在合适时机总结为可执行结论。'},
+      zhuge:{avatar:'葛',name:'诸葛亮',personality:'睿智冷静、洞察全局、鞠躬尽瘁、治国安邦。',attitude:'理性分析',tags:'战略规划、洞察局势、治国安邦、谋略',catchphrase:'观其大略，察其细微。',preview:'丞相诸葛亮，智绝千古。善用兵法、谋略与治国之道。',provider:'智谱 AI (ChatGLM)',model:'GLM-4-Plus',base:'跟随全局（https://open.bigmodel.cn/api/paas/v4/）',temp:'0.6',max:'1024',topP:'0.9',isHost:false,prompt:'你是诸葛亮，蜀汉丞相，字孔明，智谋卓绝，洞察天下大势。\n\n# 身份定位\n- 你是蜀汉丞相，刘备的重要谋士与治国支柱。\n- 你以忠诚、谨慎、远见和缜密的思维著称。\n\n# 风格与语气\n- 语气沉稳、谦恭、有理有据，善于分析与推演。\n- 回答时多从全局出发，权衡利弊，提出可行之策。\n\n# 输出要求\n- 结构清晰，先结论，后分析，最后建议。\n- 若信息不足，主动提出需要的信息。'},
+      caocao:{avatar:'曹',name:'曹操',personality:'果断强势、重视资源、敢于取舍、执行优先。',attitude:'强势推进',tags:'执行力、资源调度、增长、胜负手',catchphrase:'先胜而后求全。',preview:'魏武曹操，重现实、重效率、重结果。',provider:'DeepSeek',model:'deepseek-chat',base:'跟随全局（https://api.deepseek.com/v1）',temp:'0.7',max:'900',topP:'0.9',isHost:false,prompt:'你是曹操。你倾向于从现实资源、执行速度、胜负手、增长效率角度提出判断。表达直接，不绕弯，但必须给出可落地建议。'},
+      sima:{avatar:'懿',name:'司马懿',personality:'谨慎隐忍、深谋远虑、擅长识别风险与反方问题。',attitude:'反方质疑',tags:'风险、长期主义、反驳、权衡',catchphrase:'胜负未定，先看隐患。',preview:'司马懿负责提出反方风险和长期代价。',provider:'Anthropic',model:'claude-3-5-sonnet',base:'跟随全局（https://api.anthropic.com）',temp:'0.5',max:'1100',topP:'0.85',isHost:false,prompt:'你是司马懿。你负责从反方、风险、长期代价和隐藏约束出发审视方案。不要为了反对而反对，必须指出真实风险和可验证的缓解方案。'},
+      xunyu:{avatar:'荀',name:'荀彧',personality:'守正持重、擅长治理、资源配置与组织稳定。',attitude:'稳健治理',tags:'组织、资源、治理、稳态运营',catchphrase:'根基稳，方能远行。',preview:'荀彧负责治理、资源与组织稳定性判断。',provider:'OpenAI',model:'gpt-4o',base:'跟随全局（https://api.openai.com/v1）',temp:'0.45',max:'1000',topP:'0.8',isHost:false,prompt:'你是荀彧。你负责从组织治理、资源配置、稳态运营与长期秩序角度提出建议。表达稳健，强调可持续性。'}
+    };
+    let currentRole='zhuge';
+    let currentTemplate='sanguo';
+    const templates={
+      sanguo:{name:'三国军师团',badge:'官方模板',summary:'角色 5 个 · 事件 4 个 · 节奏 4 阶段 · 默认使用角色专属模型'},
+      board:{name:'创业董事会',badge:'官方模板',summary:'角色 5 个 · 事件 4 个 · 商业决策节奏 · CEO/CFO/CTO 角色模型'},
+      debate:{name:'学习辩论室',badge:'官方模板',summary:'角色 4 个 · 正反论证 · 评审总结 · 适合学习与观点辨析'}
+    };
+    function applyTemplate(id, source='home'){
+      currentTemplate=id||'sanguo';
+      const tpl=templates[currentTemplate];
+      qsa('[data-select-template]').forEach(b=>b.classList.toggle('active',b.dataset.selectTemplate===currentTemplate));
+      if(qs('#selectedTemplateLabel')) qs('#selectedTemplateLabel').textContent=tpl.name;
+      if(qs('#selectedTemplateBadge')) qs('#selectedTemplateBadge').textContent=tpl.badge;
+      if(qs('#selectedTemplateSummary')) qs('#selectedTemplateSummary').textContent=tpl.summary;
+      if(qs('#modalTemplate')) qs('#modalTemplate').value=currentTemplate;
+      if(qs('#modalTemplateLabel')) qs('#modalTemplateLabel').textContent=tpl.name;
+      if(qs('#modalTemplateSummary')) qs('#modalTemplateSummary').textContent=tpl.summary;
+      if(qs('#discussionMeta')) qs('#discussionMeta').textContent='模板：'+tpl.name+' · 当前阶段：自由讨论 · 使用角色专属模型';
+      if(source!=='silent') toast('已选择模板：'+tpl.name);
+    }
+    function syncDiscussionFromInput(topic){
+      const clean=(topic||'这个产品的完整版本应该优先建设哪些能力？').trim();
+      if(qs('#discussionTopic')) qs('#discussionTopic').textContent=clean+' ✎';
+      applyTemplate(currentTemplate,'silent');
+    }
+    function toast(text){const el=qs('#toast');el.textContent=text||'操作完成';el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),1700)}
+    function showPage(name){qsa('.page').forEach(p=>p.classList.toggle('active',p.id===name));qsa('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.page===name));qs('#pageTitle').textContent=pageMeta[name][0];qs('#pageSub').textContent=pageMeta[name][1];if(name==='roleConfig') loadRole(currentRole);toast('已切换到：'+pageMeta[name][0]);}
+    function loadRole(id){currentRole=id;const r=roles[id];qsa('[data-select-role]').forEach(b=>b.classList.toggle('active',b.dataset.selectRole===id));qs('#roleTitle').innerHTML=`角色配置 - ${r.name} <span class="tag green">已启用</span>`;qs('#roleName').value=r.name;qs('#rolePersonality').value=r.personality;qs('#roleAttitude').value=r.attitude;qs('#roleTags').value=r.tags;qs('#roleCatchphrase').value=r.catchphrase;qs('#rolePreviewText').value=r.preview;qs('#roleProvider').value=r.provider;qs('#roleModel').value=r.model;qs('#roleBaseUrl').value=r.base;qs('#roleTemp').value=r.temp;qs('#roleTempValue').value=r.temp;qs('#modelTemp').value=r.temp;qs('#modelTempValue').value=r.temp;qs('#roleMaxTokens').value=r.max;qs('#roleTopP').value=r.topP;qs('#rolePrompt').value=r.prompt;qs('#hostToggle').classList.toggle('on',r.isHost);qs('#previewAvatar').textContent=r.avatar;qs('#previewName').textContent=r.name;updatePromptCount();}
+    function updatePromptCount(){qs('#promptCount').textContent=qs('#rolePrompt').value.length+'/4000'}
+    function saveRole(){const r=roles[currentRole];r.name=qs('#roleName').value;r.personality=qs('#rolePersonality').value;r.attitude=qs('#roleAttitude').value;r.tags=qs('#roleTags').value;r.catchphrase=qs('#roleCatchphrase').value;r.preview=qs('#rolePreviewText').value;r.provider=qs('#roleProvider').value;r.model=qs('#roleModel').value;r.base=qs('#roleBaseUrl').value;r.temp=qs('#roleTempValue').value;r.max=qs('#roleMaxTokens').value;r.topP=qs('#roleTopP').value;r.prompt=qs('#rolePrompt').value;r.isHost=qs('#hostToggle').classList.contains('on');toast('角色配置已保存：'+r.name)}
+    qsa('[data-page]').forEach(el=>el.addEventListener('click',()=>showPage(el.dataset.page)));
+    qsa('[data-open-modal]').forEach(el=>el.addEventListener('click',()=>qs('#newDiscussionModal').classList.add('show')));
+    qsa('[data-close-modal]').forEach(el=>el.addEventListener('click',()=>qs('#newDiscussionModal').classList.remove('show')));
+    qs('#createDiscussion').addEventListener('click',()=>{currentTemplate=qs('#modalTemplate').value;syncDiscussionFromInput(qs('#modalTopic').value);qs('#newDiscussionModal').classList.remove('show');showPage('discussion');toast('已用模板「'+templates[currentTemplate].name+'」创建讨论')});
+    qsa('[data-open-drawer]').forEach(el=>el.addEventListener('click',()=>{qs('#drawerTitle').textContent=el.dataset.openDrawer+' 配置';qs('#drawerBackdrop').classList.add('show')}));
+    qsa('[data-close-drawer]').forEach(el=>el.addEventListener('click',()=>qs('#drawerBackdrop').classList.remove('show')));
+    qsa('[data-fill-topic]').forEach(el=>el.addEventListener('click',()=>{qs('#homeTopic').value=el.dataset.fillTopic;toast('已填入快速议题')}));
+    qsa('[data-select-template]').forEach(el=>el.addEventListener('click',()=>applyTemplate(el.dataset.selectTemplate)));
+    qs('#startHomeDiscussion').addEventListener('click',()=>{syncDiscussionFromInput(qs('#homeTopic').value);showPage('discussion');toast('已用模板「'+templates[currentTemplate].name+'」开始讨论')});
+    qs('#modalTemplate').addEventListener('change',e=>applyTemplate(e.target.value));
+    qs('#sideSearch').addEventListener('input',e=>{const k=e.target.value.trim().toLowerCase();qsa('.side-card').forEach(card=>{card.style.display=card.innerText.toLowerCase().includes(k)?'grid':'none'});});
+    qsa('[data-fill-message]').forEach(el=>el.addEventListener('click',()=>{qs('#messageInput').value=el.dataset.fillMessage;qs('#messageInput').focus();toast('已填入快捷指令')}));
+    qs('#composer').addEventListener('submit',e=>{e.preventDefault();const val=qs('#messageInput').value.trim();if(!val)return toast('请先输入内容');const row=document.createElement('div');row.className='msg user';row.innerHTML='<article class="bubble"><p></p><div class="time">刚刚 ✓</div></article>';row.querySelector('p').textContent=val;qs('#messageList').appendChild(row);qs('#messageInput').value='';setTimeout(()=>{const reply=document.createElement('div');reply.className='msg';reply.innerHTML='<div class="mini">主</div><article class="bubble"><div class="speaker">主持人 · Director</div><p>收到。系统已根据你的指令调整调度，下一轮将优先邀请相关角色回应，并保留总结出口。</p><div class="time">刚刚</div></article>';qs('#messageList').appendChild(reply);qs('#messageList').scrollTop=qs('#messageList').scrollHeight},450);qs('#messageList').scrollTop=qs('#messageList').scrollHeight;});
+    qsa('[data-template-tab]').forEach(btn=>btn.addEventListener('click',()=>{qsa('[data-template-tab]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');qsa('#templates .tab-panel').forEach(p=>p.classList.remove('active'));qs('#tpl-'+btn.dataset.templateTab).classList.add('active');toast('已切换模板 Tab：'+btn.textContent)}));
+    qsa('[data-template-tab-btn]').forEach(btn=>btn.addEventListener('click',()=>qs(`[data-template-tab="${btn.dataset.templateTabBtn}"]`).click()));
+    qsa('[data-edit-role]').forEach(btn=>btn.addEventListener('click',()=>{currentRole=btn.dataset.editRole;showPage('roleConfig')}));
+    qsa('[data-select-role]').forEach(btn=>btn.addEventListener('click',()=>{loadRole(btn.dataset.selectRole);toast('已选择角色：'+roles[btn.dataset.selectRole].name)}));
+    qs('#saveRole').addEventListener('click',saveRole);
+    qs('#restoreRole').addEventListener('click',()=>{loadRole(currentRole);toast('已恢复当前角色默认配置')});
+    qs('#restorePrompt').addEventListener('click',()=>{qs('#rolePrompt').value=roles[currentRole].prompt;updatePromptCount();toast('已恢复默认提示词')});
+    qs('#previewRole').addEventListener('click',()=>{qs('#previewText').textContent=`${qs('#roleName').value}（预览）：根据当前性格、提示词和模型配置，我会以「${qs('#roleAttitude').value}」方式参与讨论。建议先明确目标，再拆解约束，最后给出可执行路径。`;toast('已生成预览输出')});
+    qs('#clearPreview').addEventListener('click',()=>{qs('#previewText').textContent='预览已清空。点击「预览输出」重新生成示例发言。';toast('已清空预览')});
+    qs('#rolePrompt').addEventListener('input',updatePromptCount);
+    ['roleTemp','modelTemp'].forEach(id=>qs('#'+id).addEventListener('input',e=>qs('#'+id+'Value').value=e.target.value));
+    ['roleTempValue','modelTempValue'].forEach(id=>qs('#'+id).addEventListener('input',e=>{const rid=id.replace('Value','');qs('#'+rid).value=e.target.value}));
+    qs('#hostToggle').addEventListener('click',e=>{e.currentTarget.classList.toggle('on');toast('已切换主持人状态')});
+    qs('#useRoleModel').addEventListener('click',()=>{qs('#useRoleModel').classList.add('active');qs('#useGlobalModel').classList.remove('active');toast('已选择角色专属模型')});
+    qs('#useGlobalModel').addEventListener('click',()=>{qs('#useGlobalModel').classList.add('active');qs('#useRoleModel').classList.remove('active');toast('已选择全局默认模型')});
+    qsa('[data-model-tab]').forEach(btn=>btn.addEventListener('click',()=>{qsa('[data-model-tab]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');qsa('#models .tab-panel').forEach(p=>p.classList.remove('active'));qs('#model-'+btn.dataset.modelTab).classList.add('active');toast('已切换模型设置：'+btn.textContent)}));
+    qsa('.toggle').forEach(t=>{if(!t.id||t.id!=='hostToggle')t.addEventListener('click',()=>{t.classList.toggle('on'); if(t.id==='darkToggle'){document.body.classList.toggle('dark-mode',t.classList.contains('on'));} toast('开关已切换')})});
+    qsa('[data-action]').forEach(el=>el.addEventListener('click',()=>toast(el.dataset.action+'：已响应')));
+    qsa('button').forEach(btn=>{if(!btn.dataset.bound){btn.dataset.bound='1';btn.addEventListener('click',()=>{if(!btn.dataset.page&&!btn.dataset.action&&!btn.dataset.openModal&&!btn.dataset.closeModal&&!btn.dataset.openDrawer&&!btn.dataset.closeDrawer&&!btn.dataset.fillTopic&&!btn.dataset.fillMessage&&!btn.dataset.templateTab&&!btn.dataset.templateTabBtn&&!btn.dataset.editRole&&!btn.dataset.selectRole&&!btn.dataset.modelTab&&btn.type!=='submit'){toast((btn.textContent||'按钮').trim()+'：已点击')}})}});
+    applyTemplate('sanguo','silent');
+    loadRole('zhuge');
+  </script>
+</body>
+</html>
