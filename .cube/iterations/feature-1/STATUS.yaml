@@ -1,0 +1,49 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/1
+
+tasks:
+  - task: "Task-01：扩展 Session 类型（添加 idle 阶段、status、modelStrategyId 字段）"
+    test_file: session-types.test.ts
+    phase: done
+    started_at: "2026-05-18 18:25"
+    completed_at: "2026-05-18 18:25"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-02：新增 CreateSessionParams 和 CreateSessionResult 类型"
+    test_file: session-types.test.ts
+    phase: locked
+  - task: "Task-03：定义 ModelStrategy 数据常量"
+    test_file: model-strategies.test.ts
+    phase: locked
+  - task: "Task-04：扩展 SessionRepository 接口（添加 findRecent 方法）"
+    test_file: session-repo.test.ts
+    phase: locked
+  - task: "Task-05：实现 MockSessionRepository 内存存储与 findRecent"
+    test_file: session-repo.test.ts
+    phase: locked
+  - task: "Task-06：实现 SessionService.createSession"
+    test_file: session-service.test.ts
+    phase: locked
+  - task: "Task-07：实现 SessionService.getRecentSessions"
+    test_file: session-service.test.ts
+    phase: locked
+  - task: "Task-08：实现 POST /api/sessions 路由"
+    test_file: sessions-api.test.ts
+    phase: locked
+  - task: "Task-09：实现 GET /api/sessions/recent 路由"
+    test_file: sessions-api.test.ts
+    phase: locked
+  - task: "Task-10：实现 HomeModule 首页完整 UI"
+    test_file: home-ui.test.tsx
+    phase: locked
+  - task: "Task-11：更新现有测试兼容性（services.test.ts 构造器参数）"
+    test_file: home.test.tsx
+    phase: locked
