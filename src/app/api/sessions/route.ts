@@ -28,7 +28,18 @@ export async function POST(
 ): Promise<NextResponse<ApiResponse<CreateSessionResult>>> {
   const requestId = crypto.randomUUID()
   try {
-    const params = (await request.json()) as CreateSessionParams
+    const body = (await request.json()) as Record<string, unknown>
+    if (typeof body.topic !== 'string' || typeof body.templateId !== 'string') {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'INVALID_REQUEST', message: 'topic and templateId must be strings' }, requestId },
+        { status: 400 }
+      )
+    }
+    const params: CreateSessionParams = {
+      topic: body.topic,
+      templateId: body.templateId,
+      modelStrategyId: typeof body.modelStrategyId === 'string' ? body.modelStrategyId : undefined,
+    }
     const service = new SessionService(new MockSessionRepository(), new MockTemplateRepository())
     const data = await service.createSession(params)
     return NextResponse.json({ success: true, data, requestId })
@@ -36,7 +47,7 @@ export async function POST(
     if (err instanceof ServiceError) {
       const { code } = err
       const httpStatus = code === 'TEMPLATE_NOT_FOUND' ? 404 : 400
-      if (code === 'TOPIC_REQUIRED' || code === 'TOPIC_TOO_LONG' || code === 'TEMPLATE_NOT_FOUND') {
+      if (code === 'TOPIC_REQUIRED' || code === 'TOPIC_TOO_LONG' || code === 'TEMPLATE_NOT_FOUND' || code === 'INVALID_STRATEGY') {
         return NextResponse.json(
           { success: false, data: null, error: { code, message: err.message }, requestId },
           { status: httpStatus }

@@ -28,13 +28,19 @@ export class SessionService {
       const template = await this.templateRepo.findById(params.templateId)
       if (!template) throw new ServiceError('TEMPLATE_NOT_FOUND', `Template not found: ${params.templateId}`)
 
+      const strategyId = params.modelStrategyId ?? DEFAULT_STRATEGY_ID
+      const VALID_STRATEGY_IDS = new Set(['smart', 'quality', 'cost'])
+      if (!VALID_STRATEGY_IDS.has(strategyId)) {
+        throw new ServiceError('INVALID_STRATEGY', `Invalid model strategy: ${strategyId}`)
+      }
+
       const now = Date.now()
       const session = await this.repo.save({
         id: '',
         templateId: params.templateId,
         topic,
         status: 'active',
-        modelStrategyId: params.modelStrategyId ?? DEFAULT_STRATEGY_ID,
+        modelStrategyId: strategyId,
         state: { stage: 'idle', turnCount: 0, lastSpeakerId: null },
         messages: [],
         createdAt: now,
