@@ -24,28 +24,33 @@ export class SessionService {
     if (!topic) throw new ServiceError('TOPIC_REQUIRED', 'Topic is required')
     if (topic.length > 100) throw new ServiceError('TOPIC_TOO_LONG', 'Topic must be 100 chars or less')
 
-    const template = await this.templateRepo.findById(params.templateId)
-    if (!template) throw new ServiceError('TEMPLATE_NOT_FOUND', `Template not found: ${params.templateId}`)
+    try {
+      const template = await this.templateRepo.findById(params.templateId)
+      if (!template) throw new ServiceError('TEMPLATE_NOT_FOUND', `Template not found: ${params.templateId}`)
 
-    const now = Date.now()
-    const session = await this.repo.save({
-      id: '',
-      templateId: params.templateId,
-      topic,
-      status: 'active',
-      modelStrategyId: params.modelStrategyId ?? DEFAULT_STRATEGY_ID,
-      state: { stage: 'idle', turnCount: 0, lastSpeakerId: null },
-      messages: [],
-      createdAt: now,
-      updatedAt: now,
-    })
+      const now = Date.now()
+      const session = await this.repo.save({
+        id: '',
+        templateId: params.templateId,
+        topic,
+        status: 'active',
+        modelStrategyId: params.modelStrategyId ?? DEFAULT_STRATEGY_ID,
+        state: { stage: 'idle', turnCount: 0, lastSpeakerId: null },
+        messages: [],
+        createdAt: now,
+        updatedAt: now,
+      })
 
-    return {
-      sessionId: session.id,
-      topic: session.topic,
-      template: { id: template.id, name: template.name },
-      status: 'active',
-      createdAt: session.createdAt,
+      return {
+        sessionId: session.id,
+        topic: session.topic,
+        template: { id: template.id, name: template.name },
+        status: 'active',
+        createdAt: session.createdAt,
+      }
+    } catch (err) {
+      if (err instanceof ServiceError) throw err
+      throw new ServiceError('INTERNAL_ERROR', 'Failed to create session', err)
     }
   }
 
