@@ -61,13 +61,29 @@ tasks:
     test_total: 14
   - task: "Task-08：实现 POST /api/sessions 路由"
     test_file: sessions-api.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:28"
+    completed_at: "2026-05-18 18:28"
+    test_passed: 10
+    test_total: 10
   - task: "Task-09：实现 GET /api/sessions/recent 路由"
     test_file: sessions-api.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:28"
+    completed_at: "2026-05-18 18:28"
+    test_passed: 10
+    test_total: 10
   - task: "Task-10：实现 HomeModule 首页完整 UI"
     test_file: home-ui.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:28"
+    completed_at: "2026-05-18 18:28"
+    test_passed: 12
+    test_total: 12
   - task: "Task-11：更新现有测试兼容性（services.test.ts 构造器参数）"
     test_file: home.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:28"
+    completed_at: "2026-05-18 18:28"
+    test_passed: 1
+    test_total: 1
