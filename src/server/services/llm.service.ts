@@ -14,8 +14,4 @@ export class LlmService {
       throw new ServiceError('LLM_PROVIDERS_FAILED', 'Failed to list LLM providers', err)
     }
   }
-
-  getConfig(): AppConfig['llm'] {
-    return this.config.llm
-  }
 }

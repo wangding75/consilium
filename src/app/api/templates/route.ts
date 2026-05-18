@@ -13,7 +13,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<Template[]>>> {
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
     const code = err instanceof ServiceError ? err.code : 'INTERNAL_ERROR'
-    const message = err instanceof Error ? err.message : 'Unknown error'
+    const message = err instanceof ServiceError ? err.message : 'An unexpected error occurred'
     return NextResponse.json(
       { success: false, data: null, error: { code, message }, requestId },
       { status: 500 }

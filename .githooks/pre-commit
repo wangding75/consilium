@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # pre-commit hook — cube stage-gate workflow
 #
-# Blocks commits that modify locked test directories (test code and test resources).
+# Blocks commits that modify locked test files (test code and test resources).
+# Uses test_file_pattern from workflow.yaml to match only test files, not all
+# files in test_dir (supports co-located test setups like TypeScript/Next.js).
 #
 # Install: git config core.hooksPath .githooks
 
@@ -14,35 +16,28 @@ SAFE_BRANCH="${BRANCH//\//-}"
 STATE_FILE="$REPO_ROOT/.cube/iterations/$SAFE_BRANCH/state.yaml"
 WORKFLOW_FILE="$REPO_ROOT/.cube/config/workflow.yaml"
 
-# Convert glob pattern to a regex (only * and ? are treated as wildcards)
-glob_to_regex() {
-  local pattern="$1"
-  echo "$pattern" \
-    | sed -E 's/[.+^${}()|[\]\\]/\\&/g' \
-    | sed -E 's/\\\*/[^/]*/g' \
-    | sed -E 's/\\\?/[^/]/g'
-}
-
+# Returns 0 (true) if the basename of FILE matches the glob PATTERN
 file_matches_pattern() {
   local file="$1"
   local pattern="$2"
   [ -z "$pattern" ] && return 0  # no pattern = match all
-  local regex
-  regex="$(glob_to_regex "$pattern")"
-  local basename
-  basename="$(basename "$file")"
-  echo "$basename" | grep -qE "^${regex}$"
+  local base
+  base="$(basename "$file")"
+  case "$base" in
+    $pattern) return 0 ;;
+    *) return 1 ;;
+  esac
 }
 
 get_state_test_pattern() {
-  [ -f "$WORKFLOW_FILE" ] || echo ""
+  [ -f "$WORKFLOW_FILE" ] || { echo ""; return; }
   grep -E '^[[:space:]]*test_file_pattern:' "$WORKFLOW_FILE" \
     | head -1 \
-    | sed -E 's/^[[:space:]]*test_file_pattern:[[:space:]]*//g' \
-    | sed -E 's/[[:space:]]+#.*$//g' \
-    | sed -E 's/^"(.*)"$/\1/g' \
-    | sed -E "s/^'(.*)'$/\\1/g" \
-    | xargs
+    | sed 's/^[[:space:]]*test_file_pattern:[[:space:]]*//' \
+    | sed 's/[[:space:]]*#.*$//' \
+    | sed 's/^"\(.*\)"$/\1/' \
+    | sed "s/^'\(.*\)'$/\1/" \
+    | xargs 2>/dev/null || echo ""
 }
 
 get_locked_dirs_from_state() {
@@ -56,26 +51,25 @@ get_locked_dirs_from_state() {
   esac
 
   grep -E '^[[:space:]]*(test_dir|test_resource_dir):' "$WORKFLOW_FILE" \
-    | sed -E 's/^[[:space:]]*(test_dir|test_resource_dir):[[:space:]]*//g' \
-    | sed -E 's/[[:space:]]+#.*$//g' \
-    | sed -E 's/^"(.*)"$/\1/g' \
-    | sed -E "s/^'(.*)'$/\\1/g" \
+    | sed 's/^[[:space:]]*\(test_dir\|test_resource_dir\):[[:space:]]*//' \
+    | sed 's/[[:space:]]*#.*$//' \
+    | sed 's/^"\(.*\)"$/\1/' \
+    | sed "s/^'\(.*\)'$/\1/" \
     | sed '/^[[:space:]]*$/d'
 }
 
 # ---- Check: Locked test files and test resources ----
 STAGED=$(git diff --cached --name-only)
 BLOCKED=""
-LOCKED_DIRS=""
 
+# Check files from .git/locks/*.lock entries (set by cube-lock)
 if [ -d "$LOCK_DIR" ]; then
   for lock_file in "$LOCK_DIR"/*.lock; do
     [ -f "$lock_file" ] || continue
     TESTS_DIR=$(grep "^tests_dir=" "$lock_file" | cut -d= -f2-)
     [ -z "$TESTS_DIR" ] && continue
     TESTS_DIR="${TESTS_DIR%/}"
-    TESTS_DIR="${TESTS_DIR//\\//}"
-    LOCK_PATTERN=$(grep "^pattern=" "$lock_file" | cut -d= -f2-)
+    LOCK_PATTERN=$(grep "^file_pattern=" "$lock_file" | cut -d= -f2-)
     for staged_file in $STAGED; do
       case "$staged_file" in
         "$TESTS_DIR"|"$TESTS_DIR"/*)
@@ -88,13 +82,13 @@ if [ -d "$LOCK_DIR" ]; then
   done
 fi
 
+# Check files from state.yaml (active during 04-development and 05-testing)
 STATE_LOCKED_DIRS="$(get_locked_dirs_from_state)"
 STATE_TEST_PATTERN="$(get_state_test_pattern)"
 
 if [ -n "$STATE_LOCKED_DIRS" ]; then
   for tests_dir in $STATE_LOCKED_DIRS; do
     tests_dir="${tests_dir%/}"
-    tests_dir="${tests_dir//\\//}"
     [ -z "$tests_dir" ] && continue
     for staged_file in $STAGED; do
       case "$staged_file" in
@@ -109,9 +103,9 @@ if [ -n "$STATE_LOCKED_DIRS" ]; then
 fi
 
 if [ -n "$BLOCKED" ]; then
-    echo "ERROR: Commit blocked — modifications to locked test directories"
+    echo "ERROR: Commit blocked — modifications to locked test files"
     echo ""
-    echo "Locked test files and test resources cannot be modified directly. Blocked files:"
+    echo "Locked test files cannot be modified directly. Blocked files:"
     for f in $BLOCKED; do
       echo "   - $f"
     done

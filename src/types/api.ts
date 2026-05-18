@@ -4,9 +4,6 @@ export interface ApiError {
   details?: unknown
 }
 
-export interface ApiResponse<T> {
-  success: boolean
-  data: T | null
-  error?: ApiError
-  requestId: string
-}
+export type ApiResponse<T> =
+  | { success: true; data: T; error?: never; requestId: string }
+  | { success: false; data: null; error: ApiError; requestId: string }

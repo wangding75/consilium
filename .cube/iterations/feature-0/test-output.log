@@ -2,10 +2,11 @@
 
  RUN  v2.1.9 /home/wangding/git/consilium
 
- ✓ src/engine/engine.test.ts (2 tests) 2ms
+ ✓ src/app/api/health.test.ts (3 tests) 8ms
+ ✓ src/app/api/routes.test.ts (5 tests) 8ms
 
- Test Files  1 passed (1)
-      Tests  2 passed (2)
-   Start at  16:22:05
-   Duration  917ms (transform 49ms, setup 0ms, collect 47ms, tests 2ms, environment 392ms, prepare 259ms)
+ Test Files  2 passed (2)
+      Tests  8 passed (8)
+   Start at  16:25:22
+   Duration  977ms (transform 163ms, setup 0ms, collect 228ms, tests 16ms, environment 797ms, prepare 500ms)
 
