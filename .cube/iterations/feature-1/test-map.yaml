@@ -67,3 +67,10 @@ type_tests:
     test_file: home-ui.test.tsx
     covers:
       - "Task-10：实现 HomeModule 首页完整 UI"
+
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: sessions-api.test.ts
+    covers:
+      - "Task-08：实现 POST /api/sessions 路由"
+      - "Task-09：实现 GET /api/sessions/recent 路由"
