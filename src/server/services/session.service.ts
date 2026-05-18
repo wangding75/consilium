@@ -3,6 +3,7 @@ import type { CreateSessionParams, CreateSessionResult } from '@/types/api'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
 import { ServiceError } from '@/server/errors'
+import { DEFAULT_STRATEGY_ID } from '@/data/model-strategies'
 
 export class SessionService {
   constructor(
@@ -18,13 +19,41 @@ export class SessionService {
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async createSession(_params: CreateSessionParams): Promise<CreateSessionResult> {
-    throw new ServiceError('NOT_IMPLEMENTED', 'createSession not implemented')
+  async createSession(params: CreateSessionParams): Promise<CreateSessionResult> {
+    const topic = params.topic?.trim()
+    if (!topic) throw new ServiceError('TOPIC_REQUIRED', 'Topic is required')
+    if (topic.length > 100) throw new ServiceError('TOPIC_TOO_LONG', 'Topic must be 100 chars or less')
+
+    const template = await this.templateRepo.findById(params.templateId)
+    if (!template) throw new ServiceError('TEMPLATE_NOT_FOUND', `Template not found: ${params.templateId}`)
+
+    const now = Date.now()
+    const session = await this.repo.save({
+      id: '',
+      templateId: params.templateId,
+      topic,
+      status: 'active',
+      modelStrategyId: params.modelStrategyId ?? DEFAULT_STRATEGY_ID,
+      state: { stage: 'idle', turnCount: 0, lastSpeakerId: null },
+      messages: [],
+      createdAt: now,
+      updatedAt: now,
+    })
+
+    return {
+      sessionId: session.id,
+      topic: session.topic,
+      template: { id: template.id, name: template.name },
+      status: 'active',
+      createdAt: session.createdAt,
+    }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async getRecentSessions(_limit?: number): Promise<Session[]> {
-    throw new ServiceError('NOT_IMPLEMENTED', 'getRecentSessions not implemented')
+  async getRecentSessions(limit?: number): Promise<Session[]> {
+    try {
+      return await this.repo.findRecent(limit)
+    } catch (err) {
+      throw new ServiceError('INTERNAL_ERROR', 'Failed to fetch recent sessions', err)
+    }
   }
 }

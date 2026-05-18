@@ -47,10 +47,18 @@ tasks:
     test_total: 7
   - task: "Task-06：实现 SessionService.createSession"
     test_file: session-service.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:27"
+    completed_at: "2026-05-18 18:27"
+    test_passed: 14
+    test_total: 14
   - task: "Task-07：实现 SessionService.getRecentSessions"
     test_file: session-service.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-18 18:27"
+    completed_at: "2026-05-18 18:27"
+    test_passed: 14
+    test_total: 14
   - task: "Task-08：实现 POST /api/sessions 路由"
     test_file: sessions-api.test.ts
     phase: locked
