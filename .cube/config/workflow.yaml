@@ -21,7 +21,7 @@ stages:
     name: Testing
 
 paths:
-  source_dir: src
+  source_dir: .
   test_dir: src
 
 language_config:

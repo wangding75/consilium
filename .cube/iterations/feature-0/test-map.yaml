@@ -1,0 +1,64 @@
+test_map:
+  - task: "Task-01：初始化 Next.js 14 + TypeScript strict + Tailwind CSS + Vitest 项目"
+    test_file: src/project.test.ts
+    test_cases: 2
+
+  - task: "Task-02：定义核心领域类型（src/types/index.ts）"
+    test_file: src/types/domain.test.ts
+    test_cases: 2
+
+  - task: "Task-03：定义 API 响应结构类型（src/types/api.ts）和配置类型（src/config/types.ts）"
+    test_file: src/types/api.test.ts
+    test_cases: 2
+
+  - task: "Task-04：创建 ServiceError 基类（src/server/errors.ts）"
+    test_file: src/server/errors.test.ts
+    test_cases: 2
+
+  - task: "Task-05：创建 App Shell 布局组件（src/app/layout.tsx + src/app/globals.css + src/components/layout/AppShell.tsx）"
+    test_file: src/components/layout/AppShell.test.tsx
+    test_cases: 1
+
+  - task: "Task-06：创建底部导航组件（src/components/mobile/BottomNav.tsx）"
+    test_file: src/components/mobile/BottomNav.test.tsx
+    test_cases: 1
+
+  - task: "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+    test_file: src/modules/home/home.test.tsx
+    test_cases: 1
+
+  - task: "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+    test_file: src/components/ui/button.test.tsx
+    test_cases: 1
+
+  - task: "Task-09：创建 GET /api/health 路由（src/app/api/health/route.ts + src/server/services/health.service.ts）"
+    test_file: src/app/api/health.test.ts
+    test_cases: 3
+
+  - task: "Task-10：创建 Repository 接口和 Mock 实现（src/server/repositories/）"
+    test_file: src/server/repositories/repositories.test.ts
+    test_cases: 3
+
+  - task: "Task-11：创建 Service 层骨架（src/server/services/）"
+    test_file: src/server/services/services.test.ts
+    test_cases: 4
+
+  - task: "Task-12：创建其余 4 个 API 路由骨架（templates / sessions / discussions / llm/providers）"
+    test_file: src/app/api/routes.test.ts
+    test_cases: 5
+
+  - task: "Task-13：创建引擎模块骨架（src/engine/）"
+    test_file: src/engine/engine.test.ts
+    test_cases: 2
+
+  - task: "Task-14：创建 LLM Provider Adapter 骨架（src/llm/providers/base.provider.ts）"
+    test_file: src/llm/providers/base.provider.test.ts
+    test_cases: 1
+
+  - task: "Task-15：创建 Mock 三国军师团模板数据（src/data/templates/three-kingdoms.ts）"
+    test_file: src/data/templates/three-kingdoms.test.ts
+    test_cases: 2
+
+  - task: "Task-16：创建测试工具函数（src/tests/utils/mock-factories.ts）"
+    test_file: src/tests/utils/mock-factories.test.ts
+    test_cases: 2
