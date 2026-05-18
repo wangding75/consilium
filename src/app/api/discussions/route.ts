@@ -12,7 +12,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<Discussion[]>>> {
     const data = await service.listDiscussions()
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
-    const code = err instanceof ServiceError ? err.code : 'INTERNAL_ERROR'
+    const code = 'INTERNAL_ERROR'
     const message = err instanceof ServiceError ? err.message : 'An unexpected error occurred'
     return NextResponse.json(
       { success: false, data: null, error: { code, message }, requestId },
