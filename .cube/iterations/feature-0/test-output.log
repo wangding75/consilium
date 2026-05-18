@@ -1,0 +1,111 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /home/wangding/git/consilium
+      Coverage enabled with v8
+
+ ✓ src/types/domain.test.ts (2 tests) 4ms
+ ✓ src/data/templates/three-kingdoms.test.ts (2 tests) 4ms
+ ✓ src/server/errors.test.ts (2 tests) 6ms
+ ✓ src/tests/utils/mock-factories.test.ts (2 tests) 8ms
+ ✓ src/engine/engine.test.ts (2 tests) 7ms
+ ✓ src/server/repositories/repositories.test.ts (3 tests) 7ms
+ ✓ src/app/api/health.test.ts (3 tests) 15ms
+ ✓ src/server/services/services.test.ts (4 tests) 9ms
+ ✓ src/app/api/routes.test.ts (5 tests) 18ms
+ ✓ src/components/layout/AppShell.test.tsx (1 test) 64ms
+ ✓ src/components/mobile/BottomNav.test.tsx (1 test) 54ms
+ ✓ src/project.test.ts (2 tests) 6ms
+ ✓ src/types/api.test.ts (2 tests) 4ms
+ ✓ src/llm/providers/base.provider.test.ts (1 test) 2ms
+ ✓ src/modules/home/home.test.tsx (1 test) 28ms
+ ✓ src/components/ui/button.test.tsx (1 test) 91ms
+
+ Test Files  16 passed (16)
+      Tests  34 passed (34)
+   Start at  16:31:56
+   Duration  3.07s (transform 1.36s, setup 0ms, collect 2.89s, tests 326ms, environment 12.56s, prepare 2.10s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   51.25 |    63.75 |   64.06 |   51.25 |                   
+ app               |       0 |        0 |       0 |       0 |                   
+  layout.tsx       |       0 |        0 |       0 |       0 | 1-19              
+  page.tsx         |       0 |        0 |       0 |       0 | 1-5               
+ ...pi/discussions |   56.25 |       50 |     100 |   56.25 |                   
+  route.ts         |   56.25 |       50 |     100 |   56.25 | 15-21             
+ app/api/health    |     100 |       60 |     100 |     100 |                   
+  route.ts         |     100 |       60 |     100 |     100 | 15-16             
+ .../llm/providers |   56.25 |       50 |     100 |   56.25 |                   
+  route.ts         |   56.25 |       50 |     100 |   56.25 | 14-20             
+ app/api/sessions  |   56.25 |       50 |     100 |   56.25 |                   
+  route.ts         |   56.25 |       50 |     100 |   56.25 | 15-21             
+ app/api/templates |     100 |       50 |     100 |     100 |                   
+  route.ts         |     100 |       50 |     100 |     100 | 15-16             
+ ...on/[sessionId] |       0 |        0 |       0 |       0 |                   
+  page.tsx         |       0 |        0 |       0 |       0 | 1-9               
+ app/sessions      |       0 |        0 |       0 |       0 |                   
+  page.tsx         |       0 |        0 |       0 |       0 | 1-5               
+ app/settings      |       0 |        0 |       0 |       0 |                   
+  page.tsx         |       0 |        0 |       0 |       0 | 1-5               
+ app/templates     |       0 |        0 |       0 |       0 |                   
+  page.tsx         |       0 |        0 |       0 |       0 | 1-5               
+ components/layout |     100 |      100 |     100 |     100 |                   
+  AppShell.tsx     |     100 |      100 |     100 |     100 |                   
+ components/mobile |     100 |       90 |     100 |     100 |                   
+  BottomNav.tsx    |     100 |       90 |     100 |     100 | 25                
+ components/ui     |   13.19 |     12.5 |    12.5 |   13.19 |                   
+  Button.tsx       |     100 |      100 |     100 |     100 |                   
+  Card.tsx         |       0 |        0 |       0 |       0 | 1-20              
+  Input.tsx        |       0 |        0 |       0 |       0 | 1-22              
+  Modal.tsx        |       0 |        0 |       0 |       0 | 1-41              
+  Sheet.tsx        |       0 |        0 |       0 |       0 | 1-41              
+  Tag.tsx          |       0 |        0 |       0 |       0 | 1-25              
+  Textarea.tsx     |       0 |        0 |       0 |       0 | 1-21              
+  Toast.tsx        |       0 |        0 |       0 |       0 | 1-41              
+ config            |     100 |      100 |     100 |     100 |                   
+  index.ts         |     100 |      100 |     100 |     100 |                   
+  types.ts         |       0 |        0 |       0 |       0 |                   
+ data/templates    |     100 |      100 |     100 |     100 |                   
+  ...e-kingdoms.ts |     100 |      100 |     100 |     100 |                   
+ engine            |   17.39 |      100 |     100 |   17.39 |                   
+  director.ts      |       0 |      100 |     100 |       0 | 9-13              
+  events.ts        |       0 |      100 |     100 |       0 | 13-17             
+  intent.ts        |       0 |      100 |     100 |       0 | 14-18             
+  orchestrator.ts  |     100 |      100 |     100 |     100 |                   
+  rhythm.ts        |       0 |      100 |     100 |       0 | 8-18              
+  scheduler.ts     |       0 |      100 |     100 |       0 | 7-11              
+  state-machine.ts |       0 |      100 |     100 |       0 | 8-16              
+ llm/providers     |       0 |        0 |       0 |       0 |                   
+  base.provider.ts |       0 |        0 |       0 |       0 |                   
+ ...les/discussion |       0 |        0 |       0 |       0 |                   
+  index.tsx        |       0 |        0 |       0 |       0 | 1-26              
+ modules/home      |     100 |      100 |     100 |     100 |                   
+  index.tsx        |     100 |      100 |     100 |     100 |                   
+ modules/sessions  |       0 |        0 |       0 |       0 |                   
+  index.tsx        |       0 |        0 |       0 |       0 | 1-19              
+ modules/settings  |       0 |        0 |       0 |       0 |                   
+  index.tsx        |       0 |        0 |       0 |       0 | 1-25              
+ modules/templates |       0 |        0 |       0 |       0 |                   
+  index.tsx        |       0 |        0 |       0 |       0 | 1-22              
+ server            |     100 |      100 |     100 |     100 |                   
+  errors.ts        |     100 |      100 |     100 |     100 |                   
+ ...r/repositories |       0 |        0 |       0 |       0 |                   
+  ...repository.ts |       0 |        0 |       0 |       0 |                   
+  ...repository.ts |       0 |        0 |       0 |       0 |                   
+  ...repository.ts |       0 |        0 |       0 |       0 |                   
+ ...ositories/mock |   70.96 |      100 |   44.44 |   70.96 |                   
+  ...repository.ts |      75 |      100 |      50 |      75 | 10-11             
+  ...repository.ts |   61.53 |      100 |      25 |   61.53 | 10-11,14-15,19    
+  ...repository.ts |      80 |      100 |   66.66 |      80 | 13-14             
+ server/services   |   78.12 |    71.42 |    90.9 |   78.12 |                   
+  ...on.service.ts |   81.81 |    66.66 |     100 |   81.81 | 12-13             
+  ...th.service.ts |     100 |      100 |     100 |     100 |                   
+  llm.service.ts   |   85.71 |    66.66 |     100 |   85.71 | 14-15             
+  ...on.service.ts |   81.81 |    66.66 |     100 |   81.81 | 12-13             
+  ...te.service.ts |   55.55 |    66.66 |   66.66 |   55.55 | 12-13,17-22       
+ types             |       0 |        0 |       0 |       0 |                   
+  api.ts           |       0 |        0 |       0 |       0 |                   
+  index.ts         |       0 |        0 |       0 |       0 |                   
+-------------------|---------|----------|---------|---------|-------------------

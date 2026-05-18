@@ -1,0 +1,215 @@
+task: feature/0
+generated: "2026-05-18"
+
+files:
+  # Task-01: Project initialization
+  - path: package.json
+    tasks:
+      - "Task-01：初始化 Next.js 14 + TypeScript strict + Tailwind CSS + Vitest 项目"
+  - path: tsconfig.json
+    tasks:
+      - "Task-01：初始化 Next.js 14 + TypeScript strict + Tailwind CSS + Vitest 项目"
+  - path: next.config.ts
+    tasks:
+      - "Task-01：初始化 Next.js 14 + TypeScript strict + Tailwind CSS + Vitest 项目"
+  - path: vitest.config.ts
+    tasks:
+      - "Task-01：初始化 Next.js 14 + TypeScript strict + Tailwind CSS + Vitest 项目"
+  - path: tailwind.config.ts
+    tasks:
+      - "Task-01：初始化 Next.js 14 + TypeScript strict + Tailwind CSS + Vitest 项目"
+  - path: postcss.config.js
+    tasks:
+      - "Task-01：初始化 Next.js 14 + TypeScript strict + Tailwind CSS + Vitest 项目"
+  - path: .env.local.example
+    tasks:
+      - "Task-01：初始化 Next.js 14 + TypeScript strict + Tailwind CSS + Vitest 项目"
+
+  # Task-02: Core domain types
+  - path: src/types/index.ts
+    tasks:
+      - "Task-02：定义核心领域类型（src/types/index.ts）"
+
+  # Task-03: API response types + config
+  - path: src/types/api.ts
+    tasks:
+      - "Task-03：定义 API 响应结构类型（src/types/api.ts）和配置类型（src/config/types.ts）"
+  - path: src/config/types.ts
+    tasks:
+      - "Task-03：定义 API 响应结构类型（src/types/api.ts）和配置类型（src/config/types.ts）"
+  - path: src/config/index.ts
+    tasks:
+      - "Task-03：定义 API 响应结构类型（src/types/api.ts）和配置类型（src/config/types.ts）"
+
+  # Task-04: ServiceError base class
+  - path: src/server/errors.ts
+    tasks:
+      - "Task-04：创建 ServiceError 基类（src/server/errors.ts）"
+
+  # Task-05: App Shell layout
+  - path: src/app/globals.css
+    tasks:
+      - "Task-05：创建 App Shell 布局组件（src/app/layout.tsx + src/app/globals.css + src/components/layout/AppShell.tsx）"
+  - path: src/app/layout.tsx
+    tasks:
+      - "Task-05：创建 App Shell 布局组件（src/app/layout.tsx + src/app/globals.css + src/components/layout/AppShell.tsx）"
+  - path: src/components/layout/AppShell.tsx
+    tasks:
+      - "Task-05：创建 App Shell 布局组件（src/app/layout.tsx + src/app/globals.css + src/components/layout/AppShell.tsx）"
+
+  # Task-06: Bottom navigation
+  - path: src/components/mobile/BottomNav.tsx
+    tasks:
+      - "Task-06：创建底部导航组件（src/components/mobile/BottomNav.tsx）"
+
+  # Task-07: 5 page skeletons + modules
+  - path: src/app/page.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/app/discussion/[sessionId]/page.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/app/sessions/page.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/app/templates/page.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/app/settings/page.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/modules/home/index.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/modules/discussion/index.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/modules/sessions/index.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/modules/templates/index.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+  - path: src/modules/settings/index.tsx
+    tasks:
+      - "Task-07：创建 5 个主页面骨架（src/app/*/page.tsx + src/modules/*/index.tsx）"
+
+  # Task-08: UI component skeletons
+  - path: src/components/ui/Button.tsx
+    tasks:
+      - "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+  - path: src/components/ui/Input.tsx
+    tasks:
+      - "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+  - path: src/components/ui/Textarea.tsx
+    tasks:
+      - "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+  - path: src/components/ui/Card.tsx
+    tasks:
+      - "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+  - path: src/components/ui/Tag.tsx
+    tasks:
+      - "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+  - path: src/components/ui/Sheet.tsx
+    tasks:
+      - "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+  - path: src/components/ui/Modal.tsx
+    tasks:
+      - "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+  - path: src/components/ui/Toast.tsx
+    tasks:
+      - "Task-08：创建基础 UI 组件骨架（src/components/ui/）"
+
+  # Task-09: GET /api/health
+  - path: src/app/api/health/route.ts
+    tasks:
+      - "Task-09：创建 GET /api/health 路由（src/app/api/health/route.ts + src/server/services/health.service.ts）"
+  - path: src/server/services/health.service.ts
+    tasks:
+      - "Task-09：创建 GET /api/health 路由（src/app/api/health/route.ts + src/server/services/health.service.ts）"
+
+  # Task-10: Repository interfaces + mock implementations
+  - path: src/server/repositories/template.repository.ts
+    tasks:
+      - "Task-10：创建 Repository 接口和 Mock 实现（src/server/repositories/）"
+  - path: src/server/repositories/session.repository.ts
+    tasks:
+      - "Task-10：创建 Repository 接口和 Mock 实现（src/server/repositories/）"
+  - path: src/server/repositories/discussion.repository.ts
+    tasks:
+      - "Task-10：创建 Repository 接口和 Mock 实现（src/server/repositories/）"
+  - path: src/server/repositories/mock/mock-template.repository.ts
+    tasks:
+      - "Task-10：创建 Repository 接口和 Mock 实现（src/server/repositories/）"
+  - path: src/server/repositories/mock/mock-session.repository.ts
+    tasks:
+      - "Task-10：创建 Repository 接口和 Mock 实现（src/server/repositories/）"
+  - path: src/server/repositories/mock/mock-discussion.repository.ts
+    tasks:
+      - "Task-10：创建 Repository 接口和 Mock 实现（src/server/repositories/）"
+
+  # Task-11: Service layer skeletons
+  - path: src/server/services/template.service.ts
+    tasks:
+      - "Task-11：创建 Service 层骨架（src/server/services/）"
+  - path: src/server/services/session.service.ts
+    tasks:
+      - "Task-11：创建 Service 层骨架（src/server/services/）"
+  - path: src/server/services/discussion.service.ts
+    tasks:
+      - "Task-11：创建 Service 层骨架（src/server/services/）"
+  - path: src/server/services/llm.service.ts
+    tasks:
+      - "Task-11：创建 Service 层骨架（src/server/services/）"
+
+  # Task-12: API route skeletons
+  - path: src/app/api/templates/route.ts
+    tasks:
+      - "Task-12：创建其余 4 个 API 路由骨架（templates / sessions / discussions / llm/providers）"
+  - path: src/app/api/sessions/route.ts
+    tasks:
+      - "Task-12：创建其余 4 个 API 路由骨架（templates / sessions / discussions / llm/providers）"
+  - path: src/app/api/discussions/route.ts
+    tasks:
+      - "Task-12：创建其余 4 个 API 路由骨架（templates / sessions / discussions / llm/providers）"
+  - path: src/app/api/llm/providers/route.ts
+    tasks:
+      - "Task-12：创建其余 4 个 API 路由骨架（templates / sessions / discussions / llm/providers）"
+
+  # Task-13: Engine module skeletons
+  - path: src/engine/orchestrator.ts
+    tasks:
+      - "Task-13：创建引擎模块骨架（src/engine/）"
+  - path: src/engine/scheduler.ts
+    tasks:
+      - "Task-13：创建引擎模块骨架（src/engine/）"
+  - path: src/engine/state-machine.ts
+    tasks:
+      - "Task-13：创建引擎模块骨架（src/engine/）"
+  - path: src/engine/director.ts
+    tasks:
+      - "Task-13：创建引擎模块骨架（src/engine/）"
+  - path: src/engine/intent.ts
+    tasks:
+      - "Task-13：创建引擎模块骨架（src/engine/）"
+  - path: src/engine/events.ts
+    tasks:
+      - "Task-13：创建引擎模块骨架（src/engine/）"
+  - path: src/engine/rhythm.ts
+    tasks:
+      - "Task-13：创建引擎模块骨架（src/engine/）"
+
+  # Task-14: LLM provider adapter
+  - path: src/llm/providers/base.provider.ts
+    tasks:
+      - "Task-14：创建 LLM Provider Adapter 骨架（src/llm/providers/base.provider.ts）"
+
+  # Task-15: Mock three-kingdoms template data
+  - path: src/data/templates/three-kingdoms.ts
+    tasks:
+      - "Task-15：创建 Mock 三国军师团模板数据（src/data/templates/three-kingdoms.ts）"
+
+  # Task-16: Test utility functions
+  - path: src/tests/utils/mock-factories.ts
+    tasks:
+      - "Task-16：创建测试工具函数（src/tests/utils/mock-factories.ts）"
