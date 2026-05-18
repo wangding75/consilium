@@ -1,0 +1,1067 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>智囊团 · 移动端交互原型</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --phone: #ffffff;
+      --text: #111827;
+      --muted: #6b7280;
+      --subtle: #94a3b8;
+      --line: #e5eaf2;
+      --soft: #f6f8fb;
+      --primary: #1062ff;
+      --primary-2: #eaf2ff;
+      --green: #16a34a;
+      --green-bg: #eaf9ef;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --purple: #7c3aed;
+      --radius: 16px;
+      --shadow: 0 24px 80px rgba(15, 23, 42, .14);
+      --nav-h: 72px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 18% 10%, rgba(16, 98, 255, .12), transparent 30%),
+        radial-gradient(circle at 80% 18%, rgba(16, 185, 129, .10), transparent 26%),
+        linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      display: grid;
+      place-items: center;
+      padding: 22px;
+    }
+
+    .prototype-stage {
+      width: min(100%, 430px);
+      display: grid;
+      gap: 12px;
+    }
+
+    .stage-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      color: #263142;
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: .2px;
+    }
+    .stage-title span { color: var(--muted); font-weight: 500; }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      max-width: calc(100vw - 28px);
+      max-height: calc(100vh - 76px);
+      min-height: 720px;
+      margin: 0 auto;
+      border-radius: 30px;
+      overflow: hidden;
+      background: var(--phone);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(148, 163, 184, .28);
+      position: relative;
+    }
+
+    .screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .statusbar {
+      height: 40px;
+      padding: 12px 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 700;
+      color: #050816;
+      flex: 0 0 auto;
+    }
+    .status-icons { display: flex; align-items: center; gap: 6px; }
+    .signal { width: 18px; height: 12px; display: grid; grid-template-columns: repeat(4, 3px); gap: 2px; align-items: end; }
+    .signal i { display: block; width: 3px; background: #111; border-radius: 3px; }
+    .signal i:nth-child(1){ height: 4px; } .signal i:nth-child(2){ height: 6px; } .signal i:nth-child(3){ height: 9px; } .signal i:nth-child(4){ height: 12px; }
+    .wifi { width: 15px; height: 11px; position: relative; }
+    .wifi:before, .wifi:after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); border: 2px solid #111; border-color: #111 transparent transparent transparent; border-radius: 999px; }
+    .wifi:before { width: 14px; height: 14px; top: 0; }
+    .wifi:after { width: 8px; height: 8px; top: 5px; }
+    .battery { width: 23px; height: 12px; border: 2px solid #111; border-radius: 4px; position: relative; }
+    .battery:before { content: ""; position: absolute; right: -4px; top: 3px; width: 2px; height: 5px; background: #111; border-radius: 0 2px 2px 0; }
+    .battery:after { content: ""; position: absolute; left: 2px; top: 2px; bottom: 2px; width: 14px; border-radius: 2px; background: #111; }
+
+    .app-body {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      background: #fff;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0 0 calc(var(--nav-h) + var(--safe-bottom)) 0;
+      display: none;
+      overflow: hidden;
+      background: #fff;
+    }
+    .page.active { display: flex; flex-direction: column; }
+
+    .page-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px 18px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .page-content::-webkit-scrollbar { display: none; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 2px 0 12px;
+      min-height: 48px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--primary);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 800;
+      box-shadow: 0 10px 20px rgba(16, 98, 255, .22);
+    }
+    .brand-title { font-size: 18px; font-weight: 750; line-height: 1; }
+    .brand-sub { margin-top: 3px; font-size: 11px; color: var(--muted); }
+    .icon-row { display: flex; align-items: center; gap: 8px; }
+    .icon-btn, .circle-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #111827;
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      display: inline-grid;
+      place-items: center;
+      cursor: pointer;
+      transition: .15s ease;
+      font-size: 15px;
+      flex: 0 0 auto;
+    }
+    .icon-btn:active, .circle-btn:active, .btn:active, .nav-item:active, .card:active { transform: scale(.98); }
+    .avatar.me {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #fbd4bd, #a855f7);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 17px;
+      border: 2px solid #fff;
+      box-shadow: 0 5px 12px rgba(15, 23, 42, .16);
+    }
+
+    .hero {
+      border: 1px solid #dce8ff;
+      background: linear-gradient(180deg, #f4f8ff 0%, #ffffff 100%);
+      border-radius: 14px;
+      padding: 16px 14px 12px;
+      box-shadow: 0 10px 26px rgba(16, 98, 255, .06);
+    }
+    .hero-head { display: flex; align-items: flex-start; gap: 12px; }
+    .rocket {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: #eaf2ff;
+      color: var(--primary);
+      font-size: 22px;
+      flex: 0 0 auto;
+    }
+    .hero h1 { margin: 0; color: var(--primary); font-size: 19px; line-height: 1.2; }
+    .hero p { margin: 4px 0 12px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    textarea.topic-input {
+      width: 100%;
+      height: 94px;
+      resize: none;
+      outline: none;
+      border: 1px solid #dfe7f3;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #172033;
+      background: #fff;
+      font-family: var(--font);
+    }
+    textarea.topic-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16, 98, 255, .08); }
+    .counter { text-align: right; margin-top: -24px; padding-right: 12px; font-size: 11px; color: var(--subtle); pointer-events: none; }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: .15s ease;
+    }
+    .card:hover { border-color: #c7d6ef; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .square-icon {
+      width: 32px; height: 32px; border-radius: 10px; background: #eef4ff; color: var(--primary); display: grid; place-items: center; font-size: 17px; flex: 0 0 auto; border: 1px solid #dce9ff;
+    }
+    .card-title { font-size: 14px; font-weight: 700; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-sub { margin-top: 4px; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chev { color: var(--subtle); font-weight: 800; }
+    .mini-avatars { display: inline-flex; vertical-align: middle; margin-right: 5px; }
+    .mini-avatars .avatar { margin-left: -5px; border: 1.5px solid #fff; }
+    .mini-avatars .avatar:first-child { margin-left: 0; }
+
+    .btn {
+      border: 0;
+      border-radius: 11px;
+      min-height: 48px;
+      padding: 0 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 15px;
+      font-family: var(--font);
+      transition: .16s ease;
+    }
+    .btn-primary {
+      width: 100%;
+      margin-top: 13px;
+      color: #fff;
+      background: var(--primary);
+      box-shadow: 0 16px 26px rgba(16, 98, 255, .22);
+    }
+    .btn-primary:hover { background: #0b57e6; }
+    .btn-secondary { background: #f2f6fd; color: #243044; min-height: 36px; font-size: 13px; border: 1px solid #e1e8f4; }
+    .btn-ghost { min-height: 34px; background: #fff; border: 1px solid var(--line); color: #243044; font-size: 13px; }
+    .btn-small { min-height: 30px; padding: 0 10px; font-size: 12px; border-radius: 9px; }
+    .btn-blue-soft { background: var(--primary-2); color: var(--primary); }
+
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin: 18px 0 8px; }
+    .section-title { font-size: 15px; font-weight: 750; color: #111827; }
+    .link { border: 0; background: transparent; color: var(--primary); font-weight: 650; font-size: 12px; cursor: pointer; }
+    .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .chip-btn {
+      border: 1px solid #e1e8f2;
+      background: #f7f9fd;
+      border-radius: 999px;
+      min-height: 34px;
+      padding: 0 10px;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .chip-btn.active { color: var(--primary); background: var(--primary-2); border-color: #cfe0ff; }
+
+    .recent-list { display: grid; gap: 8px; }
+    .recent-item { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: #fff; cursor: pointer; }
+    .recent-icon { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-size: 17px; flex: 0 0 auto; }
+    .recent-main { min-width: 0; flex: 1; }
+    .recent-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-meta { margin-top: 4px; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .recent-time { font-size: 11px; color: var(--subtle); flex: 0 0 auto; }
+
+    /* Discussion */
+    .chat-page .page-content { padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .chat-header { flex: 0 0 auto; padding: 4px 12px 8px; border-bottom: 1px solid #edf1f7; background: #fff; }
+    .chat-title-row { display: flex; align-items: center; gap: 8px; min-height: 38px; }
+    .back-btn { border: 0; background: transparent; font-size: 28px; line-height: 1; width: 30px; height: 30px; cursor: pointer; color: #111827; display: grid; place-items: center; }
+    .chat-title { flex: 1; min-width: 0; font-size: 14px; font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 650; background: #eef4ff; color: var(--primary); }
+    .tag.gray { background: #f2f4f7; color: #64748b; }
+    .tag.green { background: var(--green-bg); color: var(--green); }
+    .tag.warn { background: #fff7ed; color: #ea580c; }
+    .roster { display: flex; gap: 13px; overflow-x: auto; padding: 8px 2px 2px; scrollbar-width: none; }
+    .roster::-webkit-scrollbar { display:none; }
+    .role-pill { text-align: center; min-width: 52px; position: relative; }
+    .role-pill .avatar { margin: 0 auto 5px; }
+    .role-pill .role-name { font-size: 11px; color: #334155; white-space: nowrap; }
+    .role-pill.active .avatar { box-shadow: 0 0 0 3px rgba(16, 98, 255, .16); }
+    .role-pill.active:after { content: ""; width: 7px; height: 7px; background: var(--primary); border-radius: 50%; position: absolute; right: 5px; top: 32px; border: 2px solid #fff; }
+
+    .avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; overflow: hidden; color: #fff; font-weight: 800; flex: 0 0 auto; position: relative; background: #cbd5e1; }
+    .avatar.host { background: linear-gradient(145deg, #facc15, #92400e); }
+    .avatar.zgl { background: linear-gradient(145deg, #f59e0b, #166534); }
+    .avatar.caocao { background: linear-gradient(145deg, #f97316, #7f1d1d); }
+    .avatar.simayi { background: linear-gradient(145deg, #94a3b8, #111827); }
+    .avatar.xunyu { background: linear-gradient(145deg, #f59e0b, #78350f); }
+    .avatar.lady { background: linear-gradient(145deg, #fdba74, #2563eb); }
+    .avatar:before { content: ""; position: absolute; inset: 8px 10px auto; height: 9px; border-radius: 50% 50% 30% 30%; background: rgba(255,255,255,.48); opacity: .9; }
+    .avatar b { position: relative; z-index: 1; font-size: 13px; text-shadow: 0 1px 1px rgba(0,0,0,.2); }
+    .avatar.sm { width: 22px; height: 22px; font-size: 10px; }
+    .avatar.sm b { font-size: 9px; }
+
+    .message-stream { flex: 1; overflow-y: auto; padding: 12px; background: #fbfcfe; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .message-stream::-webkit-scrollbar { display:none; }
+    .msg { display: flex; gap: 8px; margin-bottom: 10px; align-items: flex-start; }
+    .msg.user { justify-content: flex-end; }
+    .msg.user .bubble { background: var(--primary); color: #fff; border-color: var(--primary); border-radius: 16px 16px 5px 16px; max-width: 78%; }
+    .msg.user .meta { color: rgba(255,255,255,.72); }
+    .bubble { max-width: calc(100% - 48px); background: #fff; border: 1px solid var(--line); border-radius: 16px 16px 16px 5px; padding: 9px 10px; box-shadow: 0 6px 14px rgba(15,23,42,.035); }
+    .msg-head { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+    .speaker { font-size: 12px; font-weight: 800; color: #0f172a; }
+    .meta { font-size: 10px; color: var(--subtle); }
+    .bubble p { margin: 0; font-size: 12.5px; line-height: 1.55; color: #2b3546; }
+    .msg.user .bubble p { color: #fff; }
+    .bubble ul { margin: 5px 0 0 16px; padding: 0; color: #2b3546; font-size: 12.5px; line-height: 1.55; }
+    .reactions { display: flex; gap: 13px; margin-top: 8px; color: #64748b; font-size: 11px; }
+    .reaction { cursor: pointer; }
+
+    .event-card {
+      border: 1px solid #e2e8f0;
+      background: linear-gradient(110deg, #f8fbff, #fff8f0);
+      border-radius: 14px;
+      padding: 11px;
+      margin: 10px 0;
+      box-shadow: 0 8px 22px rgba(15,23,42,.04);
+    }
+    .event-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+    .event-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 800; color: #334155; }
+    .vote-grid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+    .vote-option { border: 1px solid #e2e8f0; border-radius: 12px; padding: 9px; background: rgba(255,255,255,.72); cursor: pointer; text-align: center; }
+    .vote-option.selected { border-color: #86efac; background: #ecfdf3; }
+    .vote-option.purple.selected { border-color: #c4b5fd; background: #f5f3ff; }
+    .vote-label { font-size: 12px; color: #475569; font-weight: 700; }
+    .vote-num { margin-top: 5px; font-size: 17px; color: var(--primary); font-weight: 850; }
+    .vs { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 1px solid #dbe4f0; color: var(--primary); display: grid; place-items: center; font-size: 12px; font-weight: 800; }
+
+    .invite-card { border: 1px solid #fed7aa; background: #fff7ed; border-radius: 14px; padding: 11px; margin: 10px 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .invite-title { font-size: 13px; font-weight: 800; color: #9a3412; display: flex; align-items: center; gap: 6px; }
+    .invite-sub { margin-top: 4px; font-size: 11px; color: #9a6a44; }
+
+    .composer { flex: 0 0 auto; padding: 8px 10px 10px; border-top: 1px solid #e8eef7; background: #fff; }
+    .composer-box { min-height: 42px; border: 1px solid #dfe7f2; border-radius: 14px; display: flex; align-items: center; gap: 8px; padding: 5px 7px 5px 11px; }
+    .composer input { flex: 1; border: 0; outline: 0; font-size: 13px; font-family: var(--font); min-width: 0; }
+    .tool-row { display: flex; align-items: center; gap: 14px; margin-top: 8px; color: #475569; font-size: 17px; padding-left: 4px; }
+    .tool-row button { border: 0; background: transparent; color: #526176; font-size: 16px; cursor: pointer; padding: 0; }
+    .send-btn { margin-left: auto !important; width: 32px; height: 32px; border-radius: 10px !important; background: var(--primary) !important; color: #fff !important; display: grid; place-items: center; }
+
+    /* Sessions */
+    .headline { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.2px; }
+    .segmented { display: flex; gap: 8px; margin: 4px 0 10px; }
+    .seg-btn { height: 36px; padding: 0 15px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: #667085; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .seg-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 8px 18px rgba(16,98,255,.18); }
+    .search-filter { display: grid; grid-template-columns: 1fr 58px; gap: 8px; margin-bottom: 10px; }
+    .search-box { height: 40px; border: 1px solid var(--line); border-radius: 12px; display: flex; align-items: center; gap: 8px; padding: 0 12px; color: var(--subtle); background: #fff; }
+    .search-box input { flex: 1; border: 0; outline: 0; font-size: 12px; font-family: var(--font); min-width:0; }
+    .session-list { display: grid; gap: 10px; }
+    .session-card { border: 1px solid var(--line); background: #fff; border-radius: 14px; padding: 13px; cursor: pointer; }
+    .session-card.active { border-color: #8bb6ff; box-shadow: inset 0 0 0 1px #8bb6ff; }
+    .session-title-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .session-title { font-size: 14px; font-weight: 780; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .session-meta { display: flex; align-items: center; gap: 12px; color: #64748b; font-size: 11px; margin-top: 8px; }
+    .session-actions { position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 11px 0 0; background: linear-gradient(180deg, rgba(255,255,255,0), #fff 30%); }
+    .action-mini { border: 0; background: #fff; color: #475569; font-size: 11px; display: grid; place-items: center; gap: 3px; cursor: pointer; }
+    .action-mini .aicon { font-size: 16px; }
+
+    /* Template */
+    .template-hero { display: grid; grid-template-columns: 116px 1fr; gap: 13px; margin-top: 2px; }
+    .template-cover { height: 116px; border-radius: 15px; overflow: hidden; background: linear-gradient(135deg, #f3c37a, #473020); position: relative; border: 1px solid #e2d5c4; }
+    .template-cover:before { content:""; position:absolute; inset:0; background: radial-gradient(circle at 30% 38%, rgba(255,255,255,.45) 0 10%, transparent 11%), radial-gradient(circle at 55% 35%, rgba(255,255,255,.36) 0 9%, transparent 10%), radial-gradient(circle at 75% 38%, rgba(255,255,255,.3) 0 9%, transparent 10%); }
+    .template-cover:after { content:"三国"; position:absolute; inset:auto 12px 12px; color:rgba(255,255,255,.9); font-size:22px; font-weight:850; letter-spacing:4px; }
+    .template-info h2 { margin: 2px 0 7px; font-size: 19px; line-height: 1.18; }
+    .template-info p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 14px; }
+    .stat-num { font-size: 16px; font-weight: 800; color: #111827; }
+    .stat-label { margin-top: 3px; color: #64748b; font-size: 11px; }
+    .tab-line { display: grid; grid-template-columns: repeat(4,1fr); border-bottom: 1px solid #e9eef6; margin: 14px -16px 0; padding: 0 16px; }
+    .line-tab { border: 0; background: transparent; height: 42px; color: #64748b; font-weight: 700; cursor: pointer; position: relative; font-family: var(--font); }
+    .line-tab.active { color: var(--primary); }
+    .line-tab.active:after { content:""; position:absolute; left:18px; right:18px; bottom:-1px; height:2px; background:var(--primary); border-radius:2px; }
+    .role-list { display: grid; gap: 10px; margin-top: 12px; }
+    .role-card { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px solid #eef2f7; }
+    .role-body { flex: 1; min-width: 0; }
+    .role-top { display:flex; align-items:center; gap:7px; }
+    .role-card-name { font-size: 13px; font-weight: 800; }
+    .role-desc { margin: 4px 0 6px; color: #64748b; font-size: 11px; line-height: 1.4; }
+    .model-line { display: flex; align-items: center; gap: 6px; color: #415168; font-size: 11px; }
+    .ok-badge { display: inline-flex; margin-top: 5px; height: 20px; align-items:center; padding: 0 8px; border-radius: 999px; background: var(--green-bg); color: var(--green); font-size: 10px; font-weight: 800; }
+    .more { border:0; background:transparent; color:#64748b; font-size:20px; cursor:pointer; }
+    .empty-panel { text-align: center; padding: 36px 16px; color: #64748b; font-size: 13px; }
+
+    /* Settings */
+    .setting-subtitle { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .settings-group { border: 1px solid var(--line); background: #fff; border-radius: 15px; padding: 6px 0; margin-top: 12px; }
+    .setting-row { min-height: 52px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer; }
+    .setting-row + .setting-row { border-top: 1px solid #eef2f7; }
+    .setting-left { display: flex; align-items: center; gap: 11px; min-width: 0; }
+    .setting-icon { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; color: #1d3151; background: #f3f6fb; border: 1px solid #e6edf7; font-size: 16px; flex:0 0 auto; }
+    .setting-title { font-size: 13px; font-weight: 760; }
+    .setting-desc { margin-top: 3px; color: #7b8798; font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 226px; }
+    .provider-status { color: var(--subtle); font-size: 12px; display:flex; align-items:center; gap:8px; }
+    .dot { width: 7px; height: 7px; border-radius:50%; background:var(--green); box-shadow: 0 0 0 3px rgba(22,163,74,.12); }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: calc(var(--nav-h) + var(--safe-bottom));
+      padding: 7px 8px var(--safe-bottom);
+      background: rgba(255,255,255,.96);
+      border-top: 1px solid #e8eef6;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+      z-index: 20;
+    }
+    .nav-item {
+      border: 0;
+      background: transparent;
+      color: #64748b;
+      display: grid;
+      place-items: center;
+      gap: 2px;
+      padding: 4px 0;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 650;
+    }
+    .nav-item .nav-icon { font-size: 19px; line-height: 1; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item.active .nav-icon { filter: drop-shadow(0 5px 8px rgba(16,98,255,.18)); }
+
+    /* Sheets, modal, toast */
+    .toast {
+      position: absolute;
+      left: 50%;
+      bottom: calc(var(--nav-h) + 22px);
+      transform: translateX(-50%) translateY(18px);
+      background: rgba(15, 23, 42, .92);
+      color: #fff;
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 9px 14px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 80;
+      transition: .2s ease;
+      white-space: nowrap;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .sheet-mask, .modal-mask {
+      position: absolute; inset: 0; background: rgba(15,23,42,.36); z-index: 60; display: none; align-items: flex-end;
+    }
+    .sheet-mask.show, .modal-mask.show { display: flex; }
+    .sheet { width: 100%; max-height: 78%; overflow: auto; background:#fff; border-radius: 22px 22px 0 0; padding: 12px 16px 18px; box-shadow: 0 -20px 40px rgba(15,23,42,.16); }
+    .sheet-handle { width: 36px; height: 4px; background:#d6dde8; border-radius:999px; margin:0 auto 12px; }
+    .sheet-title { font-size: 17px; font-weight: 820; margin-bottom: 4px; }
+    .sheet-sub { font-size: 12px; color: var(--muted); line-height: 1.5; margin-bottom: 12px; }
+    .modal-mask { align-items: center; justify-content: center; padding: 22px; }
+    .modal { width: 100%; background: #fff; border-radius: 18px; padding: 16px; box-shadow: 0 24px 50px rgba(15,23,42,.18); }
+    .modal-title { font-size: 17px; font-weight: 820; margin-bottom: 6px; }
+    .modal p { margin: 0; color: #64748b; line-height: 1.55; font-size: 12px; }
+    .modal-actions { display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top: 14px; }
+    .form-field { margin-top: 10px; }
+    .form-field label { display:block; font-size: 11px; color:#64748b; font-weight:700; margin:0 0 6px; }
+    .form-field input, .form-field select { width:100%; height: 42px; border:1px solid #dfe7f2; border-radius: 12px; padding:0 12px; font-family:var(--font); outline:0; background:#fff; }
+    .form-field input:focus, .form-field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(16,98,255,.08); }
+
+    .design-notes {
+      margin-top: 10px;
+      border: 1px dashed #c7d2fe;
+      background: #f8fbff;
+      border-radius: 14px;
+      padding: 10px 12px;
+      color: #334155;
+      font-size: 11.5px;
+      line-height: 1.55;
+    }
+    .design-notes b { color: #1e40af; }
+
+    @media (max-width: 480px) {
+      body { padding: 0; background: #fff; }
+      .prototype-stage { width: 100%; height: 100%; }
+      .stage-title { display: none; }
+      .phone { width: 100vw; height: 100vh; max-width: none; max-height: none; min-height: 0; border-radius: 0; border: 0; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="prototype-stage" aria-label="智囊团移动端原型">
+    <div class="stage-title">
+      <strong>智囊团 · 移动端交互原型</strong>
+      <span>5 个 Tab · 可点击流程</span>
+    </div>
+
+    <section class="phone">
+      <div class="screen">
+        <div class="statusbar">
+          <div>9:41</div>
+          <div class="status-icons" aria-hidden="true"><span class="signal"><i></i><i></i><i></i><i></i></span><span class="wifi"></span><span class="battery"></span></div>
+        </div>
+
+        <div class="app-body">
+          <!-- 1 首页 / 发起讨论 -->
+          <section class="page active" data-page="home">
+            <div class="page-content">
+              <header class="topbar">
+                <div class="brand">
+                  <div class="logo">Z</div>
+                  <div>
+                    <div class="brand-title">智囊团</div>
+                    <div class="brand-sub">多角色讨论平台</div>
+                  </div>
+                </div>
+                <div class="icon-row">
+                  <button class="icon-btn" data-action="notify" aria-label="通知">♧</button>
+                  <button class="avatar me" data-action="profile" aria-label="个人中心">👩</button>
+                </div>
+              </header>
+
+              <section class="hero">
+                <div class="hero-head">
+                  <div class="rocket">🚀</div>
+                  <div>
+                    <h1>开启一场多角色讨论</h1>
+                    <p>邀请不同角色，共同探讨复杂问题，获得多元洞见</p>
+                  </div>
+                </div>
+                <textarea id="topicInput" class="topic-input" maxlength="100">制定市场进入策略</textarea>
+                <div class="counter"><span id="topicCount">8</span>/100</div>
+              </section>
+
+              <button class="card" data-sheet="template">
+                <div class="row">
+                  <div class="left">
+                    <div class="square-icon">⚜</div>
+                    <div>
+                      <div class="card-title">模板：三国军师团</div>
+                      <div class="card-sub"><span class="mini-avatars"><span class="avatar sm host"><b>主</b></span><span class="avatar sm zgl"><b>亮</b></span><span class="avatar sm caocao"><b>操</b></span></span>角色 5 · 事件 3 · GPT-4.1-mini</div>
+                    </div>
+                  </div>
+                  <div class="chev">›</div>
+                </div>
+              </button>
+
+              <button class="card" data-sheet="strategy">
+                <div class="row">
+                  <div class="left">
+                    <div class="square-icon">⚙</div>
+                    <div>
+                      <div class="card-title">模型策略：智能躲避反馈</div>
+                      <div class="card-sub">优先速度与成本，必要时切换强模型</div>
+                    </div>
+                  </div>
+                  <div class="chev">›</div>
+                </div>
+              </button>
+
+              <button id="startBtn" class="btn btn-primary">✈ 开始讨论</button>
+
+              <div class="section-head">
+                <div class="section-title">快速开始</div>
+              </div>
+              <div class="quick-grid">
+                <button class="chip-btn" data-topic="评估新功能优先级">评估新功能优先级</button>
+                <button class="chip-btn" data-topic="制定市场进入策略">制定市场进入策略</button>
+                <button class="chip-btn" data-topic="分析用户增长方案">分析用户增长方案</button>
+                <button class="chip-btn" data-topic="优化定价策略">优化定价策略</button>
+              </div>
+
+              <div class="section-head">
+                <div class="section-title">最近讨论</div>
+                <button class="link" data-goto="sessions">查看全部 ›</button>
+              </div>
+              <div class="recent-list">
+                <button class="recent-item" data-open-session="1">
+                  <div class="recent-icon" style="background:#3b82f6">▣</div>
+                  <div class="recent-main"><div class="recent-title">这个产品如何在欧美市场突围？</div><div class="recent-meta">三国军师团 · 进行中 · 12 分钟前</div></div>
+                  <div class="recent-time">11:23</div>
+                </button>
+                <button class="recent-item" data-open-session="2">
+                  <div class="recent-icon" style="background:#22c55e">▥</div>
+                  <div class="recent-main"><div class="recent-title">如何提升新用户 7 日留存？</div><div class="recent-meta">产品增长专家团 · 已完成 · 15 分钟前</div></div>
+                  <div class="recent-time">昨天</div>
+                </button>
+                <button class="recent-item" data-open-session="3">
+                  <div class="recent-icon" style="background:#a855f7">◆</div>
+                  <div class="recent-main"><div class="recent-title">AI 是否替代产品经理？</div><div class="recent-meta">产品辩论桌 · 已完成 · 1 天前</div></div>
+                  <div class="recent-time">5.24</div>
+                </button>
+              </div>
+
+              <div class="design-notes"><b>设计批注：</b>首页只保留发起讨论所需的议题、模板、模型策略与最近会话入口，降低启动成本；卡片与 CTA 按 8pt 间距统一。</div>
+            </div>
+          </section>
+
+          <!-- 2 讨论页 -->
+          <section class="page chat-page" data-page="discussion">
+            <div class="page-content">
+              <div class="chat-header">
+                <div class="chat-title-row">
+                  <button class="back-btn" data-goto="home" aria-label="返回">‹</button>
+                  <div style="min-width:0;flex:1">
+                    <div id="discussionTitle" class="chat-title">这个产品如何在欧美市场突围？</div>
+                    <span class="tag">三国军师团</span>
+                  </div>
+                  <button class="icon-btn" data-sheet="more">⋯</button>
+                </div>
+                <div class="roster">
+                  <button class="role-pill active" data-role="主持人"><span class="avatar lady"><b>主</b></span><span class="role-name">主持人</span></button>
+                  <button class="role-pill" data-role="诸葛亮"><span class="avatar zgl"><b>亮</b></span><span class="role-name">诸葛亮</span></button>
+                  <button class="role-pill" data-role="曹操"><span class="avatar caocao"><b>操</b></span><span class="role-name">曹操</span></button>
+                  <button class="role-pill" data-role="司马懿"><span class="avatar simayi"><b>懿</b></span><span class="role-name">司马懿</span></button>
+                  <button class="role-pill" data-role="荀彧"><span class="avatar xunyu"><b>彧</b></span><span class="role-name">荀彧</span></button>
+                </div>
+              </div>
+
+              <div id="messageStream" class="message-stream">
+                <article class="msg">
+                  <span class="avatar lady"><b>主</b></span>
+                  <div class="bubble">
+                    <div class="msg-head"><span class="speaker">主持人</span><span class="meta">11:20</span><span class="tag">主持</span></div>
+                    <p><b style="color:#1062ff">开场：</b>各位，今日讨论主题：这个产品如何在欧美市场突围？请结合市场、竞争、用户、渠道等维度，提出可执行的策略。</p>
+                    <div class="meta" style="margin-top:6px">已邀请 5 位角色 · 系统事件</div>
+                  </div>
+                </article>
+                <article class="msg">
+                  <span class="avatar zgl"><b>亮</b></span>
+                  <div class="bubble">
+                    <div class="msg-head"><span class="speaker" style="color:#059669">诸葛亮</span><span class="meta">11:24</span></div>
+                    <p>先审时：欧美市场文化差异大，用户更重视隐私与合规。产品定位、强调安全与高效；渠道上与本地社区合作伙伴共建信任。</p>
+                    <ul><li><b>定位：</b>治理与可信 AI 决策辅助</li><li><b>渠道：</b>与本地化合作伙伴共建信任</li><li><b>风险：</b>法规与数据合规优先</li></ul>
+                    <div class="reactions"><span class="reaction">👍 12</span><span class="reaction">💬 3</span></div>
+                  </div>
+                </article>
+                <article class="msg">
+                  <span class="avatar caocao"><b>操</b></span>
+                  <div class="bubble">
+                    <div class="msg-head"><span class="speaker" style="color:#b45309">曹操</span><span class="meta">11:26</span></div>
+                    <p>我认为，先借助本地化资源快速打磨产品与增长引擎；优先切入中小企业场景，快速低成本验证、快跑迭代。</p>
+                    <div class="reactions"><span class="reaction">👍 9</span><span class="reaction">💬 1</span></div>
+                  </div>
+                </article>
+                <div class="event-card">
+                  <div class="event-head">
+                    <div class="event-title">♙ 立场投票 <span class="meta">进行中 · 11:30</span></div>
+                  </div>
+                  <div class="meta" style="margin-bottom:8px">哪种策略更应优先推进？</div>
+                  <div class="vote-grid">
+                    <button class="vote-option" data-vote="local"><div class="vote-label">本地化合作优先</div><div class="vote-num">2</div><div class="mini-avatars" style="justify-content:center;margin-top:5px"><span class="avatar sm zgl"><b>亮</b></span><span class="avatar sm xunyu"><b>彧</b></span></div></button>
+                    <div class="vs">VS</div>
+                    <button class="vote-option purple" data-vote="growth"><div class="vote-label">快速增长优先</div><div class="vote-num">2</div><div class="mini-avatars" style="justify-content:center;margin-top:5px"><span class="avatar sm caocao"><b>操</b></span><span class="avatar sm simayi"><b>懿</b></span></div></button>
+                  </div>
+                </div>
+                <div class="invite-card">
+                  <div><div class="invite-title">⌘ 邀请用户参与 <span class="meta">11:30</span></div><div class="invite-sub">邀请产品、市场和增长专家加入，提供更多视角</div></div>
+                  <button class="btn btn-small btn-primary" style="width:auto;margin:0;min-height:34px" data-action="invite">邀请</button>
+                </div>
+              </div>
+
+              <div class="composer">
+                <div class="composer-box"><input id="chatInput" type="text" placeholder="输入观点、补充信息或发起事件..." /><button class="send-btn" id="sendBtn" aria-label="发送">➤</button></div>
+                <div class="tool-row"><button data-action="image">▧</button><button data-quick-command="让诸葛亮反驳一下">@</button><button data-quick-command="触发投票">#</button><button data-quick-command="总结当前结论">▥</button><button data-sheet="commands">⋯</button></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3 会话页 -->
+          <section class="page" data-page="sessions">
+            <div class="page-content">
+              <header class="topbar">
+                <h1 class="headline">会话中心</h1>
+                <button class="icon-btn" data-action="new-session">＋</button>
+              </header>
+              <div class="segmented">
+                <button class="seg-btn active" data-filter="all">全部</button>
+                <button class="seg-btn" data-filter="running">进行中</button>
+                <button class="seg-btn" data-filter="done">已完成</button>
+                <button class="seg-btn" data-filter="archived">已归档</button>
+              </div>
+              <div class="search-filter">
+                <div class="search-box">⌕ <input id="sessionSearch" placeholder="搜索会话、模板或角色" /></div>
+                <button class="btn btn-ghost" data-sheet="filter" style="height:40px;min-height:40px">筛选</button>
+              </div>
+
+              <div id="sessionList" class="session-list">
+                <article class="session-card active" data-status="running" data-session-title="这个产品如何在欧美市场突围？">
+                  <div class="session-title-row"><div class="session-title">这个产品如何在欧美市场突围？</div><span class="tag">进行中</span></div>
+                  <div class="tag gray" style="margin-top:6px">三国军师团</div>
+                  <div class="session-meta"><span>♙ 5 角色</span><span>↻ 3 事件</span><span style="margin-left:auto">今天 11:23</span></div>
+                </article>
+                <article class="session-card" data-status="done" data-session-title="如何提升新用户 7 日留存？">
+                  <div class="session-title-row"><div class="session-title">如何提升新用户 7 日留存？</div><span class="tag green">已完成</span></div>
+                  <div class="tag gray" style="margin-top:6px">产品增长专家团</div>
+                  <div class="session-meta"><span>♙ 5 角色</span><span>▣ 15 消息</span><span style="margin-left:auto">昨天 10:31</span></div>
+                </article>
+                <article class="session-card" data-status="done" data-session-title="AI 是否替代产品经理？">
+                  <div class="session-title-row"><div class="session-title">AI 是否替代产品经理？</div><span class="tag green">已完成</span></div>
+                  <div class="tag gray" style="margin-top:6px">产品辩论桌</div>
+                  <div class="session-meta"><span>♙ 5 角色</span><span>▣ 18 消息</span><span style="margin-left:auto">两天前 16:02</span></div>
+                </article>
+                <article class="session-card" data-status="archived" data-session-title="海外市场进入策略讨论">
+                  <div class="session-title-row"><div class="session-title">海外市场进入策略讨论</div><span class="tag gray">已归档</span></div>
+                  <div class="tag gray" style="margin-top:6px">全球顾问团</div>
+                  <div class="session-meta"><span>♙ 6 角色</span><span>▣ 20 消息</span><span style="margin-left:auto">5.24 14:22</span></div>
+                </article>
+                <article class="session-card" data-status="done" data-session-title="2024 Q2 KPI 复盘">
+                  <div class="session-title-row"><div class="session-title">2024 Q2 KPI 复盘</div><span class="tag green">已完成</span></div>
+                  <div class="tag gray" style="margin-top:6px">运营复盘团</div>
+                  <div class="session-meta"><span>♙ 5 角色</span><span>▣ 19 消息</span><span style="margin-left:auto">5.20 10:15</span></div>
+                </article>
+              </div>
+
+              <div class="session-actions">
+                <button class="action-mini" data-action="new-session"><span class="aicon">⊕</span>新建</button>
+                <button class="action-mini" data-action="export"><span class="aicon">⇧</span>导出</button>
+                <button class="action-mini" data-action="archive"><span class="aicon">▤</span>归档</button>
+                <button class="action-mini" data-action="batch"><span class="aicon">☷</span>批量</button>
+              </div>
+              <div class="design-notes"><b>设计批注：</b>会话中心强化检索与状态筛选，卡片统一展示模板、角色数、事件/消息数和时间，服务于恢复上下文。</div>
+            </div>
+          </section>
+
+          <!-- 4 模板页 -->
+          <section class="page" data-page="templates">
+            <div class="page-content">
+              <header class="topbar">
+                <h1 class="headline">模板中心</h1>
+                <button class="icon-btn" data-action="search-template">⌕</button>
+              </header>
+              <section class="template-hero">
+                <div class="template-cover"></div>
+                <div class="template-info">
+                  <div class="row" style="align-items:flex-start"><h2>三国军师团</h2><span class="tag">官方模板</span></div>
+                  <p>基于三国历史背景，汇聚谋略、洞察与权衡，擅长战略、风险与复杂问题分析。</p>
+                  <button class="btn btn-small btn-blue-soft" style="margin-top:8px" data-action="use-template">使用模板</button>
+                </div>
+              </section>
+              <div class="stat-grid">
+                <div><div class="stat-num">12,643</div><div class="stat-label">使用次数</div></div>
+                <div><div class="stat-num">1,243</div><div class="stat-label">会话数</div></div>
+                <div><div class="stat-num">923</div><div class="stat-label">收藏数</div></div>
+              </div>
+              <div class="tab-line">
+                <button class="line-tab" data-template-tab="overview">概览</button>
+                <button class="line-tab active" data-template-tab="roles">角色</button>
+                <button class="line-tab" data-template-tab="events">事件</button>
+                <button class="line-tab" data-template-tab="rhythm">节奏</button>
+              </div>
+              <div id="templateTabPanel">
+                <div class="section-head"><div class="section-title">角色列表 (5)</div><button class="btn btn-small btn-blue-soft" data-sheet="roles-config">⚙ 配置角色</button></div>
+                <div class="role-list">
+                  <article class="role-card"><span class="avatar host"><b>主</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">主持人</span><span class="tag">主</span></div><div class="role-desc">引导全局讨论，控节奏与流程</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+                  <article class="role-card"><span class="avatar zgl"><b>亮</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">诸葛亮</span><span class="tag gray">应</span></div><div class="role-desc">擅长谋略、洞察与系统性思考</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+                  <article class="role-card"><span class="avatar caocao"><b>操</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">曹操</span></div><div class="role-desc">现实主义者，重视效率与执行</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+                  <article class="role-card"><span class="avatar simayi"><b>懿</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">司马懿</span><span class="tag gray">险</span></div><div class="role-desc">深思熟虑，擅长长期布局</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+                  <article class="role-card"><span class="avatar xunyu"><b>彧</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">荀彧</span></div><div class="role-desc">稳健谋士，擅长资源治理</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+                </div>
+              </div>
+              <div class="design-notes"><b>设计批注：</b>模板页采用详情优先结构，先给出模板价值和数据，再进入角色、事件与节奏配置，避免配置入口分散。</div>
+            </div>
+          </section>
+
+          <!-- 5 设置页 -->
+          <section class="page" data-page="settings">
+            <div class="page-content">
+              <header class="topbar" style="align-items:flex-start">
+                <div><h1 class="headline">设置</h1><div class="setting-subtitle">设置项在此配置模型、模板与角色提示词</div></div>
+              </header>
+              <section class="settings-group">
+                <button class="setting-row" data-sheet="provider-status"><div class="setting-left"><div><div class="setting-title">Provider 状态</div></div></div><div class="provider-status">全部正常 ›</div></button>
+                <div class="setting-row"><div class="setting-left"><div class="setting-icon">◎</div><div><div class="setting-title">OpenAI</div></div></div><div class="provider-status"><span class="dot"></span>已连接</div></div>
+                <div class="setting-row"><div class="setting-left"><div class="setting-icon">AI</div><div><div class="setting-title">Anthropic</div></div></div><div class="provider-status"><span class="dot"></span>已连接</div></div>
+                <div class="setting-row"><div class="setting-left"><div class="setting-icon">✦</div><div><div class="setting-title">Gemini</div></div></div><div class="provider-status"><span class="dot"></span>已连接</div></div>
+                <div class="setting-row"><div class="setting-left"><div class="setting-icon">◒</div><div><div class="setting-title">DeepSeek</div></div></div><div class="provider-status"><span class="dot"></span>已连接</div></div>
+              </section>
+
+              <section class="settings-group">
+                <button class="setting-row" data-sheet="model-provider"><div class="setting-left"><div class="setting-icon">⚙</div><div><div class="setting-title">模型与 Provider</div><div class="setting-desc">管理模型与地供应商连接状态</div></div></div><div class="chev">›</div></button>
+                <button class="setting-row" data-sheet="default-model"><div class="setting-left"><div class="setting-icon">⚒</div><div><div class="setting-title">全局默认模型</div><div class="setting-desc">设置系统默认模型与参数</div></div></div><div class="chev">›</div></button>
+                <button class="setting-row" data-sheet="role-model"><div class="setting-left"><div class="setting-icon">♙</div><div><div class="setting-title">角色专属模型</div><div class="setting-desc">为不同角色配置专属模型</div></div></div><div class="chev">›</div></button>
+              </section>
+
+              <section class="settings-group">
+                <button class="setting-row" data-sheet="template-manage"><div class="setting-left"><div class="setting-icon">▣</div><div><div class="setting-title">模板管理</div><div class="setting-desc">新建、编辑、导出与导入模板</div></div></div><div class="chev">›</div></button>
+                <button class="setting-row" data-sheet="prompt-config"><div class="setting-left"><div class="setting-icon">✎</div><div><div class="setting-title">Prompt / 提示词适配</div><div class="setting-desc">全局提示词策略与角色提示词配置</div></div></div><div class="chev">›</div></button>
+                <button class="setting-row" data-sheet="appearance"><div class="setting-left"><div class="setting-icon">◷</div><div><div class="setting-title">外观与通知</div><div class="setting-desc">主题、字号、推送与静音设置</div></div></div><div class="chev">›</div></button>
+                <button class="setting-row" data-sheet="storage"><div class="setting-left"><div class="setting-icon">♧</div><div><div class="setting-title">本地数据与安全</div><div class="setting-desc">数据导出、清理与隐私安全</div></div></div><div class="chev">›</div></button>
+              </section>
+              <div class="design-notes"><b>设计批注：</b>设置页按 Provider、模型策略、模板/提示词、本地安全分组，保留移动端单列可扫读结构。</div>
+            </div>
+          </section>
+
+          <nav class="bottom-nav" aria-label="底部导航">
+            <button class="nav-item active" data-nav="home"><span class="nav-icon">⌂</span><span>首页</span></button>
+            <button class="nav-item" data-nav="discussion"><span class="nav-icon">☵</span><span>讨论</span></button>
+            <button class="nav-item" data-nav="sessions"><span class="nav-icon">▣</span><span>会话</span></button>
+            <button class="nav-item" data-nav="templates"><span class="nav-icon">▦</span><span>模板</span></button>
+            <button class="nav-item" data-nav="settings"><span class="nav-icon">⚙</span><span>设置</span></button>
+          </nav>
+
+          <div id="toast" class="toast">已操作</div>
+          <div id="sheetMask" class="sheet-mask" role="dialog" aria-modal="true"><div id="sheet" class="sheet"></div></div>
+          <div id="modalMask" class="modal-mask" role="dialog" aria-modal="true"><div id="modal" class="modal"></div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const state = {
+      page: 'home',
+      templateTab: 'roles',
+      selectedVote: null,
+      sessionFilter: 'all'
+    };
+
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+    const toast = $('#toast');
+    const sheetMask = $('#sheetMask');
+    const sheet = $('#sheet');
+    const modalMask = $('#modalMask');
+    const modal = $('#modal');
+
+    function showToast(text) {
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(showToast.t);
+      showToast.t = setTimeout(() => toast.classList.remove('show'), 1600);
+    }
+
+    function gotoPage(page) {
+      state.page = page;
+      $$('.page').forEach(p => p.classList.toggle('active', p.dataset.page === page));
+      $$('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.nav === page));
+      closeSheet();
+    }
+
+    function closeSheet() { sheetMask.classList.remove('show'); sheet.innerHTML = ''; }
+    function closeModal() { modalMask.classList.remove('show'); modal.innerHTML = ''; }
+
+    const sheetContent = {
+      template: () => `
+        <div class="sheet-handle"></div><div class="sheet-title">选择讨论模板</div><div class="sheet-sub">当前原型以“三国军师团”为默认模板，后续可扩展创业董事会、产品辩论桌等场景。</div>
+        <button class="card" onclick="selectTemplate('三国军师团')"><div class="row"><div class="left"><div class="square-icon">⚜</div><div><div class="card-title">三国军师团</div><div class="card-sub">谋略、风险、执行与长期布局</div></div></div><span class="tag">已选</span></div></button>
+        <button class="card" onclick="selectTemplate('创业公司董事会')"><div class="row"><div class="left"><div class="square-icon">▥</div><div><div class="card-title">创业公司董事会</div><div class="card-sub">增长、财务、产品、技术、法务</div></div></div><span class="tag gray">即将支持</span></div></button>
+        <button class="card" onclick="selectTemplate('产品辩论桌')"><div class="row"><div class="left"><div class="square-icon">◆</div><div><div class="card-title">产品辩论桌</div><div class="card-sub">围绕产品方向进行正反辩论</div></div></div><span class="tag gray">即将支持</span></div></button>`,
+      strategy: () => `
+        <div class="sheet-handle"></div><div class="sheet-title">模型策略</div><div class="sheet-sub">用于控制角色发言质量、速度、成本与兜底行为。</div>
+        <button class="card" onclick="selectStrategy('智能躲避反馈')"><div class="row"><div><div class="card-title">智能躲避反馈</div><div class="card-sub">默认策略：优先快模型，复杂场景切强模型</div></div><span class="tag">已选</span></div></button>
+        <button class="card" onclick="selectStrategy('质量优先')"><div class="row"><div><div class="card-title">质量优先</div><div class="card-sub">更多推理与更强模型，适合严肃决策</div></div><span class="tag gray">可选</span></div></button>
+        <button class="card" onclick="selectStrategy('成本优先')"><div class="row"><div><div class="card-title">成本优先</div><div class="card-sub">压缩 token 与发言长度，适合快速探索</div></div><span class="tag gray">可选</span></div></button>`,
+      more: () => `
+        <div class="sheet-handle"></div><div class="sheet-title">讨论操作</div><button class="setting-row" onclick="quickCommand('请主持人总结当前结论')"><div class="setting-left"><div class="setting-icon">▤</div><div><div class="setting-title">总结当前结论</div><div class="setting-desc">进入 closing 前的中间总结</div></div></div><span class="chev">›</span></button><button class="setting-row" onclick="quickCommand('触发一次站队投票')"><div class="setting-left"><div class="setting-icon">♙</div><div><div class="setting-title">触发投票</div><div class="setting-desc">让角色围绕关键分歧站队</div></div></div><span class="chev">›</span></button><button class="setting-row" onclick="showToast('会话已归档');closeSheet()"><div class="setting-left"><div class="setting-icon">▣</div><div><div class="setting-title">归档会话</div><div class="setting-desc">保留记录但不再置顶</div></div></div><span class="chev">›</span></button>`,
+      commands: () => `
+        <div class="sheet-handle"></div><div class="sheet-title">快捷指令</div><div class="sheet-sub">点击后会自动填入输入框。</div>
+        <button class="chip-btn" style="width:100%;margin:5px 0" onclick="fillChat('让诸葛亮反驳一下')">让诸葛亮反驳一下</button>
+        <button class="chip-btn" style="width:100%;margin:5px 0" onclick="fillChat('请曹操给出最激进的增长方案')">请曹操给出最激进的增长方案</button>
+        <button class="chip-btn" style="width:100%;margin:5px 0" onclick="fillChat('现在投票，并说明各自理由')">现在投票，并说明各自理由</button>
+        <button class="chip-btn" style="width:100%;margin:5px 0" onclick="fillChat('总结一下，给出最终建议')">总结一下，给出最终建议</button>`,
+      filter: () => `
+        <div class="sheet-handle"></div><div class="sheet-title">筛选会话</div><div class="form-field"><label>模板</label><select><option>全部模板</option><option>三国军师团</option><option>产品增长专家团</option></select></div><div class="form-field"><label>时间</label><select><option>最近 7 天</option><option>最近 30 天</option><option>全部</option></select></div><button class="btn btn-primary" onclick="showToast('筛选已应用');closeSheet()">应用筛选</button>`,
+      'roles-config': () => `
+        <div class="sheet-handle"></div><div class="sheet-title">配置角色</div><div class="sheet-sub">可调整角色模型、温度、发言频率与是否参与投票。</div><div class="form-field"><label>默认模型</label><select><option>GPT-4.1-mini</option><option>Claude Sonnet</option><option>Gemini 2.5 Flash</option></select></div><div class="form-field"><label>发言长度</label><select><option>克制：80-160 字</option><option>标准：120-240 字</option><option>详细：240-400 字</option></select></div><button class="btn btn-primary" onclick="showToast('角色配置已保存');closeSheet()">保存配置</button>`,
+      'role-detail': () => `
+        <div class="sheet-handle"></div><div class="sheet-title">角色详情</div><div class="sheet-sub">诸葛亮：系统性思考、风险预判、长期主义。默认模型 GPT-4.1-mini，温度 0.7。</div><div class="form-field"><label>角色提示词</label><input value="以谋略家视角分析机会、风险和执行路径" /></div><button class="btn btn-primary" onclick="showToast('角色提示词已更新');closeSheet()">保存</button>`,
+      'provider-status': () => providerSheet(),
+      'model-provider': () => modelProviderSheet(),
+      'default-model': () => defaultModelSheet(),
+      'role-model': () => roleModelSheet(),
+      'template-manage': () => genericSheet('模板管理', '支持新建、编辑、导出与导入模板。当前原型中保留入口与表单状态。'),
+      'prompt-config': () => genericSheet('Prompt / 提示词适配', '统一管理全局提示词、角色提示词与模型适配策略。'),
+      appearance: () => genericSheet('外观与通知', '支持主题、字号、消息推送、静音时间和讨论完成通知。'),
+      storage: () => genericSheet('本地数据与安全', '支持导出会话、清理缓存、API Key 本地保存策略和隐私说明。')
+    };
+
+    function genericSheet(title, sub) {
+      return `<div class="sheet-handle"></div><div class="sheet-title">${title}</div><div class="sheet-sub">${sub}</div><div class="form-field"><label>示例配置项</label><input value="当前为移动端原型 Mock 数据" /></div><button class="btn btn-primary" onclick="showToast('已保存');closeSheet()">保存</button>`;
+    }
+    function providerSheet(){
+      return `<div class="sheet-handle"></div><div class="sheet-title">Provider 状态</div><div class="sheet-sub">所有 Provider 连接状态均为 Mock，可用于演示配置链路。</div>${['OpenAI','Anthropic','Gemini','DeepSeek'].map(p=>`<div class="setting-row"><div class="setting-left"><div class="setting-icon">◎</div><div><div class="setting-title">${p}</div><div class="setting-desc">延迟 120ms · 最近检测 2 分钟前</div></div></div><div class="provider-status"><span class="dot"></span>已连接</div></div>`).join('')}<button class="btn btn-primary" onclick="showToast('检测完成：全部正常');closeSheet()">重新检测</button>`;
+    }
+    function modelProviderSheet(){
+      return `<div class="sheet-handle"></div><div class="sheet-title">模型与 Provider</div><div class="form-field"><label>Provider</label><select><option>OpenAI</option><option>Anthropic</option><option>Gemini</option><option>DeepSeek</option><option>Custom Provider</option></select></div><div class="form-field"><label>Base URL</label><input value="https://api.openai.com/v1" /></div><div class="form-field"><label>API Key</label><input value="sk-••••••••••••••" /></div><button class="btn btn-primary" onclick="showToast('连接配置已保存');closeSheet()">保存连接</button>`;
+    }
+    function defaultModelSheet(){
+      return `<div class="sheet-handle"></div><div class="sheet-title">全局默认模型</div><div class="form-field"><label>默认模型</label><select><option>GPT-4.1-mini</option><option>Claude Sonnet 4</option><option>Gemini 2.5 Flash</option></select></div><div class="form-field"><label>Temperature</label><input value="0.7" /></div><button class="btn btn-primary" onclick="showToast('默认模型已更新');closeSheet()">保存</button>`;
+    }
+    function roleModelSheet(){
+      return `<div class="sheet-handle"></div><div class="sheet-title">角色专属模型</div><div class="sheet-sub">为不同角色选择不同模型，以形成观点差异。</div><div class="form-field"><label>诸葛亮</label><select><option>GPT-4.1-mini</option><option>Claude Sonnet 4</option></select></div><div class="form-field"><label>曹操</label><select><option>GPT-4.1-mini</option><option>Gemini 2.5 Flash</option></select></div><button class="btn btn-primary" onclick="showToast('角色模型已保存');closeSheet()">保存</button>`;
+    }
+
+    function openSheet(name) {
+      const html = sheetContent[name] ? sheetContent[name]() : genericSheet('功能入口', '该入口已在原型中预留，可按后续迭代继续扩展。');
+      sheet.innerHTML = html;
+      sheetMask.classList.add('show');
+    }
+
+    function showConfirm(title, text, onOkText = '确认') {
+      modal.innerHTML = `<div class="modal-title">${title}</div><p>${text}</p><div class="modal-actions"><button class="btn btn-ghost" onclick="closeModal()">取消</button><button class="btn btn-primary" style="margin:0" onclick="showToast('${onOkText}成功');closeModal()">${onOkText}</button></div>`;
+      modalMask.classList.add('show');
+    }
+
+    function startDiscussion(topic) {
+      const value = (topic || $('#topicInput').value || '制定市场进入策略').trim();
+      $('#discussionTitle').textContent = value;
+      gotoPage('discussion');
+      showToast('已创建讨论会话');
+    }
+
+    function appendUserMessage(text) {
+      const stream = $('#messageStream');
+      const article = document.createElement('article');
+      article.className = 'msg user';
+      article.innerHTML = `<div class="bubble"><div class="msg-head"><span class="speaker" style="color:#fff">你</span><span class="meta">刚刚</span></div><p>${escapeHtml(text)}</p></div>`;
+      stream.appendChild(article);
+      setTimeout(() => {
+        const reply = document.createElement('article');
+        reply.className = 'msg';
+        reply.innerHTML = `<span class="avatar simayi"><b>懿</b></span><div class="bubble"><div class="msg-head"><span class="speaker">司马懿</span><span class="meta">刚刚</span></div><p>此处应谨慎：${escapeHtml(text)}。建议先验证最小闭环，再扩大投入，避免因过早扩张导致成本失控。</p><div class="reactions"><span class="reaction">👍 1</span><span class="reaction">💬 0</span></div></div>`;
+        stream.appendChild(reply);
+        stream.scrollTop = stream.scrollHeight;
+      }, 500);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>'"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[s])); }
+
+    function fillChat(text){ $('#chatInput').value = text; closeSheet(); $('#chatInput').focus(); }
+    function quickCommand(text){ fillChat(text); showToast('已填入快捷指令'); }
+    function selectTemplate(name){ showToast(`已选择：${name}`); closeSheet(); }
+    function selectStrategy(name){ showToast(`已选择策略：${name}`); closeSheet(); }
+
+    window.closeSheet = closeSheet; window.closeModal = closeModal; window.fillChat = fillChat; window.quickCommand = quickCommand; window.selectTemplate = selectTemplate; window.selectStrategy = selectStrategy; window.showToast = showToast;
+
+    document.addEventListener('click', (e) => {
+      const nav = e.target.closest('[data-nav]');
+      if (nav) return gotoPage(nav.dataset.nav);
+      const goto = e.target.closest('[data-goto]');
+      if (goto) return gotoPage(goto.dataset.goto);
+      const sheetBtn = e.target.closest('[data-sheet]');
+      if (sheetBtn) return openSheet(sheetBtn.dataset.sheet);
+      const action = e.target.closest('[data-action]');
+      if (action) return handleAction(action.dataset.action);
+      const topic = e.target.closest('[data-topic]');
+      if (topic) { $('#topicInput').value = topic.dataset.topic; updateCount(); $$('.chip-btn').forEach(b=>b.classList.remove('active')); topic.classList.add('active'); return showToast('已填入议题'); }
+      const session = e.target.closest('[data-open-session], .session-card');
+      if (session && (session.dataset.openSession || session.dataset.sessionTitle)) { $('#discussionTitle').textContent = session.dataset.sessionTitle || '这个产品如何在欧美市场突围？'; return gotoPage('discussion'); }
+      const vote = e.target.closest('[data-vote]');
+      if (vote) { $$('.vote-option').forEach(v=>v.classList.remove('selected')); vote.classList.add('selected'); return showToast('已记录你的投票'); }
+      const role = e.target.closest('[data-role]');
+      if (role) { $$('.role-pill').forEach(r=>r.classList.remove('active')); role.classList.add('active'); return showToast(`已选中：${role.dataset.role}`); }
+      const filter = e.target.closest('[data-filter]');
+      if (filter) return applySessionFilter(filter.dataset.filter);
+      const templateTab = e.target.closest('[data-template-tab]');
+      if (templateTab) return switchTemplateTab(templateTab.dataset.templateTab);
+    });
+
+    sheetMask.addEventListener('click', (e) => { if (e.target === sheetMask) closeSheet(); });
+    modalMask.addEventListener('click', (e) => { if (e.target === modalMask) closeModal(); });
+
+    $('#startBtn').addEventListener('click', () => startDiscussion());
+    $('#sendBtn').addEventListener('click', sendChat);
+    $('#chatInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+    $('#topicInput').addEventListener('input', updateCount);
+    $('#sessionSearch').addEventListener('input', filterSessionsByText);
+
+    $$('[data-quick-command]').forEach(btn => btn.addEventListener('click', () => fillChat(btn.dataset.quickCommand)));
+
+    function sendChat(){
+      const input = $('#chatInput');
+      const text = input.value.trim();
+      if (!text) return showToast('请输入内容');
+      input.value = '';
+      appendUserMessage(text);
+    }
+
+    function updateCount(){ $('#topicCount').textContent = $('#topicInput').value.length; }
+
+    function handleAction(action){
+      const map = {
+        notify: ['通知中心', '暂无新的系统通知。'],
+        profile: ['个人中心', '这里可进入账号信息、偏好设置与使用记录。'],
+        invite: ['邀请已发送', '已模拟邀请产品、市场与增长专家加入讨论。'],
+        image: ['图片上传', '移动端原型中已预留图片/附件入口。'],
+        'new-session': null,
+        export: ['导出会话', '将当前会话导出为 Markdown / PDF。', '导出'],
+        archive: ['归档会话', '确认将选中会话移入归档列表？', '归档'],
+        batch: ['批量管理', '可批量归档、删除或导出会话。'],
+        'search-template': ['搜索模板', '可搜索模板名称、场景、角色或推荐模型。'],
+        'use-template': null
+      };
+      if (action === 'new-session' || action === 'use-template') return gotoPage('home');
+      const val = map[action] || ['功能入口', '该操作已在原型中预留。'];
+      showConfirm(val[0], val[1], val[2] || '确认');
+    }
+
+    function applySessionFilter(filter){
+      state.sessionFilter = filter;
+      $$('.seg-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.filter === filter));
+      $$('.session-card').forEach(card => {
+        const visible = filter === 'all' || card.dataset.status === filter;
+        card.style.display = visible ? '' : 'none';
+      });
+    }
+
+    function filterSessionsByText(){
+      const q = $('#sessionSearch').value.trim().toLowerCase();
+      $$('.session-card').forEach(card => {
+        const byStatus = state.sessionFilter === 'all' || card.dataset.status === state.sessionFilter;
+        const byText = !q || card.textContent.toLowerCase().includes(q);
+        card.style.display = byStatus && byText ? '' : 'none';
+      });
+    }
+
+    function switchTemplateTab(tab){
+      state.templateTab = tab;
+      $$('.line-tab').forEach(t => t.classList.toggle('active', t.dataset.templateTab === tab));
+      const panel = $('#templateTabPanel');
+      if (tab === 'roles') return panel.innerHTML = `
+        <div class="section-head"><div class="section-title">角色列表 (5)</div><button class="btn btn-small btn-blue-soft" data-sheet="roles-config">⚙ 配置角色</button></div>
+        <div class="role-list">
+          <article class="role-card"><span class="avatar host"><b>主</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">主持人</span><span class="tag">主</span></div><div class="role-desc">引导全局讨论，控节奏与流程</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+          <article class="role-card"><span class="avatar zgl"><b>亮</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">诸葛亮</span><span class="tag gray">应</span></div><div class="role-desc">擅长谋略、洞察与系统性思考</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+          <article class="role-card"><span class="avatar caocao"><b>操</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">曹操</span></div><div class="role-desc">现实主义者，重视效率与执行</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+          <article class="role-card"><span class="avatar simayi"><b>懿</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">司马懿</span><span class="tag gray">险</span></div><div class="role-desc">深思熟虑，擅长长期布局</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+          <article class="role-card"><span class="avatar xunyu"><b>彧</b></span><div class="role-body"><div class="role-top"><span class="role-card-name">荀彧</span></div><div class="role-desc">稳健谋士，擅长资源治理</div><div class="model-line">◎ 模型：GPT-4.1-mini</div><span class="ok-badge">已配置</span></div><button class="more" data-sheet="role-detail">⋮</button></article>
+        </div>`;
+      const data = {
+        overview: ['模板概览', '适合战略决策、市场进入、产品方向、复杂权衡等场景。用户以“主公/决策者”身份参与，主持人控场，角色提出不同立场。'],
+        events: ['事件规则', '已配置：立场投票、打脸反驳、反转提醒。触发依据为轮次、分歧关键词与用户指令。'],
+        rhythm: ['节奏配置', 'opening → developing → climax → closing。单角色发言 80-180 字，关键分歧时邀请用户介入。']
+      }[tab];
+      panel.innerHTML = `<div class="empty-panel"><div style="font-size:24px;margin-bottom:8px">▣</div><b>${data[0]}</b><p style="line-height:1.6">${data[1]}</p></div>`;
+    }
+  </script>
+</body>
+</html>
