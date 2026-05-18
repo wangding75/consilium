@@ -15,6 +15,9 @@ const QUICK_START_TOPICS = [
 
 const DEFAULT_TEMPLATE_ID = 'three-kingdoms-advisors'
 const DEFAULT_TEMPLATE_NAME = '三国军师团'
+const TEMPLATE_NAMES: Record<string, string> = {
+  [DEFAULT_TEMPLATE_ID]: DEFAULT_TEMPLATE_NAME,
+}
 
 export function HomeModule() {
   const router = useRouter()
@@ -120,7 +123,7 @@ export function HomeModule() {
           onClick={() => setIsTemplateSheetOpen(true)}
         >
           <span className="text-xs text-text-muted">模板</span>
-          <span className="text-sm text-text-primary">{DEFAULT_TEMPLATE_NAME}</span>
+          <span className="text-sm text-text-primary">{TEMPLATE_NAMES[selectedTemplateId] ?? selectedTemplateId}</span>
         </button>
 
         <button

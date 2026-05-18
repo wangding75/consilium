@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server'
-import type { ApiResponse } from '@/types/api'
+import type { ApiResponse, CreateSessionParams, CreateSessionResult } from '@/types/api'
 import type { Session } from '@/types'
-import type { CreateSessionParams, CreateSessionResult } from '@/types/api'
 import { SessionService } from '@/server/services/session.service'
-import { MockSessionRepository } from '@/server/repositories/mock/mock-session.repository'
-import { MockTemplateRepository } from '@/server/repositories/mock/mock-template.repository'
+import { sharedSessionRepo, sharedTemplateRepo } from '@/server/repositories/mock/instances'
 import { ServiceError } from '@/server/errors'
 
 export async function GET(): Promise<NextResponse<ApiResponse<Session[]>>> {
   const requestId = crypto.randomUUID()
   try {
-    const service = new SessionService(new MockSessionRepository(), new MockTemplateRepository())
+    const service = new SessionService(sharedSessionRepo, sharedTemplateRepo)
     const data = await service.listSessions()
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
@@ -40,7 +38,7 @@ export async function POST(
       templateId: body.templateId,
       modelStrategyId: typeof body.modelStrategyId === 'string' ? body.modelStrategyId : undefined,
     }
-    const service = new SessionService(new MockSessionRepository(), new MockTemplateRepository())
+    const service = new SessionService(sharedSessionRepo, sharedTemplateRepo)
     const data = await service.createSession(params)
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
