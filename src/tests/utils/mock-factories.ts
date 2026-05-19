@@ -48,6 +48,7 @@ export function mockSession(override: Partial<Session> = {}): Session {
     id: 'mock-session-1',
     templateId: 'mock-template-1',
     topic: '测试议题',
+    status: 'active',
     state: mockDiscussionState(),
     messages: [],
     createdAt: Date.now(),

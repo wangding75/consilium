@@ -15,7 +15,7 @@ it('TemplateService.listTemplates returns array of templates', async () => {
 })
 
 it('SessionService.listSessions returns array', async () => {
-  const service = new SessionService(new MockSessionRepository())
+  const service = new SessionService(new MockSessionRepository(), new MockTemplateRepository())
   const sessions = await service.listSessions()
   expect(Array.isArray(sessions)).toBe(true)
 })

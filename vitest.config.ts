@@ -8,6 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: [],
+    exclude: ['node_modules', '.cube/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

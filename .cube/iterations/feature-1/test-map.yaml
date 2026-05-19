@@ -1,0 +1,76 @@
+tasks:
+  - task: "Task-01：扩展 Session 类型（添加 idle 阶段、status、modelStrategyId 字段）"
+    module: types
+    test_file: session-types.test.ts
+    test_cases: 6
+
+  - task: "Task-02：新增 CreateSessionParams 和 CreateSessionResult 类型"
+    module: types
+    test_file: session-types.test.ts
+    test_cases: 6
+
+  - task: "Task-03：定义 ModelStrategy 数据常量"
+    module: data
+    test_file: model-strategies.test.ts
+    test_cases: 7
+
+  - task: "Task-04：扩展 SessionRepository 接口（添加 findRecent 方法）"
+    module: server/repositories
+    test_file: session-repo.test.ts
+    test_cases: 7
+
+  - task: "Task-05：实现 MockSessionRepository 内存存储与 findRecent"
+    module: server/repositories/mock
+    test_file: session-repo.test.ts
+    test_cases: 7
+
+  - task: "Task-06：实现 SessionService.createSession"
+    module: server/services
+    test_file: session-service.test.ts
+    test_cases: 14
+
+  - task: "Task-07：实现 SessionService.getRecentSessions"
+    module: server/services
+    test_file: session-service.test.ts
+    test_cases: 14
+
+  - task: "Task-08：实现 POST /api/sessions 路由"
+    module: app/api/sessions
+    test_file: sessions-api.test.ts
+    test_cases: 10
+
+  - task: "Task-09：实现 GET /api/sessions/recent 路由"
+    module: app/api/sessions
+    test_file: sessions-api.test.ts
+    test_cases: 10
+
+  - task: "Task-10：实现 HomeModule 首页完整 UI"
+    module: modules/home
+    test_file: home-ui.test.tsx
+    test_cases: 12
+
+  - task: "Task-11：更新现有测试兼容性（services.test.ts 构造器参数）"
+    module: modules/home
+    test_file: home.test.tsx
+    test_cases: 1
+
+type_tests:
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: sessions-api.test.ts
+    covers:
+      - "Task-08：实现 POST /api/sessions 路由"
+      - "Task-09：实现 GET /api/sessions/recent 路由"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: home-ui.test.tsx
+    covers:
+      - "Task-10：实现 HomeModule 首页完整 UI"
+
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: sessions-api.test.ts
+    covers:
+      - "Task-08：实现 POST /api/sessions 路由"
+      - "Task-09：实现 GET /api/sessions/recent 路由"
