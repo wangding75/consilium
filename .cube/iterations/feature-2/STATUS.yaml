@@ -117,7 +117,15 @@ tasks:
     test_total: 6
   - task: "Task-16：实现讨论页 RoleBar / MessageList / MessageInput UI 组件"
     test_file: discussion-module.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:51"
+    completed_at: "2026-05-19 11:51"
+    test_passed: 2
+    test_total: 2
   - task: "Task-17：实现 DiscussionModule 前后端联动"
     test_file: discussion-module.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:51"
+    completed_at: "2026-05-19 11:51"
+    test_passed: 2
+    test_total: 2
