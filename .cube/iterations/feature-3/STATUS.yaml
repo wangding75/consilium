@@ -96,7 +96,11 @@ tasks:
     test_total: 2
   - task: "Task-13：实现 MessageList 组件（消息流 + 自动滚动 + 四态）"
     test_file: message-list.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 18:56"
+    completed_at: "2026-05-19 18:56"
+    test_passed: 7
+    test_total: 7
   - task: "Task-14：实现 MessageInput 组件（发送、校验、快捷文本填充）"
     test_file: message-input.test.tsx
     phase: locked
