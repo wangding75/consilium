@@ -57,6 +57,12 @@ tasks:
   - task: "Task-07：完善 GET /messages API（分页、校验和错误码）"
     test_file: messages-get.test.ts
     phase: locked
+    started_at: "2026-05-19 18:37"
+    phase: green
+    test_passed: 5
+    test_total: 5
+    completed_at: "2026-05-19 18:43"
+    phase: done
   - task: "Task-08：完善 POST /messages API（clientMessageId 回显、幂等和失败重试）"
     test_file: messages-post.test.ts
     phase: locked
