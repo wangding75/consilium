@@ -40,6 +40,12 @@ tasks:
   - task: "Task-04：实现 MockMessageRepository 的新方法、排序和回复关联"
     test_file: mock-message-repository-ext.test.ts
     phase: locked
+    started_at: "2026-05-19 18:23"
+    phase: green
+    test_passed: 13
+    test_total: 13
+    completed_at: "2026-05-19 18:25"
+    phase: done
   - task: "Task-05：完善 DiscussionService.getMessages（消息排序与 before 游标）"
     test_file: discussion-service-messages.test.ts
     phase: locked

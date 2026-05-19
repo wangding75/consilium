@@ -23,6 +23,10 @@ export class MockMessageRepository implements MessageRepository {
   }
 
   async save(msg: DiscussionMessage): Promise<DiscussionMessage> {
+    const existing = this.store.get(msg.messageId)
+    if (existing?.clientMessageId && existing.clientMessageId !== msg.clientMessageId) {
+      this.clientIdIndex.delete(`${existing.sessionId}:${existing.clientMessageId}`)
+    }
     this.store.set(msg.messageId, msg)
     if (msg.clientMessageId) {
       this.clientIdIndex.set(`${msg.sessionId}:${msg.clientMessageId}`, msg.messageId)

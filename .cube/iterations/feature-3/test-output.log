@@ -2,10 +2,10 @@
 
  RUN  v2.1.9 /home/wangding/git/consilium
 
- ✓ src/server/repositories/message-repository-ext.test.ts (7 tests) 5ms
+ ✓ src/server/repositories/mock/mock-message.repository.test.ts (6 tests) 11ms
 
  Test Files  1 passed (1)
-      Tests  7 passed (7)
-   Start at  18:22:45
-   Duration  957ms (transform 47ms, setup 0ms, collect 36ms, tests 5ms, environment 384ms, prepare 73ms)
+      Tests  6 passed (6)
+   Start at  18:25:15
+   Duration  980ms (transform 49ms, setup 0ms, collect 39ms, tests 11ms, environment 382ms, prepare 87ms)
 
