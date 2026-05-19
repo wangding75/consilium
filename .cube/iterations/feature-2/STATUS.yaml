@@ -33,7 +33,11 @@ tasks:
     test_total: 7
   - task: "Task-04：实现 Scheduler（selectSpeakers 扩展接口 + 串行轮转策略）"
     test_file: scheduler.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:44"
+    completed_at: "2026-05-19 11:45"
+    test_passed: 5
+    test_total: 5
   - task: "Task-05：实现 AgentRuntime（调用 LLMClient 生成角色输出）"
     test_file: agent-runtime.test.ts
     phase: locked
