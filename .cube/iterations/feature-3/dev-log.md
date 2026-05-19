@@ -77,3 +77,18 @@
 - 修改：src/app/discussion/[sessionId]/page.tsx
 
 ---
+
+## 代码审查（2026-05-19 19:01）
+
+**审查范围**：feature/3 分支 04-development 全部变更
+
+**审查结果**：
+
+| 级别 | 问题 | 文件 | 说明 |
+|------|------|------|------|
+| MEDIUM | DiscussionModuleInner 未使用 DiscussionStore | src/modules/discussion/index.tsx:30 | 组件使用本地 useState 而非 DiscussionProvider 提供的 store，DiscussionProvider 包裹但内部未消费。不影响功能正确性（测试通过），但造成 store 冗余包裹 |
+| MEDIUM | MessageList typingSpeakerName=null 渲染 "null正在输入..." | src/modules/discussion/message-list.tsx:47 | `typingSpeakerName && ...` 在 null 时不渲染（JSX 中 null 是 falsy），但测试注释指出潜在 bug。当前测试不验证 null 情况的输出，无功能影响 |
+| LOW | DiscussionStore.sendMessage 重复 dispatch TYPING_SET | src/store/discussion.store.ts:212 | 连续两次 dispatch `TYPING_SET`，第二次是冗余的 |
+| LOW | DiscussionModuleInner 使用 window.location.href 导航 | src/modules/discussion/index.tsx:101 | 应使用 next/navigation 的 router.push，但测试已 mock 且功能正确 |
+
+**结论**：无 CRITICAL 或 HIGH 级别问题。MEDIUM 问题为架构层面优化项，不影响当前功能正确性。所有 253 个测试通过。
