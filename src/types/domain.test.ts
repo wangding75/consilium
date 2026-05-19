@@ -1,4 +1,4 @@
-import type { DiscussionState, Role } from '@/types'
+import type { DiscussionState, Role, DiscussionMessage } from '@/types'
 
 it('DiscussionState shape has required fields', () => {
   const state: DiscussionState = {
