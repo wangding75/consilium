@@ -124,4 +124,8 @@ tasks:
     test_total: 3
   - task: "Task-17：实现 DiscussionModule 完整集成（DiscussionProvider + 完整集成逻辑）"
     test_file: discussion-module.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 18:59"
+    completed_at: "2026-05-19 18:59"
+    test_passed: 7
+    test_total: 7
