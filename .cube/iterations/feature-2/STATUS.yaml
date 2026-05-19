@@ -96,13 +96,25 @@ tasks:
     test_total: 6
   - task: "Task-13：实现 GET /api/sessions/:sessionId API 路由"
     test_file: session-detail.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:50"
+    completed_at: "2026-05-19 11:50"
+    test_passed: 4
+    test_total: 4
   - task: "Task-14：实现 GET /api/discussions/:sessionId/messages API 路由"
     test_file: discussion-messages.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:50"
+    completed_at: "2026-05-19 11:50"
+    test_passed: 3
+    test_total: 3
   - task: "Task-15：实现 POST /api/discussions/:sessionId/messages API 路由"
     test_file: discussion-messages.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:50"
+    completed_at: "2026-05-19 11:50"
+    test_passed: 6
+    test_total: 6
   - task: "Task-16：实现讨论页 RoleBar / MessageList / MessageInput UI 组件"
     test_file: discussion-module.test.tsx
     phase: locked
