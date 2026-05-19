@@ -2,10 +2,10 @@
 
  RUN  v2.1.9 /home/wangding/git/consilium
 
- ✓ src/modules/discussion/message-list.test.tsx (7 tests) 36ms
+ ✓ src/modules/discussion/message-input.test.tsx (4 tests) 103ms
 
  Test Files  1 passed (1)
-      Tests  7 passed (7)
-   Start at  18:56:22
-   Duration  1.09s (transform 49ms, setup 0ms, collect 150ms, tests 36ms, environment 397ms, prepare 83ms)
+      Tests  4 passed (4)
+   Start at  18:57:06
+   Duration  1.19s (transform 54ms, setup 0ms, collect 163ms, tests 103ms, environment 408ms, prepare 89ms)
 
