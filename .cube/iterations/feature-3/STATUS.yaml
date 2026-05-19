@@ -117,7 +117,11 @@ tasks:
     test_total: 3
   - task: "Task-16：实现 DiscussionHeader 组件（标题、模板 Tag、返回、更多操作）"
     test_file: discussion-header.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 18:58"
+    completed_at: "2026-05-19 18:59"
+    test_passed: 3
+    test_total: 3
   - task: "Task-17：实现 DiscussionModule 完整集成（DiscussionProvider + 完整集成逻辑）"
     test_file: discussion-module.test.tsx
     phase: locked
