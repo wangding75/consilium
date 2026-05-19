@@ -2,10 +2,10 @@
 
  RUN  v2.1.9 /home/wangding/git/consilium
 
- ✓ src/types/api-send-message.test.ts (6 tests) 4ms
+ ✓ src/server/repositories/message-repository-ext.test.ts (7 tests) 5ms
 
  Test Files  1 passed (1)
-      Tests  6 passed (6)
-   Start at  18:21:16
-   Duration  994ms (transform 40ms, setup 0ms, collect 21ms, tests 4ms, environment 419ms, prepare 89ms)
+      Tests  7 passed (7)
+   Start at  18:22:45
+   Duration  957ms (transform 47ms, setup 0ms, collect 36ms, tests 5ms, environment 384ms, prepare 73ms)
 

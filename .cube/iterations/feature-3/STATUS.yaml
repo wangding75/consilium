@@ -31,6 +31,12 @@ tasks:
   - task: "Task-03：扩展 MessageRepository 接口（添加 findByClientMessageId 和 updateStatus 方法）"
     test_file: message-repository-ext.test.ts
     phase: locked
+    started_at: "2026-05-19 18:22"
+    phase: green
+    test_passed: 7
+    test_total: 7
+    completed_at: "2026-05-19 18:23"
+    phase: done
   - task: "Task-04：实现 MockMessageRepository 的新方法、排序和回复关联"
     test_file: mock-message-repository-ext.test.ts
     phase: locked
