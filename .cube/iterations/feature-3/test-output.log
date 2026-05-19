@@ -2,10 +2,10 @@
 
  RUN  v2.1.9 /home/wangding/git/consilium
 
- ✓ src/modules/discussion/role-bar.test.tsx (4 tests) 38ms
+ ✓ src/modules/discussion/typing-indicator.test.tsx (2 tests) 22ms
 
  Test Files  1 passed (1)
-      Tests  4 passed (4)
-   Start at  18:54:20
-   Duration  1.35s (transform 45ms, setup 0ms, collect 211ms, tests 38ms, environment 411ms, prepare 81ms)
+      Tests  2 passed (2)
+   Start at  18:55:21
+   Duration  1.10s (transform 43ms, setup 0ms, collect 142ms, tests 22ms, environment 395ms, prepare 78ms)
 
