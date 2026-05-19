@@ -9,7 +9,13 @@ export interface AgentRuntime {
 export class DefaultAgentRuntime implements AgentRuntime {
   constructor(private readonly provider: LLMProvider) {}
 
-  async run(_profile: AgentProfile, _contextMessages: LLMMessage[]): Promise<AgentOutput> {
-    throw new Error('not implemented')
+  async run(profile: AgentProfile, contextMessages: LLMMessage[]): Promise<AgentOutput> {
+    const content = await this.provider.chat(contextMessages, { model: profile.model })
+    return {
+      agentId: profile.agentId,
+      roleId: profile.roleId,
+      content,
+      messageType: profile.agentType === 'host' ? 'host' : 'character',
+    }
   }
 }
