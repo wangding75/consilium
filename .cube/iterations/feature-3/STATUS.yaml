@@ -110,7 +110,11 @@ tasks:
     test_total: 4
   - task: "Task-15：实现 MoreSheet 组件（总结/投票/归档入口 + Mock Modal）"
     test_file: more-sheet.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 18:57"
+    completed_at: "2026-05-19 18:58"
+    test_passed: 3
+    test_total: 3
   - task: "Task-16：实现 DiscussionHeader 组件（标题、模板 Tag、返回、更多操作）"
     test_file: discussion-header.test.tsx
     phase: locked
