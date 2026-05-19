@@ -81,3 +81,29 @@
 - 修改：src/modules/discussion/index.tsx
 
 ---
+
+## 代码审查
+
+**审查时间：** 2026-05-19 11:53
+**审查范围：** Tasks 04-17 实现代码（engine、repository、service 层）
+
+### 问题清单
+
+| 严重程度 | 文件 | 描述 | 状态 |
+|---------|------|------|------|
+| HIGH | scheduler.ts:16 | candidates 为空时 modulo-by-zero 导致 TypeError | ✅ 已修复：增加空数组守卫 |
+| HIGH | discussion.service.ts:93/98 | Date.now() 作为 messageId/runId 在并发下产生碰撞 | ✅ 已修复：改用 crypto.randomUUID() |
+| HIGH | discussion.service.ts | content 无长度上限，可能造成 LLM token 滥用 | 记录为 Known Risk（Mock 环境不影响正确性） |
+| MEDIUM | discussion.service.ts | sessionRepo 等依赖为 optional，静默失败风险 | 记录：生产阶段需改为必填依赖 |
+| MEDIUM | orchestrator.ts:60 | provider 字段硬编码 'mock' | 记录：生产阶段通过接口读取 |
+| MEDIUM | mock-message.repository.ts | before 分页参数被忽略 | 记录：Mock 仅用于测试，不影响功能 |
+| LOW | orchestrator.ts | DefaultOrchestrator 兼容 stub 在生产模块中 | 记录：迁移完成后清理 |
+
+### 安全审查结论
+- 无 CRITICAL 问题
+- 已修复 2 个 HIGH 问题（crash 级别）
+- 1 个 HIGH 问题记录为 Known Risk（内容长度验证，Mock 测试环境不适用）
+- 所有 160 个测试在修复后通过
+
+### 测试覆盖
+- 全量运行：35 个测试文件，160 个测试，全部通过

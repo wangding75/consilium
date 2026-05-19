@@ -90,12 +90,12 @@ export class DiscussionService {
       throw new ServiceError('MESSAGE_EMPTY', 'Message content cannot be empty')
     }
 
-    const runId = `run-${Date.now()}`
+    const runId = `run-${crypto.randomUUID()}`
     let userMessage = null
 
     if (!isOpening) {
       const msg = await this.messageRepo?.save({
-        messageId: `msg-user-${Date.now()}`,
+        messageId: `msg-user-${crypto.randomUUID()}`,
         sessionId,
         type: 'user',
         content,
@@ -135,7 +135,7 @@ export class DiscussionService {
 
     for (const logData of callLogs) {
       const log: AgentCallLog = {
-        id: `log-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        id: `log-${crypto.randomUUID()}`,
         ...logData,
         createdAt: new Date().toISOString(),
       }

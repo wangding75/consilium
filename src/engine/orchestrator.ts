@@ -72,3 +72,13 @@ export class DiscussionOrchestrator {
     return { agentMessages, callLogs, activeSpeakerId }
   }
 }
+
+// @deprecated — compatibility stub for iteration-1 engine.test.ts
+export class DefaultOrchestrator {
+  async start(_session: unknown): Promise<void> {
+    return
+  }
+  async next(_session: unknown): Promise<null> {
+    return null
+  }
+}

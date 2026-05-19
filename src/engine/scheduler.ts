@@ -13,6 +13,7 @@ export class RoundRobinScheduler implements Scheduler {
     }
     const nonHosts = roles.filter((r) => r.agentType !== 'host' && r.roleId !== lastSpeakerId)
     const candidates = nonHosts.length > 0 ? nonHosts : roles.filter((r) => r.agentType !== 'host')
+    if (candidates.length === 0) return { speakerIds: [], reason: '无可用发言者' }
     const speaker = candidates[roundIndex % candidates.length]
     return { speakerIds: [speaker.roleId], reason: `轮转策略，选择 ${speaker.name}` }
   }
