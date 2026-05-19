@@ -1,0 +1,67 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/2
+
+tasks:
+  - task: "Task-01：定义多 Agent 讨论核心类型"
+    test_file: types-sanity.test.ts
+    phase: done
+    started_at: "2026-05-19 11:40"
+    completed_at: "2026-05-19 11:41"
+    test_passed: 4
+    test_total: 4
+  - task: "Task-02：实现 MockLLMClient"
+    test_file: mock-llm-client.test.ts
+    phase: locked
+  - task: "Task-03：实现 ContextBuilder"
+    test_file: context-builder.test.ts
+    phase: locked
+  - task: "Task-04：实现 Scheduler（selectSpeakers 扩展接口 + 串行轮转策略）"
+    test_file: scheduler.test.ts
+    phase: locked
+  - task: "Task-05：实现 AgentRuntime（调用 LLMClient 生成角色输出）"
+    test_file: agent-runtime.test.ts
+    phase: locked
+  - task: "Task-06：实现 DiscussionOrchestrator（替换旧 Orchestrator，协调 Host/Expert/Critic 串行发言）"
+    test_file: discussion-orchestrator.test.ts
+    phase: locked
+  - task: "Task-07：实现 MessageRepository 接口和 MockMessageRepository"
+    test_file: mock-message.repository.test.ts
+    phase: locked
+  - task: "Task-08：实现 AgentCallLogRepository 接口和 MockAgentCallLogRepository"
+    test_file: mock-agent-call-log.repository.test.ts
+    phase: locked
+  - task: "Task-09：扩展共享 mock 实例（instances.ts）"
+    test_file: mock-message.repository.test.ts
+    phase: locked
+  - task: "Task-10：实现 DiscussionService.getSessionDetail()"
+    test_file: discussion-service.test.ts
+    phase: locked
+  - task: "Task-11：实现 DiscussionService.getMessages()"
+    test_file: discussion-service.test.ts
+    phase: locked
+  - task: "Task-12：实现 DiscussionService.sendUserMessage()（含 Orchestrator 调用和日志持久化）"
+    test_file: discussion-service.test.ts
+    phase: locked
+  - task: "Task-13：实现 GET /api/sessions/:sessionId API 路由"
+    test_file: session-detail.test.ts
+    phase: locked
+  - task: "Task-14：实现 GET /api/discussions/:sessionId/messages API 路由"
+    test_file: discussion-messages.test.ts
+    phase: locked
+  - task: "Task-15：实现 POST /api/discussions/:sessionId/messages API 路由"
+    test_file: discussion-messages.test.ts
+    phase: locked
+  - task: "Task-16：实现讨论页 RoleBar / MessageList / MessageInput UI 组件"
+    test_file: discussion-module.test.tsx
+    phase: locked
+  - task: "Task-17：实现 DiscussionModule 前后端联动"
+    test_file: discussion-module.test.tsx
+    phase: locked
