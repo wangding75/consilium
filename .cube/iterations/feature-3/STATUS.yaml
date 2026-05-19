@@ -75,6 +75,12 @@ tasks:
   - task: "Task-09：实现 DiscussionStore（React Context + useReducer）"
     test_file: discussion.store.test.ts
     phase: locked
+    started_at: "2026-05-19 18:47"
+    phase: green
+    test_passed: 15
+    test_total: 15
+    completed_at: "2026-05-19 18:49"
+    phase: done
   - task: "Task-10：实现 MessageBubble 组件（4 种类型 + 失败重试）"
     test_file: message-bubble.test.tsx
     phase: locked

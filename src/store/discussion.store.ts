@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, createElement, useContext, useReducer, useRef, type ReactNode } from 'react'
+import { createContext, createElement, useContext, useReducer, useRef, useCallback, type ReactNode } from 'react'
 import type { DiscussionMessage } from '@/types'
 import type { ApiError, SessionDetailResult } from '@/types/api'
 
@@ -26,7 +26,12 @@ export interface DiscussionActions {
 }
 
 export function generateClientMessageId(): string {
-  throw new Error('not implemented')
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let random = ''
+  for (let i = 0; i < 6; i++) {
+    random += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return `client_${Date.now()}_${random}`
 }
 
 const initialState: DiscussionStoreState = {
@@ -51,11 +56,86 @@ export type DiscussionAction =
   | { type: 'MESSAGE_FAILED'; sessionId: string; clientMessageId: string; error: ApiError }
   | { type: 'SENDING_STATUS'; clientMessageId: string; status: 'pending' | 'completed' | 'failed' }
 
+function mergeMessages(
+  existing: DiscussionMessage[],
+  incoming: DiscussionMessage[]
+): DiscussionMessage[] {
+  const map = new Map<string, DiscussionMessage>()
+  for (const m of existing) map.set(m.messageId, m)
+  for (const m of incoming) {
+    const key = m.clientMessageId && !map.has(m.messageId)
+      ? [...map.values()].find(e => e.clientMessageId === m.clientMessageId)?.messageId
+      : m.messageId
+    map.set(key ?? m.messageId, m)
+  }
+  return [...map.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+}
+
 export function discussionReducer(
   state: DiscussionStoreState,
   action: DiscussionAction
 ): DiscussionStoreState {
-  throw new Error('not implemented')
+  switch (action.type) {
+    case 'SESSION_LOADED':
+      return {
+        ...state,
+        sessions: { ...state.sessions, [action.sessionId]: action.session },
+        activeSpeakerBySessionId: { ...state.activeSpeakerBySessionId, [action.sessionId]: action.session.activeSpeakerId },
+      }
+    case 'MESSAGES_LOADED': {
+      const current = state.messagesBySessionId[action.sessionId] ?? []
+      const merged = mergeMessages(current, action.messages)
+      return {
+        ...state,
+        messagesBySessionId: { ...state.messagesBySessionId, [action.sessionId]: merged },
+        activeSpeakerBySessionId: { ...state.activeSpeakerBySessionId, [action.sessionId]: action.activeSpeakerId },
+      }
+    }
+    case 'LOADING_SET':
+      return { ...state, loadingBySessionId: { ...state.loadingBySessionId, [action.sessionId]: action.loading } }
+    case 'TYPING_SET':
+      return { ...state, typingBySessionId: { ...state.typingBySessionId, [action.sessionId]: action.typing } }
+    case 'ERROR_SET':
+      return { ...state, errorBySessionId: { ...state.errorBySessionId, [action.sessionId]: action.error } }
+    case 'MESSAGE_OPTIMISTIC': {
+      const current = state.messagesBySessionId[action.sessionId] ?? []
+      return {
+        ...state,
+        messagesBySessionId: { ...state.messagesBySessionId, [action.sessionId]: [...current, action.message] },
+      }
+    }
+    case 'MESSAGE_SENT': {
+      const current = state.messagesBySessionId[action.sessionId] ?? []
+      const incoming = [...(action.userMessage ? [action.userMessage] : []), ...action.agentMessages]
+      const merged = mergeMessages(current, incoming)
+      return {
+        ...state,
+        messagesBySessionId: { ...state.messagesBySessionId, [action.sessionId]: merged },
+        typingBySessionId: { ...state.typingBySessionId, [action.sessionId]: false },
+        typingSpeakerBySessionId: { ...state.typingSpeakerBySessionId, [action.sessionId]: null },
+        activeSpeakerBySessionId: { ...state.activeSpeakerBySessionId, [action.sessionId]: action.activeSpeakerId },
+        sendingByClientMessageId: { ...state.sendingByClientMessageId, [action.clientMessageId]: 'completed' },
+      }
+    }
+    case 'MESSAGE_FAILED': {
+      const current = state.messagesBySessionId[action.sessionId] ?? []
+      const updated = current.map(m =>
+        m.clientMessageId === action.clientMessageId ? { ...m, status: 'failed' as const } : m
+      )
+      return {
+        ...state,
+        messagesBySessionId: { ...state.messagesBySessionId, [action.sessionId]: updated },
+        typingBySessionId: { ...state.typingBySessionId, [action.sessionId]: false },
+        typingSpeakerBySessionId: { ...state.typingSpeakerBySessionId, [action.sessionId]: null },
+        sendingByClientMessageId: { ...state.sendingByClientMessageId, [action.clientMessageId]: 'failed' },
+        errorBySessionId: { ...state.errorBySessionId, [action.sessionId]: action.error },
+      }
+    }
+    case 'SENDING_STATUS':
+      return { ...state, sendingByClientMessageId: { ...state.sendingByClientMessageId, [action.clientMessageId]: action.status } }
+    default:
+      return state
+  }
 }
 
 interface DiscussionContextValue {
@@ -70,25 +150,150 @@ interface DiscussionProviderProps {
 }
 
 export function DiscussionProvider({ children }: DiscussionProviderProps) {
-  const [state] = useReducer(discussionReducer, initialState)
-  useRef(new Map<string, ReturnType<typeof setTimeout>>())
+  const [state, dispatch] = useReducer(discussionReducer, initialState)
+  const timeoutHandles = useRef(new Map<string, ReturnType<typeof setTimeout>>())
 
   const actions: DiscussionActions = {
-    loadSession: async () => {
-      throw new Error('not implemented')
-    },
-    loadMessages: async () => {
-      throw new Error('not implemented')
-    },
-    sendMessage: async () => {
-      throw new Error('not implemented')
-    },
-    retryMessage: async () => {
-      throw new Error('not implemented')
-    },
-    clearError: () => {
-      throw new Error('not implemented')
-    },
+    loadSession: useCallback(async (sessionId: string) => {
+      dispatch({ type: 'LOADING_SET', sessionId, loading: true })
+      dispatch({ type: 'ERROR_SET', sessionId, error: null })
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}`)
+        const json = await res.json()
+        if (json.success) {
+          dispatch({ type: 'SESSION_LOADED', sessionId, session: json.data })
+        } else {
+          dispatch({ type: 'ERROR_SET', sessionId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      } finally {
+        dispatch({ type: 'LOADING_SET', sessionId, loading: false })
+      }
+    }, []),
+
+    loadMessages: useCallback(async (sessionId: string, opts?: { before?: string }) => {
+      try {
+        const params = new URLSearchParams({ limit: '50' })
+        if (opts?.before) params.set('before', opts.before)
+        const res = await fetch(`/api/discussions/${sessionId}/messages?${params}`)
+        const json = await res.json()
+        if (json.success) {
+          dispatch({ type: 'MESSAGES_LOADED', sessionId, messages: json.data.messages, activeSpeakerId: json.data.activeSpeakerId })
+        }
+      } catch {
+        // silently ignore
+      }
+    }, []),
+
+    sendMessage: useCallback(async (sessionId: string, content: string) => {
+      const clientMessageId = generateClientMessageId()
+      const session = state.sessions[sessionId]
+      const activeSpeakerId = state.activeSpeakerBySessionId[sessionId]
+      let typingSpeaker: { roleId: string; name: string } | null = null
+      if (activeSpeakerId && session) {
+        const role = session.roles.find(r => r.roleId === activeSpeakerId)
+        if (role) typingSpeaker = { roleId: role.roleId, name: role.name }
+      }
+
+      const optimisticMsg: DiscussionMessage = {
+        messageId: `optimistic-${clientMessageId}`,
+        sessionId,
+        type: 'user',
+        content,
+        status: 'pending',
+        clientMessageId,
+        createdAt: new Date().toISOString(),
+      }
+
+      dispatch({ type: 'MESSAGE_OPTIMISTIC', sessionId, message: optimisticMsg })
+      dispatch({ type: 'SENDING_STATUS', clientMessageId, status: 'pending' })
+      dispatch({ type: 'TYPING_SET', sessionId, typing: true })
+      dispatch({ type: 'TYPING_SET', sessionId, typing: true })
+
+      // 10s timeout
+      const handle = setTimeout(() => {
+        if (state.sendingByClientMessageId[clientMessageId] === 'pending') {
+          dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: { code: 'TIMEOUT', message: '发送超时' } })
+        }
+        timeoutHandles.current.delete(clientMessageId)
+      }, 10000)
+      timeoutHandles.current.set(clientMessageId, handle)
+
+      try {
+        const res = await fetch(`/api/discussions/${sessionId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content, clientMessageId }),
+        })
+        const json = await res.json()
+        clearTimeout(handle)
+        timeoutHandles.current.delete(clientMessageId)
+
+        if (json.success) {
+          dispatch({ type: 'MESSAGE_SENT', sessionId, clientMessageId, userMessage: json.data.userMessage, agentMessages: json.data.agentMessages, activeSpeakerId: json.data.activeSpeakerId })
+        } else {
+          dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: json.error })
+        }
+      } catch {
+        clearTimeout(handle)
+        timeoutHandles.current.delete(clientMessageId)
+        dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, [state.sessions, state.activeSpeakerBySessionId, state.sendingByClientMessageId]),
+
+    retryMessage: useCallback(async (sessionId: string, clientMessageId: string) => {
+      const session = state.sessions[sessionId]
+      const activeSpeakerId = state.activeSpeakerBySessionId[sessionId]
+      let typingSpeaker: { roleId: string; name: string } | null = null
+      if (activeSpeakerId && session) {
+        const role = session.roles.find(r => r.roleId === activeSpeakerId)
+        if (role) typingSpeaker = { roleId: role.roleId, name: role.name }
+      }
+
+      // Reset the failed message to pending
+      const current = state.messagesBySessionId[sessionId] ?? []
+      const updated = current.map(m =>
+        m.clientMessageId === clientMessageId ? { ...m, status: 'pending' as const } : m
+      )
+      dispatch({ type: 'MESSAGES_LOADED', sessionId, messages: updated, activeSpeakerId })
+      dispatch({ type: 'SENDING_STATUS', clientMessageId, status: 'pending' })
+      dispatch({ type: 'TYPING_SET', sessionId, typing: true })
+
+      const handle = setTimeout(() => {
+        if (state.sendingByClientMessageId[clientMessageId] === 'pending') {
+          dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: { code: 'TIMEOUT', message: '发送超时' } })
+        }
+        timeoutHandles.current.delete(clientMessageId)
+      }, 10000)
+      timeoutHandles.current.set(clientMessageId, handle)
+
+      try {
+        const failedMsg = current.find(m => m.clientMessageId === clientMessageId)
+        const res = await fetch(`/api/discussions/${sessionId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: failedMsg?.content ?? '', clientMessageId }),
+        })
+        const json = await res.json()
+        clearTimeout(handle)
+        timeoutHandles.current.delete(clientMessageId)
+
+        if (json.success) {
+          dispatch({ type: 'MESSAGE_SENT', sessionId, clientMessageId, userMessage: json.data.userMessage, agentMessages: json.data.agentMessages, activeSpeakerId: json.data.activeSpeakerId })
+        } else {
+          dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: json.error })
+        }
+      } catch {
+        clearTimeout(handle)
+        timeoutHandles.current.delete(clientMessageId)
+        dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, [state.sessions, state.activeSpeakerBySessionId, state.sendingByClientMessageId, state.messagesBySessionId]),
+
+    clearError: useCallback((sessionId: string) => {
+      dispatch({ type: 'ERROR_SET', sessionId, error: null })
+    }, []),
   }
 
   return createElement(DiscussionContext.Provider, { value: { state, actions } }, children)

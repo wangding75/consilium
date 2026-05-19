@@ -2,10 +2,10 @@
 
  RUN  v2.1.9 /home/wangding/git/consilium
 
- ✓ src/app/api/discussions/messages-post.test.ts (5 tests) 14ms
+ ✓ src/store/discussion.store.test.ts (15 tests) 14ms
 
  Test Files  1 passed (1)
-      Tests  5 passed (5)
-   Start at  18:45:22
-   Duration  1.08s (transform 116ms, setup 0ms, collect 145ms, tests 14ms, environment 390ms, prepare 74ms)
+      Tests  15 passed (15)
+   Start at  18:48:29
+   Duration  1.08s (transform 70ms, setup 0ms, collect 83ms, tests 14ms, environment 438ms, prepare 80ms)
 
