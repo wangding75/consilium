@@ -19,7 +19,11 @@ tasks:
     test_total: 4
   - task: "Task-02：实现 MockLLMClient"
     test_file: mock-llm-client.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:41"
+    completed_at: "2026-05-19 11:42"
+    test_passed: 5
+    test_total: 5
   - task: "Task-03：实现 ContextBuilder"
     test_file: context-builder.test.ts
     phase: locked
