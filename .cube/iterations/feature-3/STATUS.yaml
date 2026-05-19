@@ -22,6 +22,12 @@ tasks:
   - task: "Task-02：扩展 API 类型（SendMessageRequest / SendMessageResult / 消息列表参数）"
     test_file: api-send-message.test.ts
     phase: locked
+    started_at: "2026-05-19 18:18"
+    phase: green
+    test_passed: 6
+    test_total: 6
+    completed_at: "2026-05-19 18:22"
+    phase: done
   - task: "Task-03：扩展 MessageRepository 接口（添加 findByClientMessageId 和 updateStatus 方法）"
     test_file: message-repository-ext.test.ts
     phase: locked
