@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import type { ApiResponse } from '@/types/api'
-import type { Discussion } from '@/types'
+import type { ApiResponse, SessionDetailResult } from '@/types/api'
 import { DiscussionService } from '@/server/services/discussion.service'
 import { MockDiscussionRepository } from '@/server/repositories/mock/mock-discussion.repository'
 import {
@@ -32,17 +31,26 @@ function createService(): DiscussionService {
   )
 }
 
-export async function GET(): Promise<NextResponse<ApiResponse<Discussion[]>>> {
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ sessionId: string }> }
+): Promise<NextResponse<ApiResponse<SessionDetailResult>>> {
   const requestId = crypto.randomUUID()
   try {
+    const { sessionId } = await params
     const service = createService()
-    const data = await service.listDiscussions()
+    const data = await service.getSessionDetail(sessionId)
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
-    const code = 'INTERNAL_ERROR'
-    const message = err instanceof ServiceError ? err.message : 'An unexpected error occurred'
+    if (err instanceof ServiceError && err.code === 'SESSION_NOT_FOUND') {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: err.code, message: err.message }, requestId },
+        { status: 404 }
+      )
+    }
+    const message = err instanceof Error ? err.message : 'An unexpected error occurred'
     return NextResponse.json(
-      { success: false, data: null, error: { code, message }, requestId },
+      { success: false, data: null, error: { code: 'INTERNAL_ERROR', message }, requestId },
       { status: 500 }
     )
   }

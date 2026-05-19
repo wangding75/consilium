@@ -8,11 +8,14 @@ export interface DiscussionState {
   lastSpeakerId: string | null
 }
 
+export type AgentType = 'host' | 'expert' | 'critic'
+
 export interface Role {
   id: string
   name: string
   persona: string
   isHost: boolean
+  agentType?: AgentType
   systemPrompt: string
   avatarEmoji?: string
 }
@@ -78,25 +81,119 @@ export interface LLMConfig {
   temperature?: number
 }
 
+// Iteration 2: replaced AgentProfile definition
 export interface AgentProfile {
+  agentId: string
   roleId: string
-  role: Role
-  llmConfig: LLMConfig
+  agentType: AgentType
+  name: string
+  persona: string
+  systemPrompt: string
+  model: string
+  temperature?: number
+  visible: boolean
 }
 
+// Iteration 2: replaced AgentOutput definition
 export interface AgentOutput {
+  agentId: string
   roleId: string
+  messageType: 'host' | 'character'
   content: string
-  eventTriggered?: EventType
-  timestamp: number
+  metadata?: {
+    roundIndex?: number
+    isMock?: boolean
+    promptTokens?: number
+    completionTokens?: number
+    durationMs?: number
+  }
 }
 
-export interface AgentRuntime {
-  run(profile: AgentProfile, context: Session): Promise<AgentOutput>
+// DiscussionMessage is stored in MessageRepository (iteration 2)
+export interface DiscussionMessage {
+  messageId: string
+  sessionId: string
+  type: 'host' | 'character' | 'user' | 'system'
+  roleId?: string
+  agentType?: AgentType
+  content: string
+  status: 'completed' | 'streaming' | 'failed'
+  createdAt: string
+  metadata?: {
+    roundIndex?: number
+    isMock?: boolean
+    promptTokens?: number
+    completionTokens?: number
+    durationMs?: number
+  }
 }
 
-// Agent combines profile with runtime execution
-export interface Agent {
-  profile: AgentProfile
-  run(context: Session): Promise<AgentOutput>
+// AgentCallLog is persisted by Service layer (iteration 2)
+export interface AgentCallLog {
+  id: string
+  sessionId: string
+  runId: string
+  messageId?: string
+  agentId: string
+  roleId: string
+  provider: string
+  model: string
+  inputSummary: string
+  outputSummary?: string
+  output?: string
+  promptTokens?: number
+  completionTokens?: number
+  totalTokens?: number
+  cost?: number
+  durationMs: number
+  status: 'success' | 'failed'
+  errorCode?: string
+  errorMessage?: string
+  createdAt: string
+}
+
+// Pre-save log data constructed by Orchestrator (without id/createdAt)
+export type AgentCallLogData = Omit<AgentCallLog, 'id' | 'createdAt'>
+
+// Scheduler types (iteration 2)
+export interface SpeakerSelectionInput {
+  sessionId: string
+  roles: AgentProfile[]
+  messageHistory: DiscussionMessage[]
+  roundIndex: number
+  lastSpeakerId?: string
+  policy?: string
+}
+
+export interface SpeakerSelectionResult {
+  speakerIds: string[]
+  reason: string
+}
+
+// Orchestrator types (iteration 2)
+export interface OrchestratorInput {
+  sessionId: string
+  runId: string
+  topic: string
+  templateName: string
+  profiles: AgentProfile[]
+  messageHistory: DiscussionMessage[]
+  triggerContent: string | null
+}
+
+export interface OrchestratorResult {
+  agentMessages: DiscussionMessage[]
+  callLogs: AgentCallLogData[]
+  activeSpeakerId: string | null
+}
+
+// ContextBuilder input type (iteration 2)
+export interface ContextBuilderInput {
+  sessionId: string
+  topic: string
+  templateName: string
+  role: AgentProfile
+  messageHistory: DiscussionMessage[]
+  maxMessages?: number
+  maxChars?: number
 }

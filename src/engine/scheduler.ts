@@ -1,11 +1,11 @@
-import type { Session, Role } from '@/types'
+import type { SpeakerSelectionInput, SpeakerSelectionResult } from '@/types'
 
 export interface Scheduler {
-  selectNext(session: Session): Promise<Role | null>
+  selectSpeakers(input: SpeakerSelectionInput): SpeakerSelectionResult
 }
 
-export class DefaultScheduler implements Scheduler {
-  async selectNext(_session: Session): Promise<Role | null> {
-    throw new Error('not implemented — will be built in iteration 2')
+export class RoundRobinScheduler implements Scheduler {
+  selectSpeakers(_input: SpeakerSelectionInput): SpeakerSelectionResult {
+    throw new Error('not implemented')
   }
 }

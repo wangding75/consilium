@@ -3,7 +3,7 @@ import type { CreateSessionParams, CreateSessionResult } from '@/types/api'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
 import { ServiceError } from '@/server/errors'
-import { MODEL_STRATEGIES, DEFAULT_STRATEGY_ID } from '@/data/model-strategies'
+import { MODEL_STRATEGIES, DEFAULT_STRATEGY_ID, type ModelStrategyId } from '@/data/model-strategies'
 
 const VALID_STRATEGY_IDS = new Set(MODEL_STRATEGIES.map((s) => s.id))
 
@@ -30,7 +30,7 @@ export class SessionService {
       const template = await this.templateRepo.findById(params.templateId)
       if (!template) throw new ServiceError('TEMPLATE_NOT_FOUND', `Template not found: ${params.templateId}`)
 
-      const strategyId = params.modelStrategyId ?? DEFAULT_STRATEGY_ID
+      const strategyId = (params.modelStrategyId ?? DEFAULT_STRATEGY_ID) as ModelStrategyId
       if (!VALID_STRATEGY_IDS.has(strategyId)) {
         throw new ServiceError('INVALID_STRATEGY', `Invalid model strategy: ${strategyId}`)
       }

@@ -1,0 +1,90 @@
+iteration: feature-2
+generated_at: "2026-05-19"
+files:
+  - path: src/types/index.ts
+    status: modified
+    tasks:
+      - "Task-01：定义多 Agent 讨论核心类型"
+  - path: src/types/api.ts
+    status: modified
+    tasks:
+      - "Task-01：定义多 Agent 讨论核心类型"
+  - path: src/data/templates/three-kingdoms.ts
+    status: modified
+    tasks:
+      - "Task-01：定义多 Agent 讨论核心类型"
+  - path: src/llm/mock-llm-client.ts
+    status: created
+    tasks:
+      - "Task-02：实现 MockLLMClient"
+  - path: src/engine/context-builder.ts
+    status: created
+    tasks:
+      - "Task-03：实现 ContextBuilder"
+  - path: src/engine/scheduler.ts
+    status: modified
+    tasks:
+      - "Task-04：实现 Scheduler（selectSpeakers 扩展接口 + 串行轮转策略）"
+  - path: src/engine/agent-runtime.ts
+    status: created
+    tasks:
+      - "Task-05：实现 AgentRuntime（调用 LLMClient 生成角色输出）"
+  - path: src/engine/orchestrator.ts
+    status: modified
+    tasks:
+      - "Task-06：实现 DiscussionOrchestrator（替换旧 Orchestrator，协调 Host/Expert/Critic 串行发言）"
+  - path: src/server/repositories/message.repository.ts
+    status: created
+    tasks:
+      - "Task-07：实现 MessageRepository 接口和 MockMessageRepository"
+  - path: src/server/repositories/mock/mock-message.repository.ts
+    status: created
+    tasks:
+      - "Task-07：实现 MessageRepository 接口和 MockMessageRepository"
+  - path: src/server/repositories/agent-call-log.repository.ts
+    status: created
+    tasks:
+      - "Task-08：实现 AgentCallLogRepository 接口和 MockAgentCallLogRepository"
+  - path: src/server/repositories/mock/mock-agent-call-log.repository.ts
+    status: created
+    tasks:
+      - "Task-08：实现 AgentCallLogRepository 接口和 MockAgentCallLogRepository"
+  - path: src/server/repositories/mock/instances.ts
+    status: modified
+    tasks:
+      - "Task-09：扩展共享 mock 实例（instances.ts）"
+  - path: src/server/services/discussion.service.ts
+    status: modified
+    tasks:
+      - "Task-10：实现 DiscussionService.getSessionDetail()"
+      - "Task-11：实现 DiscussionService.getMessages()"
+      - "Task-12：实现 DiscussionService.sendUserMessage()（含 Orchestrator 调用和日志持久化）"
+  - path: src/app/api/sessions/[sessionId]/route.ts
+    status: created
+    tasks:
+      - "Task-13：实现 GET /api/sessions/:sessionId API 路由"
+  - path: src/app/api/discussions/[sessionId]/messages/route.ts
+    status: created
+    tasks:
+      - "Task-14：实现 GET /api/discussions/:sessionId/messages API 路由"
+      - "Task-15：实现 POST /api/discussions/:sessionId/messages API 路由"
+  - path: src/app/api/discussions/route.ts
+    status: modified
+    tasks:
+      - "Task-12：实现 DiscussionService.sendUserMessage()（含 Orchestrator 调用和日志持久化）"
+  - path: src/modules/discussion/role-bar.tsx
+    status: created
+    tasks:
+      - "Task-16：实现讨论页 RoleBar / MessageList / MessageInput UI 组件"
+  - path: src/modules/discussion/message-list.tsx
+    status: created
+    tasks:
+      - "Task-16：实现讨论页 RoleBar / MessageList / MessageInput UI 组件"
+  - path: src/modules/discussion/message-input.tsx
+    status: created
+    tasks:
+      - "Task-16：实现讨论页 RoleBar / MessageList / MessageInput UI 组件"
+  - path: src/modules/discussion/index.tsx
+    status: modified
+    tasks:
+      - "Task-17：实现 DiscussionModule 前后端联动"

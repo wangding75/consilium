@@ -1,16 +1,26 @@
-import type { Session, AgentOutput } from '@/types'
+import type { OrchestratorInput, OrchestratorResult } from '@/types'
+import type { Scheduler } from '@/engine/scheduler'
+import type { ContextBuilder } from '@/engine/context-builder'
+import type { AgentRuntime } from '@/engine/agent-runtime'
 
-export interface Orchestrator {
-  start(session: Session): Promise<void>
-  next(session: Session): Promise<AgentOutput | null>
+export class DiscussionOrchestrator {
+  constructor(
+    private readonly scheduler: Scheduler,
+    private readonly contextBuilder: ContextBuilder,
+    private readonly agentRuntime: AgentRuntime
+  ) {}
+
+  async run(_input: OrchestratorInput): Promise<OrchestratorResult> {
+    throw new Error('not implemented')
+  }
 }
 
-export class DefaultOrchestrator implements Orchestrator {
-  async start(_session: Session): Promise<void> {
+// @deprecated — kept to allow existing engine.test.ts to compile; remove in 03-test-cases
+export class DefaultOrchestrator {
+  async start(_session: unknown): Promise<void> {
     return
   }
-
-  async next(_session: Session): Promise<AgentOutput | null> {
+  async next(_session: unknown): Promise<null> {
     return null
   }
 }
