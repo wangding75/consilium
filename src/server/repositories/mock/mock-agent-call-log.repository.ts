@@ -2,11 +2,14 @@ import type { AgentCallLog } from '@/types'
 import type { AgentCallLogRepository } from '../agent-call-log.repository'
 
 export class MockAgentCallLogRepository implements AgentCallLogRepository {
-  async save(_log: AgentCallLog): Promise<AgentCallLog> {
-    throw new Error('not implemented')
+  private store = new Map<string, AgentCallLog>()
+
+  async save(log: AgentCallLog): Promise<AgentCallLog> {
+    this.store.set(log.id, log)
+    return log
   }
 
-  async findBySessionId(_sessionId: string): Promise<AgentCallLog[]> {
-    throw new Error('not implemented')
+  async findBySessionId(sessionId: string): Promise<AgentCallLog[]> {
+    return Array.from(this.store.values()).filter((l) => l.sessionId === sessionId)
   }
 }
