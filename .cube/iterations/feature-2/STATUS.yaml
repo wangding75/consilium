@@ -68,7 +68,11 @@ tasks:
     test_total: 3
   - task: "Task-09：扩展共享 mock 实例（instances.ts）"
     test_file: mock-message.repository.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:48"
+    completed_at: "2026-05-19 11:48"
+    test_passed: 6
+    test_total: 6
   - task: "Task-10：实现 DiscussionService.getSessionDetail()"
     test_file: discussion-service.test.ts
     phase: locked
