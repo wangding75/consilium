@@ -1,8 +1,33 @@
 import type { LLMMessage } from '@/llm/providers/base.provider'
-import type { ContextBuilderInput } from '@/types'
+import type { ContextBuilderInput, DiscussionMessage } from '@/types'
+
+const DEFAULT_MAX_MESSAGES = 20
+const DEFAULT_MAX_CHARS = 4000
+
+function toRole(msg: DiscussionMessage): 'user' | 'assistant' {
+  return msg.type === 'user' ? 'user' : 'assistant'
+}
 
 export class ContextBuilder {
-  build(_input: ContextBuilderInput): LLMMessage[] {
-    throw new Error('not implemented')
+  build(input: ContextBuilderInput): LLMMessage[] {
+    const { role, topic, templateName, messageHistory, maxMessages, maxChars } = input
+    const limitMsgs = maxMessages ?? DEFAULT_MAX_MESSAGES
+    const limitChars = maxChars ?? DEFAULT_MAX_CHARS
+
+    const systemContent = `${role.systemPrompt}\n\n讨论主题：${topic}\n模板：${templateName}`
+    const systemMsg: LLMMessage = { role: 'system', content: systemContent }
+
+    const recent = messageHistory.slice(-limitMsgs)
+    let chars = systemContent.length
+    const historyMsgs: LLMMessage[] = []
+
+    for (const msg of recent) {
+      const content = msg.content
+      if (chars + content.length > limitChars) break
+      chars += content.length
+      historyMsgs.push({ role: toRole(msg), content })
+    }
+
+    return [systemMsg, ...historyMsgs]
   }
 }
