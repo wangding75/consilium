@@ -47,7 +47,11 @@ tasks:
     test_total: 5
   - task: "Task-06：实现 DiscussionOrchestrator（替换旧 Orchestrator，协调 Host/Expert/Critic 串行发言）"
     test_file: discussion-orchestrator.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:46"
+    completed_at: "2026-05-19 11:47"
+    test_passed: 5
+    test_total: 5
   - task: "Task-07：实现 MessageRepository 接口和 MockMessageRepository"
     test_file: mock-message.repository.test.ts
     phase: locked
