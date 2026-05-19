@@ -1,0 +1,92 @@
+tasks:
+  - task: "Task-01：定义多 Agent 讨论核心类型"
+    module: types
+    test_file: types-sanity.test.ts
+    test_cases: 4
+  - task: "Task-02：实现 MockLLMClient"
+    module: llm
+    test_file: mock-llm-client.test.ts
+    test_cases: 5
+  - task: "Task-03：实现 ContextBuilder"
+    module: engine
+    test_file: context-builder.test.ts
+    test_cases: 7
+  - task: "Task-04：实现 Scheduler（selectSpeakers 扩展接口 + 串行轮转策略）"
+    module: engine
+    test_file: scheduler.test.ts
+    test_cases: 5
+  - task: "Task-05：实现 AgentRuntime（调用 LLMClient 生成角色输出）"
+    module: engine
+    test_file: agent-runtime.test.ts
+    test_cases: 5
+  - task: "Task-06：实现 DiscussionOrchestrator（替换旧 Orchestrator，协调 Host/Expert/Critic 串行发言）"
+    module: engine
+    test_file: discussion-orchestrator.test.ts
+    test_cases: 5
+  - task: "Task-07：实现 MessageRepository 接口和 MockMessageRepository"
+    module: repositories/mock
+    test_file: mock-message.repository.test.ts
+    test_cases: 6
+  - task: "Task-08：实现 AgentCallLogRepository 接口和 MockAgentCallLogRepository"
+    module: repositories/mock
+    test_file: mock-agent-call-log.repository.test.ts
+    test_cases: 3
+  - task: "Task-09：扩展共享 mock 实例（instances.ts）"
+    module: repositories/mock
+    test_file: mock-message.repository.test.ts
+    test_cases: 6
+  - task: "Task-10：实现 DiscussionService.getSessionDetail()"
+    module: services
+    test_file: discussion-service.test.ts
+    test_cases: 12
+  - task: "Task-11：实现 DiscussionService.getMessages()"
+    module: services
+    test_file: discussion-service.test.ts
+    test_cases: 12
+  - task: "Task-12：实现 DiscussionService.sendUserMessage()（含 Orchestrator 调用和日志持久化）"
+    module: services
+    test_file: discussion-service.test.ts
+    test_cases: 12
+  - task: "Task-13：实现 GET /api/sessions/:sessionId API 路由"
+    module: api/sessions
+    test_file: session-detail.test.ts
+    test_cases: 4
+  - task: "Task-14：实现 GET /api/discussions/:sessionId/messages API 路由"
+    module: api/discussions
+    test_file: discussion-messages.test.ts
+    test_cases: 9
+  - task: "Task-15：实现 POST /api/discussions/:sessionId/messages API 路由"
+    module: api/discussions
+    test_file: discussion-messages.test.ts
+    test_cases: 9
+  - task: "Task-16：实现讨论页 RoleBar / MessageList / MessageInput UI 组件"
+    module: modules/discussion
+    test_file: discussion-module.test.tsx
+    test_cases: 2
+  - task: "Task-17：实现 DiscussionModule 前后端联动"
+    module: modules/discussion
+    test_file: discussion-module.test.tsx
+    test_cases: 2
+
+type_tests:
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: discussion-service.test.ts
+    covers:
+      - "Task-10：实现 DiscussionService.getSessionDetail()"
+      - "Task-11：实现 DiscussionService.getMessages()"
+      - "Task-12：实现 DiscussionService.sendUserMessage()（含 Orchestrator 调用和日志持久化）"
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: discussion-module.test.tsx
+    covers:
+      - "Task-16：实现讨论页 RoleBar / MessageList / MessageInput UI 组件"
+      - "Task-17：实现 DiscussionModule 前后端联动"
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: integration.test.ts
+    covers:
+      - "Task-13：实现 GET /api/sessions/:sessionId API 路由"
+      - "Task-14：实现 GET /api/discussions/:sessionId/messages API 路由"
+      - "Task-15：实现 POST /api/discussions/:sessionId/messages API 路由"
+      - "Task-17：实现 DiscussionModule 前后端联动"
