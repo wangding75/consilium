@@ -54,7 +54,11 @@ tasks:
     test_total: 5
   - task: "Task-07：实现 MessageRepository 接口和 MockMessageRepository"
     test_file: mock-message.repository.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:47"
+    completed_at: "2026-05-19 11:47"
+    test_passed: 6
+    test_total: 6
   - task: "Task-08：实现 AgentCallLogRepository 接口和 MockAgentCallLogRepository"
     test_file: mock-agent-call-log.repository.test.ts
     phase: locked
