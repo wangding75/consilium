@@ -75,13 +75,25 @@ tasks:
     test_total: 6
   - task: "Task-10：实现 DiscussionService.getSessionDetail()"
     test_file: discussion-service.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:49"
+    completed_at: "2026-05-19 11:50"
+    test_passed: 3
+    test_total: 3
   - task: "Task-11：实现 DiscussionService.getMessages()"
     test_file: discussion-service.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:49"
+    completed_at: "2026-05-19 11:50"
+    test_passed: 3
+    test_total: 3
   - task: "Task-12：实现 DiscussionService.sendUserMessage()（含 Orchestrator 调用和日志持久化）"
     test_file: discussion-service.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 11:49"
+    completed_at: "2026-05-19 11:50"
+    test_passed: 6
+    test_total: 6
   - task: "Task-13：实现 GET /api/sessions/:sessionId API 路由"
     test_file: session-detail.test.ts
     phase: locked
