@@ -2,10 +2,10 @@
 
  RUN  v2.1.9 /home/wangding/git/consilium
 
- ✓ src/modules/discussion/message-bubble.test.tsx (7 tests) 54ms
+ ✓ src/modules/discussion/role-bar.test.tsx (4 tests) 38ms
 
  Test Files  1 passed (1)
-      Tests  7 passed (7)
-   Start at  18:52:51
-   Duration  1.36s (transform 84ms, setup 0ms, collect 231ms, tests 54ms, environment 412ms, prepare 176ms)
+      Tests  4 passed (4)
+   Start at  18:54:20
+   Duration  1.35s (transform 45ms, setup 0ms, collect 211ms, tests 38ms, environment 411ms, prepare 81ms)
 
