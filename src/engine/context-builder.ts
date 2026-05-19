@@ -21,11 +21,11 @@ export class ContextBuilder {
     let chars = systemContent.length
     const historyMsgs: LLMMessage[] = []
 
-    for (const msg of recent) {
-      const content = msg.content
+    for (let i = recent.length - 1; i >= 0; i--) {
+      const content = recent[i].content
       if (chars + content.length > limitChars) break
       chars += content.length
-      historyMsgs.push({ role: toRole(msg), content })
+      historyMsgs.unshift({ role: toRole(recent[i]), content })
     }
 
     return [systemMsg, ...historyMsgs]

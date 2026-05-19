@@ -116,17 +116,25 @@ export class DiscussionService {
       visible: true,
     }))
 
-    const orchestratorResult = await this.orchestrator?.run({
-      sessionId,
-      runId,
-      topic: session.topic,
-      templateName: template?.name ?? '',
-      profiles,
-      messageHistory: [...existingMessages, ...(userMessage ? [userMessage] : [])],
-      triggerContent: isOpening ? null : content,
-    })
+    let orchestratorResult
+    try {
+      orchestratorResult = await this.orchestrator?.run({
+        sessionId,
+        runId,
+        topic: session.topic,
+        templateName: template?.name ?? '',
+        profiles,
+        messageHistory: [...existingMessages, ...(userMessage ? [userMessage] : [])],
+        triggerContent: isOpening ? null : content,
+      })
+    } catch (err) {
+      throw new ServiceError('AGENT_GENERATION_FAILED', 'Agent generation failed', err)
+    }
 
     const agentMessages = orchestratorResult?.agentMessages ?? []
+    if (agentMessages.length === 0 && profiles.length > 0) {
+      throw new ServiceError('NO_AVAILABLE_AGENT', 'No agent available to respond')
+    }
     const callLogs = orchestratorResult?.callLogs ?? []
 
     for (const msg of agentMessages) {
