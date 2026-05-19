@@ -1,11 +1,20 @@
-import type { Session, Role } from '@/types'
+import type { SpeakerSelectionInput, SpeakerSelectionResult } from '@/types'
 
 export interface Scheduler {
-  selectNext(session: Session): Promise<Role | null>
+  selectSpeakers(input: SpeakerSelectionInput): SpeakerSelectionResult
 }
 
-export class DefaultScheduler implements Scheduler {
-  async selectNext(_session: Session): Promise<Role | null> {
-    throw new Error('not implemented — will be built in iteration 2')
+export class RoundRobinScheduler implements Scheduler {
+  selectSpeakers(input: SpeakerSelectionInput): SpeakerSelectionResult {
+    const { roles, messageHistory, lastSpeakerId, roundIndex } = input
+    if (messageHistory.length === 0) {
+      const host = roles.find((r) => r.agentType === 'host')
+      if (host) return { speakerIds: [host.roleId], reason: '空历史，Host 开场' }
+    }
+    const nonHosts = roles.filter((r) => r.agentType !== 'host' && r.roleId !== lastSpeakerId)
+    const candidates = nonHosts.length > 0 ? nonHosts : roles.filter((r) => r.agentType !== 'host')
+    if (candidates.length === 0) return { speakerIds: [], reason: '无可用发言者' }
+    const speaker = candidates[roundIndex % candidates.length]
+    return { speakerIds: [speaker.roleId], reason: `轮转策略，选择 ${speaker.name}` }
   }
 }
