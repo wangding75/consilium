@@ -48,6 +48,12 @@ tasks:
   - task: "Task-06：完善 DiscussionService.sendUserMessage（clientMessageId 去重、失败重试再生成）"
     test_file: discussion-service-send.test.ts
     phase: locked
+    started_at: "2026-05-19 18:28"
+    phase: green
+    test_passed: 6
+    test_total: 6
+    completed_at: "2026-05-19 18:37"
+    phase: done
   - task: "Task-07：完善 GET /messages API（分页、校验和错误码）"
     test_file: messages-get.test.ts
     phase: locked
