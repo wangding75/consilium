@@ -64,7 +64,7 @@ export class DiscussionService {
     const session = await this.sessionRepo?.findById(sessionId)
     if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
 
-    const messages = await this.messageRepo?.findBySessionId(sessionId, { limit: opts.limit }) ?? []
+    const messages = await this.messageRepo?.findBySessionId(sessionId, { limit: opts.limit, before: opts.before }) ?? []
 
     return {
       sessionId,

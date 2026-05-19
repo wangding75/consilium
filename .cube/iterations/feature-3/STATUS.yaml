@@ -12,43 +12,39 @@ branch: feature/3
 tasks:
   - task: "Task-01：扩展 DiscussionMessage 类型（添加 pending 状态、clientMessageId 和回复关联 metadata）"
     test_file: domain-message.test.ts
-    phase: locked
+    phase: done
     started_at: "2026-05-19 18:16"
-    phase: green
+    completed_at: "2026-05-19 18:17"
     test_passed: 4
     test_total: 4
-    completed_at: "2026-05-19 18:17"
-    phase: done
   - task: "Task-02：扩展 API 类型（SendMessageRequest / SendMessageResult / 消息列表参数）"
     test_file: api-send-message.test.ts
-    phase: locked
+    phase: done
     started_at: "2026-05-19 18:18"
-    phase: green
+    completed_at: "2026-05-19 18:22"
     test_passed: 6
     test_total: 6
-    completed_at: "2026-05-19 18:22"
-    phase: done
   - task: "Task-03：扩展 MessageRepository 接口（添加 findByClientMessageId 和 updateStatus 方法）"
     test_file: message-repository-ext.test.ts
-    phase: locked
+    phase: done
     started_at: "2026-05-19 18:22"
-    phase: green
+    completed_at: "2026-05-19 18:23"
     test_passed: 7
     test_total: 7
-    completed_at: "2026-05-19 18:23"
-    phase: done
   - task: "Task-04：实现 MockMessageRepository 的新方法、排序和回复关联"
     test_file: mock-message-repository-ext.test.ts
-    phase: locked
+    phase: done
     started_at: "2026-05-19 18:23"
-    phase: green
+    completed_at: "2026-05-19 18:25"
     test_passed: 13
     test_total: 13
-    completed_at: "2026-05-19 18:25"
-    phase: done
   - task: "Task-05：完善 DiscussionService.getMessages（消息排序与 before 游标）"
     test_file: discussion-service-messages.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-19 18:26"
+    completed_at: "2026-05-19 18:27"
+    test_passed: 2
+    test_total: 2
   - task: "Task-06：完善 DiscussionService.sendUserMessage（clientMessageId 去重、失败重试再生成）"
     test_file: discussion-service-send.test.ts
     phase: locked
