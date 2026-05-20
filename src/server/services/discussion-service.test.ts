@@ -23,7 +23,7 @@ async function createSession(sessionRepo: MockSessionRepository): Promise<Sessio
   })
 }
 
-function makeOrchestratorResult(sessionId: string): OrchestratorResult {
+function makeOrchestratorResult(sessionId: string, clientMessageId?: string): OrchestratorResult {
   const msg: DiscussionMessage = {
     messageId: 'agent-msg-1',
     sessionId,
@@ -33,6 +33,7 @@ function makeOrchestratorResult(sessionId: string): OrchestratorResult {
     content: '亮以为，当三分天下',
     status: 'completed',
     createdAt: new Date().toISOString(),
+    ...(clientMessageId ? { metadata: { replyToClientMessageId: clientMessageId } } : {}),
   }
   return {
     agentMessages: [msg],
@@ -112,7 +113,6 @@ describe('DiscussionService', () => {
     })
   })
 
-  // Task-11: getMessages
   describe('getMessages', () => {
     it('returns empty messages list when no messages exist', async () => {
       const session = await createSession(sessionRepo)
@@ -146,7 +146,6 @@ describe('DiscussionService', () => {
     })
   })
 
-  // Task-12: sendUserMessage
   describe('sendUserMessage', () => {
     it('saves user message and returns agentMessages on successful run', async () => {
       const session = await createSession(sessionRepo)

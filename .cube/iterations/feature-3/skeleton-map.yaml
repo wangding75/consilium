@@ -1,0 +1,71 @@
+files:
+  - path: src/types/index.ts
+    type: interface
+    tasks:
+      - "Task-01：扩展 DiscussionMessage 类型（添加 pending 状态、clientMessageId 和回复关联 metadata）"
+  - path: src/types/api.ts
+    type: interface
+    tasks:
+      - "Task-02：扩展 API 类型（SendMessageRequest / SendMessageResult / 消息列表参数）"
+  - path: src/server/repositories/message.repository.ts
+    type: interface
+    tasks:
+      - "Task-03：扩展 MessageRepository 接口（添加 findByClientMessageId 和 updateStatus 方法）"
+  - path: src/server/repositories/mock/mock-message.repository.ts
+    type: class
+    tasks:
+      - "Task-04：实现 MockMessageRepository 的新方法、排序和回复关联"
+  - path: src/engine/agent-runtime.ts
+    type: class
+    tasks:
+      - "Task-06：完善 DiscussionService.sendUserMessage（clientMessageId 去重、失败重试再生成）"
+  - path: src/server/services/discussion.service.ts
+    type: class
+    tasks:
+      - "Task-05：完善 DiscussionService.getMessages（消息排序与 before 游标）"
+      - "Task-06：完善 DiscussionService.sendUserMessage（clientMessageId 去重、失败重试再生成）"
+  - path: src/app/api/discussions/[sessionId]/messages/route.ts
+    type: interface
+    tasks:
+      - "Task-07：完善 GET /messages API（分页、校验和错误码）"
+      - "Task-08：完善 POST /messages API（clientMessageId 回显、幂等和失败重试）"
+  - path: src/store/discussion.store.ts
+    type: interface
+    tasks:
+      - "Task-09：实现 DiscussionStore（React Context + useReducer）"
+  - path: src/modules/discussion/message-bubble.tsx
+    type: class
+    tasks:
+      - "Task-10：实现 MessageBubble 组件（4 种类型 + 失败重试）"
+  - path: src/modules/discussion/role-bar.tsx
+    type: class
+    tasks:
+      - "Task-11：实现 RoleBar 组件（头像、名称、activeSpeakerId 高亮）"
+  - path: src/modules/discussion/typing-indicator.tsx
+    type: class
+    tasks:
+      - "Task-12：实现 TypingIndicator 组件"
+  - path: src/modules/discussion/message-list.tsx
+    type: class
+    tasks:
+      - "Task-13：实现 MessageList 组件（消息流 + 自动滚动 + 四态）"
+  - path: src/modules/discussion/message-input.tsx
+    type: class
+    tasks:
+      - "Task-14：实现 MessageInput 组件（发送、校验、快捷文本填充）"
+  - path: src/modules/discussion/more-sheet.tsx
+    type: class
+    tasks:
+      - "Task-15：实现 MoreSheet 组件（总结/投票/归档入口 + Mock Modal）"
+  - path: src/modules/discussion/discussion-header.tsx
+    type: class
+    tasks:
+      - "Task-16：实现 DiscussionHeader 组件（标题、模板 Tag、返回、更多操作）"
+  - path: src/modules/discussion/index.tsx
+    type: class
+    tasks:
+      - "Task-17：实现 DiscussionModule 完整集成（DiscussionProvider + 完整集成逻辑）"
+  - path: src/app/discussion/[sessionId]/page.tsx
+    type: interface
+    tasks:
+      - "Task-17：实现 DiscussionModule 完整集成（DiscussionProvider + 完整集成逻辑）"

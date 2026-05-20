@@ -39,16 +39,45 @@ export async function GET(
   try {
     const { sessionId } = await params
     const url = new URL(req.url)
-    const limit = parseInt(url.searchParams.get('limit') ?? '50', 10)
+    const rawLimit = url.searchParams.get('limit') ?? '50'
+    const limit = parseInt(rawLimit, 10)
+    if (isNaN(limit) || limit <= 0) {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'limit must be a positive integer' }, requestId },
+        { status: 400 }
+      )
+    }
+    if (limit > 100) {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'limit must not exceed 100' }, requestId },
+        { status: 400 }
+      )
+    }
     const before = url.searchParams.get('before') ?? undefined
     const service = createService()
     const data = await service.getMessages(sessionId, { limit, before })
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
-    if (err instanceof ServiceError && err.code === 'SESSION_NOT_FOUND') {
+    const errorCode = err instanceof ServiceError ? err.code : (err as { code?: string })?.code
+    if (errorCode === 'SESSION_NOT_FOUND') {
+      const message = err instanceof Error ? err.message : 'Session not found'
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'SESSION_NOT_FOUND', message }, requestId },
+        { status: 404 }
+      )
+    }
+    if (err instanceof ServiceError) {
+      const httpStatus =
+        err.code === 'TEMPLATE_NOT_FOUND'
+          ? 404
+          : err.code === 'MESSAGE_EMPTY'
+            ? 400
+            : err.code === 'LLM_PROVIDER_ERROR'
+              ? 502
+              : 500
       return NextResponse.json(
         { success: false, data: null, error: { code: err.code, message: err.message }, requestId },
-        { status: 404 }
+        { status: httpStatus }
       )
     }
     const message = err instanceof Error ? err.message : 'An unexpected error occurred'
@@ -72,9 +101,17 @@ export async function POST(
     const data = await service.sendUserMessage(sessionId, content, body.clientMessageId)
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
+    const errorCode = err instanceof ServiceError ? err.code : (err as { code?: string })?.code
+    if (errorCode === 'SESSION_NOT_FOUND') {
+      const message = err instanceof Error ? err.message : 'Session not found'
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'SESSION_NOT_FOUND', message }, requestId },
+        { status: 404 }
+      )
+    }
     if (err instanceof ServiceError) {
       const httpStatus =
-        err.code === 'SESSION_NOT_FOUND' || err.code === 'TEMPLATE_NOT_FOUND'
+        err.code === 'TEMPLATE_NOT_FOUND'
           ? 404
           : err.code === 'MESSAGE_EMPTY'
             ? 400

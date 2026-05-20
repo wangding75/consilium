@@ -64,20 +64,20 @@ export class DiscussionService {
     const session = await this.sessionRepo?.findById(sessionId)
     if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
 
-    const messages = await this.messageRepo?.findBySessionId(sessionId, { limit: opts.limit }) ?? []
+    const messages = await this.messageRepo?.findBySessionId(sessionId, { limit: opts.limit, before: opts.before }) ?? []
 
     return {
       sessionId,
       messages,
       activeSpeakerId: session.state.lastSpeakerId ?? null,
-      hasMore: false,
+      hasMore: messages.length >= opts.limit,
     }
   }
 
   async sendUserMessage(
     sessionId: string,
     content: string,
-    _clientMessageId?: string
+    clientMessageId?: string
   ): Promise<SendMessageResult> {
     const session = await this.sessionRepo?.findById(sessionId)
     if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
@@ -90,19 +90,49 @@ export class DiscussionService {
       throw new ServiceError('MESSAGE_EMPTY', 'Message content cannot be empty')
     }
 
+    // clientMessageId dedup: check for existing message
+    if (clientMessageId) {
+      const existingUserMsg = await this.messageRepo?.findByClientMessageId(clientMessageId, sessionId)
+      if (existingUserMsg && existingUserMsg.status === 'completed') {
+        const replies = await this.messageRepo?.findRepliesByClientMessageId(sessionId, clientMessageId) ?? []
+        if (replies.length > 0) {
+          return {
+            sessionId,
+            runId: `run-idempotent-${crypto.randomUUID()}`,
+            clientMessageId,
+            userMessage: existingUserMsg,
+            agentMessages: replies,
+            activeSpeakerId: session.state.lastSpeakerId ?? null,
+          }
+        }
+      }
+      if (existingUserMsg && (existingUserMsg.status === 'failed' || existingUserMsg.status === 'pending')) {
+        await this.messageRepo?.updateStatus(existingUserMsg.messageId, 'pending')
+      }
+    }
+
     const runId = `run-${crypto.randomUUID()}`
     let userMessage = null
 
     if (!isOpening) {
-      const msg = await this.messageRepo?.save({
-        messageId: `msg-user-${crypto.randomUUID()}`,
-        sessionId,
-        type: 'user',
-        content,
-        status: 'completed',
-        createdAt: new Date().toISOString(),
-      })
-      userMessage = msg ?? null
+      const existingUserMsg = clientMessageId
+        ? await this.messageRepo?.findByClientMessageId(clientMessageId, sessionId)
+        : null
+      if (existingUserMsg) {
+        await this.messageRepo?.updateStatus(existingUserMsg.messageId, 'completed')
+        userMessage = { ...existingUserMsg, status: 'completed' as const }
+      } else {
+        const msg = await this.messageRepo?.save({
+          messageId: `msg-user-${crypto.randomUUID()}`,
+          sessionId,
+          type: 'user',
+          content,
+          status: 'completed',
+          clientMessageId,
+          createdAt: new Date().toISOString(),
+        })
+        userMessage = msg ?? null
+      }
     }
 
     const profiles = (template?.roles ?? []).map((r) => ({
@@ -128,17 +158,22 @@ export class DiscussionService {
         triggerContent: isOpening ? null : content,
       })
     } catch (err) {
+      if (userMessage) await this.messageRepo?.updateStatus(userMessage.messageId, 'failed')
       throw new ServiceError('AGENT_GENERATION_FAILED', 'Agent generation failed', err)
     }
 
     const agentMessages = orchestratorResult?.agentMessages ?? []
     if (agentMessages.length === 0 && profiles.length > 0) {
+      if (userMessage) await this.messageRepo?.updateStatus(userMessage.messageId, 'failed')
       throw new ServiceError('NO_AVAILABLE_AGENT', 'No agent available to respond')
     }
     const callLogs = orchestratorResult?.callLogs ?? []
 
     for (const msg of agentMessages) {
-      await this.messageRepo?.save(msg)
+      await this.messageRepo?.save({
+        ...msg,
+        metadata: { ...msg.metadata, replyToClientMessageId: clientMessageId },
+      })
     }
 
     for (const logData of callLogs) {
@@ -153,6 +188,7 @@ export class DiscussionService {
     return {
       sessionId,
       runId,
+      clientMessageId,
       userMessage,
       agentMessages,
       activeSpeakerId: orchestratorResult?.activeSpeakerId ?? null,

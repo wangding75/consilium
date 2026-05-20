@@ -1,0 +1,131 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/3
+
+tasks:
+  - task: "Task-01：扩展 DiscussionMessage 类型（添加 pending 状态、clientMessageId 和回复关联 metadata）"
+    test_file: domain-message.test.ts
+    phase: done
+    started_at: "2026-05-19 18:16"
+    completed_at: "2026-05-19 18:17"
+    test_passed: 4
+    test_total: 4
+  - task: "Task-02：扩展 API 类型（SendMessageRequest / SendMessageResult / 消息列表参数）"
+    test_file: api-send-message.test.ts
+    phase: done
+    started_at: "2026-05-19 18:18"
+    completed_at: "2026-05-19 18:22"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-03：扩展 MessageRepository 接口（添加 findByClientMessageId 和 updateStatus 方法）"
+    test_file: message-repository-ext.test.ts
+    phase: done
+    started_at: "2026-05-19 18:22"
+    completed_at: "2026-05-19 18:23"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-04：实现 MockMessageRepository 的新方法、排序和回复关联"
+    test_file: mock-message-repository-ext.test.ts
+    phase: done
+    started_at: "2026-05-19 18:23"
+    completed_at: "2026-05-19 18:25"
+    test_passed: 13
+    test_total: 13
+  - task: "Task-05：完善 DiscussionService.getMessages（消息排序与 before 游标）"
+    test_file: discussion-service-messages.test.ts
+    phase: done
+    started_at: "2026-05-19 18:26"
+    completed_at: "2026-05-19 18:27"
+    test_passed: 2
+    test_total: 2
+  - task: "Task-06：完善 DiscussionService.sendUserMessage（clientMessageId 去重、失败重试再生成）"
+    test_file: discussion-service-send.test.ts
+    phase: done
+    started_at: "2026-05-19 18:28"
+    completed_at: "2026-05-19 18:37"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-07：完善 GET /messages API（分页、校验和错误码）"
+    test_file: messages-get.test.ts
+    phase: done
+    started_at: "2026-05-19 18:37"
+    completed_at: "2026-05-19 18:43"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-08：完善 POST /messages API（clientMessageId 回显、幂等和失败重试）"
+    test_file: messages-post.test.ts
+    phase: done
+    started_at: "2026-05-19 18:44"
+    completed_at: "2026-05-19 18:46"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-09：实现 DiscussionStore（React Context + useReducer）"
+    test_file: discussion.store.test.ts
+    phase: done
+    started_at: "2026-05-19 18:47"
+    completed_at: "2026-05-19 18:49"
+    test_passed: 15
+    test_total: 15
+  - task: "Task-10：实现 MessageBubble 组件（4 种类型 + 失败重试）"
+    test_file: message-bubble.test.tsx
+    phase: done
+    started_at: "2026-05-19 18:50"
+    completed_at: "2026-05-19 18:53"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-11：实现 RoleBar 组件（头像、名称、activeSpeakerId 高亮）"
+    test_file: role-bar.test.tsx
+    phase: done
+    started_at: "2026-05-19 18:54"
+    completed_at: "2026-05-19 18:54"
+    test_passed: 4
+    test_total: 4
+  - task: "Task-12：实现 TypingIndicator 组件"
+    test_file: typing-indicator.test.tsx
+    phase: done
+    started_at: "2026-05-19 18:55"
+    completed_at: "2026-05-19 18:55"
+    test_passed: 2
+    test_total: 2
+  - task: "Task-13：实现 MessageList 组件（消息流 + 自动滚动 + 四态）"
+    test_file: message-list.test.tsx
+    phase: done
+    started_at: "2026-05-19 18:56"
+    completed_at: "2026-05-19 18:56"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-14：实现 MessageInput 组件（发送、校验、快捷文本填充）"
+    test_file: message-input.test.tsx
+    phase: done
+    started_at: "2026-05-19 18:57"
+    completed_at: "2026-05-19 18:57"
+    test_passed: 4
+    test_total: 4
+  - task: "Task-15：实现 MoreSheet 组件（总结/投票/归档入口 + Mock Modal）"
+    test_file: more-sheet.test.tsx
+    phase: done
+    started_at: "2026-05-19 18:57"
+    completed_at: "2026-05-19 18:58"
+    test_passed: 3
+    test_total: 3
+  - task: "Task-16：实现 DiscussionHeader 组件（标题、模板 Tag、返回、更多操作）"
+    test_file: discussion-header.test.tsx
+    phase: done
+    started_at: "2026-05-19 18:58"
+    completed_at: "2026-05-19 18:59"
+    test_passed: 3
+    test_total: 3
+  - task: "Task-17：实现 DiscussionModule 完整集成（DiscussionProvider + 完整集成逻辑）"
+    test_file: discussion-module.test.tsx
+    phase: done
+    started_at: "2026-05-19 18:59"
+    completed_at: "2026-05-19 18:59"
+    test_passed: 7
+    test_total: 7

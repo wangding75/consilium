@@ -1,92 +1,69 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useState } from 'react'
+import { DiscussionProvider, useDiscussionStore } from '@/store/discussion.store'
+import { DiscussionHeader } from './discussion-header'
 import { RoleBar } from './role-bar'
 import { MessageList } from './message-list'
 import { MessageInput } from './message-input'
-import type { DiscussionMessage } from '@/types'
-import type { RoleInfo } from './role-bar'
+import { MoreSheet } from './more-sheet'
 
 interface DiscussionModuleProps {
   sessionId: string
 }
 
 export function DiscussionModule({ sessionId }: DiscussionModuleProps) {
-  const [messages, setMessages] = useState<DiscussionMessage[]>([])
-  const [roles, setRoles] = useState<RoleInfo[]>([])
-  const [topic, setTopic] = useState('')
-  const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  return (
+    <DiscussionProvider>
+      <DiscussionModuleInner sessionId={sessionId} />
+    </DiscussionProvider>
+  )
+}
 
-  const loadSession = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/sessions/${sessionId}`)
-      const json = await res.json()
-      if (json.success) {
-        setTopic(json.data.topic)
-        setRoles(json.data.roles)
-        setActiveSpeakerId(json.data.activeSpeakerId)
-      }
-    } catch {
-      // ignore
-    }
-  }, [sessionId])
+function DiscussionModuleInner({ sessionId }: DiscussionModuleProps) {
+  const { state, actions } = useDiscussionStore()
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
 
-  const loadMessages = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/discussions/${sessionId}/messages?limit=50`)
-      const json = await res.json()
-      if (json.success) {
-        setMessages(json.data.messages)
-        setActiveSpeakerId(json.data.activeSpeakerId)
-      }
-    } catch {
-      // ignore
-    }
-  }, [sessionId])
+  const session = state.sessions[sessionId]
+  const messages = state.messagesBySessionId[sessionId] ?? []
+  const activeSpeakerId = state.activeSpeakerBySessionId[sessionId] ?? null
+  const isLoading = state.loadingBySessionId[sessionId] ?? false
+  const error = state.errorBySessionId[sessionId] ?? null
+  const isTyping = state.typingBySessionId[sessionId] ?? false
+  const typingSpeaker = state.typingSpeakerBySessionId[sessionId] ?? null
+  const roles = session?.roles ?? []
+
+  const typingSpeakerName = isTyping
+    ? typingSpeaker?.name ?? (activeSpeakerId ? null : null)
+    : null
 
   useEffect(() => {
-    loadSession()
-    loadMessages()
-  }, [loadSession, loadMessages])
-
-  const handleSend = async (content: string) => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const res = await fetch(`/api/discussions/${sessionId}/messages`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
-      })
-      const json = await res.json()
-      if (json.success) {
-        const newMsgs: DiscussionMessage[] = []
-        if (json.data.userMessage) newMsgs.push(json.data.userMessage)
-        newMsgs.push(...json.data.agentMessages)
-        setMessages((prev) => [...prev, ...newMsgs])
-        setActiveSpeakerId(json.data.activeSpeakerId)
-      } else {
-        setError(json.error?.message ?? '发送失败，请重试')
-      }
-    } catch {
-      setError('网络错误，请重试')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    actions.loadSession(sessionId)
+    actions.loadMessages(sessionId)
+  }, [sessionId, actions.loadSession, actions.loadMessages])
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border">
-        <h1 className="text-xl font-bold text-text-primary mb-1">讨论</h1>
-        <p className="text-text-secondary text-sm">会话 ID：{sessionId}</p>
-        {topic && <p className="text-text-secondary text-sm mt-1">主题：{topic}</p>}
-      </div>
+      <DiscussionHeader
+        topic={session?.topic || `会话 ID：${sessionId}`}
+        templateName={session?.template?.name ?? ''}
+        onBack={() => { window.location.href = '/' }}
+        onMore={() => setIsMoreOpen(true)}
+      />
       <RoleBar roles={roles} activeSpeakerId={activeSpeakerId} />
-      <MessageList messages={messages} isLoading={isLoading} error={error} onRetry={loadMessages} />
-      <MessageInput onSend={handleSend} disabled={isLoading} />
+      <MessageList
+        messages={messages}
+        isLoading={isLoading}
+        error={error}
+        typingSpeakerName={typingSpeakerName}
+        onRetry={() => actions.loadMessages(sessionId)}
+        onMessageRetry={(clientMessageId) => actions.retryMessage(sessionId, clientMessageId)}
+      />
+      <MessageInput
+        onSend={(content) => actions.sendMessage(sessionId, content)}
+        disabled={isLoading}
+      />
+      <MoreSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} />
     </div>
   )
 }

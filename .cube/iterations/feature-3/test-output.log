@@ -1,0 +1,346 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /home/wangding/git/consilium
+
+ ✓ src/engine/context-builder.test.ts (7 tests) 30ms
+ ✓ src/engine/discussion-orchestrator.test.ts (5 tests) 39ms
+ ✓ src/server/services/session-service.test.ts (14 tests) 39ms
+ ✓ src/store/discussion.store.test.ts (15 tests) 83ms
+ ✓ src/server/services/discussion-service-send.test.ts (6 tests) 20ms
+ ✓ src/server/repositories/mock/mock-message-repository-ext.test.ts (13 tests) 127ms
+ ✓ src/server/services/discussion-service.test.ts (12 tests) 32ms
+ ✓ src/app/api/sessions/sessions-api.test.ts (10 tests) 44ms
+ ✓ src/app/api/discussions/messages-post.test.ts (5 tests) 23ms
+stderr | src/modules/discussion/discussion-module.test.tsx > DiscussionModule > renders discussion module with send button
+Warning: An update to DiscussionModuleInner inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at DiscussionModuleInner (/home/wangding/git/consilium/src/modules/discussion/index.tsx:30:34)
+    at DiscussionProvider (/home/wangding/git/consilium/src/store/discussion.store.ts:97:31)
+    at DiscussionModule (/home/wangding/git/consilium/src/modules/discussion/index.tsx:18:29)
+Warning: An update to DiscussionModuleInner inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at DiscussionModuleInner (/home/wangding/git/consilium/src/modules/discussion/index.tsx:30:34)
+    at DiscussionProvider (/home/wangding/git/consilium/src/store/discussion.store.ts:97:31)
+    at DiscussionModule (/home/wangding/git/consilium/src/modules/discussion/index.tsx:18:29)
+Warning: An update to DiscussionModuleInner inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at DiscussionModuleInner (/home/wangding/git/consilium/src/modules/discussion/index.tsx:30:34)
+    at DiscussionProvider (/home/wangding/git/consilium/src/store/discussion.store.ts:97:31)
+    at DiscussionModule (/home/wangding/git/consilium/src/modules/discussion/index.tsx:18:29)
+Warning: An update to DiscussionModuleInner inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at DiscussionModuleInner (/home/wangding/git/consilium/src/modules/discussion/index.tsx:30:34)
+    at DiscussionProvider (/home/wangding/git/consilium/src/store/discussion.store.ts:97:31)
+    at DiscussionModule (/home/wangding/git/consilium/src/modules/discussion/index.tsx:18:29)
+Warning: An update to DiscussionModuleInner inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at DiscussionModuleInner (/home/wangding/git/consilium/src/modules/discussion/index.tsx:30:34)
+    at DiscussionProvider (/home/wangding/git/consilium/src/store/discussion.store.ts:97:31)
+    at DiscussionModule (/home/wangding/git/consilium/src/modules/discussion/index.tsx:18:29)
+Warning: An update to DiscussionModuleInner inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at DiscussionModuleInner (/home/wangding/git/consilium/src/modules/discussion/index.tsx:30:34)
+    at DiscussionProvider (/home/wangding/git/consilium/src/store/discussion.store.ts:97:31)
+    at DiscussionModule (/home/wangding/git/consilium/src/modules/discussion/index.tsx:18:29)
+
+stderr | src/modules/home/home-ui.test.tsx > HomeModule renders topic textarea
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+
+stderr | src/modules/home/home-ui.test.tsx > HomeModule renders 开始讨论 button
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+
+stderr | src/modules/home/home-ui.test.tsx > HomeModule renders 4 quick-start chips
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+
+stderr | src/modules/home/home-ui.test.tsx > clicking quick-start chip fills topic textarea
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+
+stderr | src/modules/home/home-ui.test.tsx > submitting empty topic shows TOPIC_REQUIRED error
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+
+stderr | src/modules/home/home-ui.test.tsx > empty topic submit does not call fetch
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+
+ ✓ src/modules/discussion/discussion-module.test.tsx (7 tests) 324ms
+stderr | src/modules/home/home-ui.test.tsx > topic character counter shows n/100
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+
+ ✓ src/modules/home/home-ui.test.tsx (12 tests) 602ms
+ ✓ src/server/repositories/message-repository-ext.test.ts (7 tests) 24ms
+ ✓ src/server/repositories/session-repo.test.ts (7 tests) 24ms
+ ✓ src/engine/scheduler.test.ts (5 tests) 15ms
+ ✓ src/server/services/discussion-service-messages.test.ts (2 tests) 69ms
+ ✓ src/app/api/sessions/session-detail.test.ts (4 tests) 26ms
+ ✓ src/app/api/discussions/discussion-messages.test.ts (4 tests) 30ms
+ ✓ src/app/api/discussions/messages-get.test.ts (5 tests) 32ms
+ ✓ src/app/api/discussions/integration.test.ts (3 tests) 32ms
+ ✓ src/modules/discussion/message-list.test.tsx (7 tests) 94ms
+ ✓ src/modules/discussion/message-bubble.test.tsx (7 tests) 120ms
+ ✓ src/engine/agent-runtime.test.ts (5 tests) 10ms
+ ✓ src/types/session-types.test.ts (6 tests) 5ms
+ ✓ src/types/api-send-message.test.ts (6 tests) 5ms
+ ✓ src/llm/mock-llm-client.test.ts (5 tests) 34ms
+ ✓ src/types/types-sanity.test.ts (4 tests) 60ms
+ ✓ src/server/repositories/mock/mock-message.repository.test.ts (6 tests) 109ms
+ ✓ src/server/services/services.test.ts (4 tests) 9ms
+ ✓ src/app/api/routes.test.ts (5 tests) 30ms
+ ✓ src/types/domain-message.test.ts (4 tests) 4ms
+ ✓ src/modules/discussion/role-bar.test.tsx (4 tests) 84ms
+ ✓ src/modules/discussion/discussion-header.test.tsx (3 tests) 191ms
+ ✓ src/modules/discussion/message-input.test.tsx (4 tests) 234ms
+ ✓ src/types/domain.test.ts (2 tests) 8ms
+ ✓ src/data/templates/three-kingdoms.test.ts (2 tests) 9ms
+ ✓ src/data/model-strategies.test.ts (7 tests) 13ms
+ ✓ src/server/repositories/repositories.test.ts (3 tests) 6ms
+ ✓ src/server/repositories/mock/mock-agent-call-log.repository.test.ts (3 tests) 46ms
+ ✓ src/engine/engine.test.ts (2 tests) 4ms
+ ✓ src/app/api/health.test.ts (3 tests) 32ms
+ ✓ src/components/layout/AppShell.test.tsx (1 test) 59ms
+ ✓ src/components/mobile/BottomNav.test.tsx (1 test) 65ms
+ ✓ src/modules/discussion/typing-indicator.test.tsx (2 tests) 42ms
+stderr | src/modules/discussion/more-sheet.test.tsx > MoreSheet > shows modal with "后续支持" message when entry is clicked
+Warning: An update to MoreSheet inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at MoreSheet (/home/wangding/git/consilium/src/modules/discussion/more-sheet.tsx:6:22)
+
+ ✓ src/modules/discussion/more-sheet.test.tsx (3 tests) 99ms
+ ✓ src/types/api.test.ts (2 tests) 5ms
+ ✓ src/server/errors.test.ts (2 tests) 6ms
+ ✓ src/tests/utils/mock-factories.test.ts (2 tests) 4ms
+ ✓ src/llm/providers/base.provider.test.ts (1 test) 3ms
+ ✓ src/project.test.ts (2 tests) 4ms
+stderr | src/modules/home/home.test.tsx > HomeModule renders without crash
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+Warning: An update to HomeModule inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at https://reactjs.org/link/wrap-tests-with-act
+    at HomeModule (/home/wangding/git/consilium/src/modules/home/index.tsx:23:51)
+
+ ✓ src/modules/home/home.test.tsx (1 test) 55ms
+ ✓ src/components/ui/button.test.tsx (1 test) 94ms
+
+ Test Files  51 passed (51)
+      Tests  253 passed (253)
+   Start at  19:00:19
+   Duration  10.21s (transform 8.17s, setup 0ms, collect 17.54s, tests 3.16s, environment 57.31s, prepare 7.18s)
+
