@@ -11,7 +11,6 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: '/', label: '首页', emoji: '🏠' },
-  { href: '/discussion/new', label: '讨论', emoji: '💬' },
   { href: '/sessions', label: '会话', emoji: '📋' },
   { href: '/templates', label: '模板', emoji: '📖' },
   { href: '/settings', label: '设置', emoji: '⚙️' },
