@@ -1,4 +1,13 @@
-import type { DiscussionMessage } from '@/types'
+import type {
+  AgentType,
+  DiscussionMessage,
+  DiscussionStage,
+  DiscussionState,
+  LegacySessionLifecycleStatus,
+  SessionLifecycleStatus,
+  SessionStatusAction,
+  StateHistoryEntry,
+} from '@/types'
 
 export interface ApiError {
   code: string
@@ -20,7 +29,7 @@ export interface CreateSessionResult {
   sessionId: string
   topic: string
   template: { id: string; name: string }
-  status: 'active'
+  status: SessionLifecycleStatus
   createdAt: number
 }
 
@@ -29,11 +38,13 @@ export interface SessionDetailResult {
   sessionId: string
   topic: string
   template: { templateId: string; name: string }
-  status: 'active' | 'completed' | 'archived'
+  status: LegacySessionLifecycleStatus
+  phase?: DiscussionStage
+  state?: DiscussionState
   roles: Array<{
     roleId: string
     name: string
-    agentType: 'host' | 'expert' | 'critic'
+    agentType: AgentType
     avatar: string
     model: string
   }>
@@ -61,4 +72,22 @@ export interface SendMessageResult {
   userMessage: DiscussionMessage | null
   agentMessages: DiscussionMessage[]
   activeSpeakerId: string | null
+}
+
+export interface ListSessionsQuery {
+  status?: SessionLifecycleStatus
+  keyword?: string
+  limit?: number
+}
+
+export interface UpdateSessionStatusRequest {
+  action: SessionStatusAction
+}
+
+export interface SessionStateResult {
+  sessionId: string
+  status: SessionLifecycleStatus
+  phase: DiscussionStage
+  state: DiscussionState
+  history: StateHistoryEntry[]
 }

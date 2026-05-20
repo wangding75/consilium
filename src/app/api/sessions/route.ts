@@ -1,15 +1,23 @@
 import { NextResponse } from 'next/server'
-import type { ApiResponse, CreateSessionParams, CreateSessionResult } from '@/types/api'
+import type { ApiResponse, CreateSessionParams, CreateSessionResult, ListSessionsQuery } from '@/types/api'
 import type { Session } from '@/types'
 import { SessionService } from '@/server/services/session.service'
 import { sharedSessionRepo, sharedTemplateRepo } from '@/server/repositories/mock/instances'
 import { ServiceError } from '@/server/errors'
 
-export async function GET(): Promise<NextResponse<ApiResponse<Session[]>>> {
+export function GET(): Promise<NextResponse<ApiResponse<Session[]>>>
+export function GET(request: Request): Promise<NextResponse<ApiResponse<Session[]>>>
+export async function GET(request?: Request): Promise<NextResponse<ApiResponse<Session[]>>> {
   const requestId = crypto.randomUUID()
   try {
+    const searchParams = request ? new URL(request.url).searchParams : new URLSearchParams()
+    const query: ListSessionsQuery = {
+      status: searchParams.get('status') as ListSessionsQuery['status'] | undefined,
+      keyword: searchParams.get('keyword') ?? undefined,
+      limit: searchParams.has('limit') ? Number(searchParams.get('limit')) : undefined,
+    }
     const service = new SessionService(sharedSessionRepo, sharedTemplateRepo)
-    const data = await service.listSessions()
+    const data = await service.listSessions(query)
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
     const code = 'INTERNAL_ERROR'

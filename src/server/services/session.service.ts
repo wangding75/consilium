@@ -1,5 +1,5 @@
-import type { Session } from '@/types'
-import type { CreateSessionParams, CreateSessionResult } from '@/types/api'
+import type { Session, SessionStatusAction } from '@/types'
+import type { CreateSessionParams, CreateSessionResult, ListSessionsQuery, SessionStateResult } from '@/types/api'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
 import { ServiceError } from '@/server/errors'
@@ -13,8 +13,9 @@ export class SessionService {
     private readonly templateRepo: TemplateRepository
   ) {}
 
-  async listSessions(): Promise<Session[]> {
+  async listSessions(query?: ListSessionsQuery): Promise<Session[]> {
     try {
+      if (query) return await this.repo.findMany(query)
       return await this.repo.findAll()
     } catch (err) {
       throw new ServiceError('SESSION_LIST_FAILED', 'Failed to list sessions', err)
@@ -40,7 +41,7 @@ export class SessionService {
         id: '',
         templateId: params.templateId,
         topic,
-        status: 'active',
+        status: 'running',
         modelStrategyId: strategyId,
         state: { stage: 'idle', turnCount: 0, lastSpeakerId: null },
         messages: [],
@@ -52,7 +53,7 @@ export class SessionService {
         sessionId: session.id,
         topic: session.topic,
         template: { id: template.id, name: template.name },
-        status: 'active',
+        status: 'running',
         createdAt: session.createdAt,
       }
     } catch (err) {
@@ -67,5 +68,13 @@ export class SessionService {
     } catch (err) {
       throw new ServiceError('INTERNAL_ERROR', 'Failed to fetch recent sessions', err)
     }
+  }
+
+  async updateSessionStatus(_sessionId: string, _action: SessionStatusAction): Promise<Session> {
+    throw new Error('not implemented — will be built in iteration 4')
+  }
+
+  async getSessionState(_sessionId: string): Promise<SessionStateResult> {
+    throw new Error('not implemented — will be built in iteration 4')
   }
 }

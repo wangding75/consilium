@@ -5,9 +5,12 @@ import { useState } from 'react'
 interface MoreSheetProps {
   isOpen: boolean
   onClose: () => void
+  onArchive?: () => void
+  onResume?: () => void
+  onComplete?: () => void
 }
 
-export function MoreSheet({ isOpen, onClose }: MoreSheetProps) {
+export function MoreSheet({ isOpen, onClose, onArchive: _onArchive, onResume: _onResume, onComplete: _onComplete }: MoreSheetProps) {
   const [modalOpen, setModalOpen] = useState(false)
 
   if (!isOpen) return null

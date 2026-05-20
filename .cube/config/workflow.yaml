@@ -26,7 +26,7 @@ paths:
 
 language_config:
   build_tool: vitest
-  compile_command: "npx tsc --noEmit"
+  compile_command: "npx tsc --noEmit -p tsconfig.check.json"
   test_command: "npx vitest run"
   red_test_command: "npx vitest run"
   green_test_command: "npx vitest run"

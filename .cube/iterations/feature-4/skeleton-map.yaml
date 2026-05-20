@@ -1,0 +1,71 @@
+files:
+  - path: src/types/index.ts
+    type: interface
+    tasks:
+      - "Task-01：统一会话生命周期状态与状态历史类型"
+  - path: src/types/api.ts
+    type: dto
+    tasks:
+      - "Task-01：统一会话生命周期状态与状态历史类型"
+      - "Task-04：实现 SessionService 会话查询与生命周期动作"
+      - "Task-05：实现会话列表、状态更新和状态查询 API"
+  - path: src/engine/state-machine.ts
+    type: interface
+    tasks:
+      - "Task-02：实现讨论状态机合法转换与消息后推进接口"
+  - path: src/server/repositories/session.repository.ts
+    type: interface
+    tasks:
+      - "Task-03：扩展会话仓储查询与状态更新接口"
+  - path: src/server/repositories/mock/mock-session.repository.ts
+    type: class
+    tasks:
+      - "Task-03：扩展会话仓储查询与状态更新接口"
+  - path: src/server/services/session.service.ts
+    type: class
+    tasks:
+      - "Task-04：实现 SessionService 会话查询与生命周期动作"
+  - path: src/server/services/discussion.service.ts
+    type: class
+    tasks:
+      - "Task-08：在消息发送后推进 phase 并支持人工确认完成"
+  - path: src/app/api/sessions/route.ts
+    type: function
+    tasks:
+      - "Task-05：实现会话列表、状态更新和状态查询 API"
+  - path: src/app/api/sessions/[sessionId]/route.ts
+    type: function
+    tasks:
+      - "Task-05：实现会话列表、状态更新和状态查询 API"
+      - "Task-07：统一首页最近讨论与讨论详情入口状态处理"
+  - path: src/app/api/sessions/[sessionId]/status/route.ts
+    type: function
+    tasks:
+      - "Task-05：实现会话列表、状态更新和状态查询 API"
+      - "Task-08：在消息发送后推进 phase 并支持人工确认完成"
+  - path: src/app/api/sessions/[sessionId]/state/route.ts
+    type: function
+    tasks:
+      - "Task-05：实现会话列表、状态更新和状态查询 API"
+  - path: src/app/api/sessions/recent/route.ts
+    type: function
+    tasks:
+      - "Task-05：实现会话列表、状态更新和状态查询 API"
+      - "Task-07：统一首页最近讨论与讨论详情入口状态处理"
+  - path: src/modules/sessions/index.tsx
+    type: class
+    tasks:
+      - "Task-06：实现会话中心搜索筛选归档恢复 UI"
+  - path: src/modules/home/index.tsx
+    type: class
+    tasks:
+      - "Task-07：统一首页最近讨论与讨论详情入口状态处理"
+  - path: src/modules/discussion/index.tsx
+    type: class
+    tasks:
+      - "Task-07：统一首页最近讨论与讨论详情入口状态处理"
+      - "Task-08：在消息发送后推进 phase 并支持人工确认完成"
+  - path: src/modules/discussion/more-sheet.tsx
+    type: class
+    tasks:
+      - "Task-08：在消息发送后推进 phase 并支持人工确认完成"

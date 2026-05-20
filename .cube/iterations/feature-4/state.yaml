@@ -1,12 +1,15 @@
 branch: feature/4
-current_stage: 01-prd
+current_stage: 02-design
 created: 2026-05-20
 
 stages:
-  01-prd: PENDING
-  02-design: PENDING
+  01-prd: PASS
+  02-design: IN_PROGRESS
   03-test-cases: PENDING
   04-development: PENDING
   05-testing: PENDING
 
-history: []
+history:
+  - time: "2026-05-20 05:48:30"
+    action: advance
+    detail: "01-prd → 02-design"
