@@ -106,7 +106,7 @@ export function discussionReducer(
     }
     case 'MESSAGE_SENT': {
       const current = state.messagesBySessionId[action.sessionId] ?? []
-      const incoming = [...(action.userMessage ? [action.userMessage] : []), ...action.agentMessages]
+      const incoming = [...(action.userMessage ? [action.userMessage] : []), ...(action.agentMessages ?? [])]
       const merged = mergeMessages(current, incoming)
       return {
         ...state,
@@ -208,7 +208,6 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
 
       dispatch({ type: 'MESSAGE_OPTIMISTIC', sessionId, message: optimisticMsg })
       dispatch({ type: 'SENDING_STATUS', clientMessageId, status: 'pending' })
-      dispatch({ type: 'TYPING_SET', sessionId, typing: true })
       dispatch({ type: 'TYPING_SET', sessionId, typing: true })
 
       // 10s timeout

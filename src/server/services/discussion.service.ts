@@ -70,7 +70,7 @@ export class DiscussionService {
       sessionId,
       messages,
       activeSpeakerId: session.state.lastSpeakerId ?? null,
-      hasMore: false,
+      hasMore: messages.length >= opts.limit,
     }
   }
 
@@ -170,7 +170,10 @@ export class DiscussionService {
     const callLogs = orchestratorResult?.callLogs ?? []
 
     for (const msg of agentMessages) {
-      await this.messageRepo?.save(msg)
+      await this.messageRepo?.save({
+        ...msg,
+        metadata: { ...msg.metadata, replyToClientMessageId: clientMessageId },
+      })
     }
 
     for (const logData of callLogs) {

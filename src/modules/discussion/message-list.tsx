@@ -1,7 +1,10 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import type { DiscussionMessage } from '@/types'
 import type { ApiError } from '@/types/api'
+import { MessageBubble } from './message-bubble'
+import { TypingIndicator } from './typing-indicator'
 
 interface MessageListProps {
   messages: DiscussionMessage[]
@@ -18,10 +21,33 @@ export function MessageList({
   error,
   typingSpeakerName,
   onRetry,
-  onMessageRetry: _onMessageRetry,
+  onMessageRetry,
 }: MessageListProps) {
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const userScrolledUp = useRef(false)
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = container
+      userScrolledUp.current = scrollHeight - scrollTop - clientHeight > 50
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    if (!userScrolledUp.current && bottomRef.current) {
+      try { bottomRef.current.scrollIntoView({ behavior: 'smooth' }) } catch { /* ignore in test env */ }
+    }
+  }, [messages, typingSpeakerName])
+
   return (
-    <div className="flex flex-col gap-2 flex-1 overflow-y-auto p-4">
+    <div ref={containerRef} className="flex flex-col gap-2 flex-1 overflow-y-auto p-4">
       {error && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           <p>{error.message}</p>
@@ -37,14 +63,12 @@ export function MessageList({
         <div className="text-sm text-text-secondary">暂无消息</div>
       )}
       {messages.map((message) => (
-        <div
-          key={message.messageId}
-          className={message.type === 'user' ? 'self-end rounded-lg bg-primary px-3 py-2 text-white' : 'self-start rounded-lg bg-surface px-3 py-2 text-text-primary'}
-        >
-          {message.content}
-        </div>
+        <MessageBubble key={message.messageId} msg={message} onRetry={onMessageRetry} />
       ))}
-      {typingSpeakerName && <div className="text-sm text-text-secondary">{typingSpeakerName}正在输入...</div>}
+      {typingSpeakerName !== undefined && typingSpeakerName !== null && (
+        <TypingIndicator speakerName={typingSpeakerName} />
+      )}
+      <div ref={bottomRef} />
     </div>
   )
 }
