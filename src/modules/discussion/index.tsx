@@ -42,6 +42,17 @@ function DiscussionModuleInner({ sessionId }: DiscussionModuleProps) {
     actions.loadMessages(sessionId)
   }, [sessionId, actions.loadSession, actions.loadMessages])
 
+  if (error && !session) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center p-4">
+        <p className="text-sm text-red-500">会话不存在或加载失败</p>
+        <button type="button" className="text-xs text-accent mt-2" onClick={() => window.location.href = '/'}>
+          返回首页
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col h-full">
       <DiscussionHeader

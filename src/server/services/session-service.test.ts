@@ -18,7 +18,7 @@ it('createSession with valid params returns CreateSessionResult', async () => {
   })
   expect(result.sessionId).toBeDefined()
   expect(result.topic).toBe('如何提高产品留存率')
-  expect(result.status).toBe('active')
+  expect(result.status).toBe('running')
   expect(typeof result.createdAt).toBe('number')
   expect(result.template.id).toBe('three-kingdoms-advisors')
 })

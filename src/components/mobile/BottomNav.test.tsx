@@ -12,10 +12,10 @@ vi.mock('next/link', () => ({
   ),
 }))
 
-it('BottomNav renders nav element with 5 items', () => {
+it('BottomNav renders nav element with 4 items', () => {
   const { container } = render(<BottomNav />)
   const nav = container.querySelector('nav')
   expect(nav).not.toBeNull()
   const links = container.querySelectorAll('a')
-  expect(links.length).toBe(5)
+  expect(links.length).toBe(4)
 })

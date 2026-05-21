@@ -1,0 +1,64 @@
+tasks:
+  - task: "Task-01：统一会话生命周期状态与状态历史类型"
+    test_file: session-lifecycle-types.test.ts
+    test_cases: 7
+
+  - task: "Task-02：实现讨论状态机合法转换与消息后推进接口"
+    test_file: state-machine.test.ts
+    test_cases: 9
+
+  - task: "Task-03：扩展会话仓储查询与状态更新接口"
+    test_file: session-lifecycle.test.ts
+    test_cases: 8
+
+  - task: "Task-04：实现 SessionService 会话查询与生命周期动作"
+    test_file: session-lifecycle.test.ts
+    test_cases: 8
+
+  - task: "Task-05：实现会话列表、状态更新和状态查询 API"
+    test_file: session-lifecycle-api.test.ts
+    test_cases: 9
+
+  - task: "Task-06：实现会话中心搜索筛选归档恢复 UI"
+    test_file: sessions-module.test.tsx
+    test_cases: 5
+
+  - task: "Task-07：统一首页最近讨论与讨论详情入口状态处理"
+    test_file: home-discussion-lifecycle.test.tsx
+    test_cases: 4
+
+  - task: "Task-08：在消息发送后推进 phase 并支持人工确认完成"
+    test_file: discussion-phase-advance.test.ts
+    test_cases: 5
+
+type_tests:
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: session-lifecycle-api.test.ts
+    covers:
+      - "Task-05：实现会话列表、状态更新和状态查询 API"
+    resources: []
+
+  - type: library
+    standard: standards/testing/library.md
+    test_file: state-machine.test.ts
+    covers:
+      - "Task-02：实现讨论状态机合法转换与消息后推进接口"
+      - "Task-03：扩展会话仓储查询与状态更新接口"
+    resources: []
+
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: session-lifecycle.test.ts
+    covers:
+      - "Task-04：实现 SessionService 会话查询与生命周期动作"
+      - "Task-08：在消息发送后推进 phase 并支持人工确认完成"
+    resources: []
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: sessions-module.test.tsx
+    covers:
+      - "Task-06：实现会话中心搜索筛选归档恢复 UI"
+      - "Task-07：统一首页最近讨论与讨论详情入口状态处理"
+    resources: []

@@ -1,11 +1,23 @@
 // Core domain types for consilium — 智囊团 multi-agent discussion platform
 
 export type DiscussionStage = 'idle' | 'opening' | 'developing' | 'climax' | 'closing'
+export type SessionLifecycleStatus = 'running' | 'completed' | 'archived' | 'active'
+export type NormalizedSessionLifecycleStatus = Exclude<SessionLifecycleStatus, 'active'>
+export type LegacySessionLifecycleStatus = SessionLifecycleStatus
+export type SessionStatusAction = 'archive' | 'complete' | 'resume'
+
+export interface StateHistoryEntry {
+  from: string
+  to: string
+  reason: string
+  createdAt: string
+}
 
 export interface DiscussionState {
   stage: DiscussionStage
   turnCount: number
   lastSpeakerId: string | null
+  history?: StateHistoryEntry[]
 }
 
 export type AgentType = 'host' | 'expert' | 'critic'
@@ -57,7 +69,7 @@ export interface Session {
   id: string
   templateId: string
   topic: string
-  status: 'active' | 'completed' | 'archived'
+  status: LegacySessionLifecycleStatus
   modelStrategyId?: string
   state: DiscussionState
   messages: Message[]
@@ -69,7 +81,7 @@ export interface Session {
 export interface Discussion {
   id: string
   sessionId: string
-  status: 'active' | 'paused' | 'completed'
+  status: SessionLifecycleStatus
   createdAt: number
 }
 

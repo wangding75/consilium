@@ -19,7 +19,7 @@ it('POST /api/sessions with valid body returns 200 with sessionId', async () => 
   expect(res.status).toBe(200)
   expect(body.success).toBe(true)
   expect(typeof body.data.sessionId).toBe('string')
-  expect(body.data.status).toBe('active')
+  expect(body.data.status).toBe('running')
   expect(typeof body.requestId).toBe('string')
 })
 

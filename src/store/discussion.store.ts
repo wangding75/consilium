@@ -64,11 +64,11 @@ function mergeMessages(
   for (const m of existing) map.set(m.messageId, m)
   for (const m of incoming) {
     const key = m.clientMessageId && !map.has(m.messageId)
-      ? [...map.values()].find(e => e.clientMessageId === m.clientMessageId)?.messageId
+      ? Array.from(map.values()).find(e => e.clientMessageId === m.clientMessageId)?.messageId
       : m.messageId
     map.set(key ?? m.messageId, m)
   }
-  return [...map.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+  return Array.from(map.values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 }
 
 export function discussionReducer(

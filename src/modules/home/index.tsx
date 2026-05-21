@@ -186,7 +186,7 @@ export function HomeModule() {
               >
                 <p className="text-sm text-text-primary truncate">{session.topic}</p>
                 <p className="text-xs text-text-muted mt-1">
-                  {session.status === 'active' ? '进行中' : '已完成'} ·{' '}
+                  {session.status === 'running' || session.status === 'active' ? '进行中' : session.status === 'archived' ? '已归档' : '已完成'} ·{' '}
                   {new Date(session.createdAt).toLocaleDateString('zh-CN')}
                 </p>
               </button>

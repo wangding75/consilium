@@ -1,3 +1,4 @@
+import type { DefaultStateMachine } from '@/engine/state-machine'
 import type { Discussion, AgentCallLog } from '@/types'
 import type { DiscussionRepository } from '@/server/repositories/discussion.repository'
 import type { SessionRepository } from '@/server/repositories/session.repository'
@@ -17,7 +18,8 @@ export class DiscussionService {
     private readonly templateRepo?: TemplateRepository,
     private readonly messageRepo?: MessageRepository,
     private readonly callLogRepo?: AgentCallLogRepository,
-    private readonly orchestrator?: DiscussionOrchestrator
+    private readonly orchestrator?: DiscussionOrchestrator,
+    private readonly stateMachine?: DefaultStateMachine
   ) {}
 
   async listDiscussions(): Promise<Discussion[]> {
@@ -50,6 +52,8 @@ export class DiscussionService {
         name: template?.name ?? '',
       },
       status: session.status,
+      phase: session.state.stage,
+      state: session.state,
       roles,
       activeSpeakerId: session.state.lastSpeakerId ?? null,
       createdAt: new Date(session.createdAt).toISOString(),
