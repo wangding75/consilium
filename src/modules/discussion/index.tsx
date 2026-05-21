@@ -33,6 +33,9 @@ function DiscussionModuleInner({ sessionId }: DiscussionModuleProps) {
   const typingSpeaker = state.typingSpeakerBySessionId[sessionId] ?? null
   const roles = session?.roles ?? []
 
+  const canIntervene = session?.status === 'running'
+  const intentError = state.intentErrorBySessionId?.[sessionId] ?? null
+
   const typingSpeakerName = isTyping
     ? typingSpeaker?.name ?? (activeSpeakerId ? null : null)
     : null
@@ -62,19 +65,27 @@ function DiscussionModuleInner({ sessionId }: DiscussionModuleProps) {
         onMore={() => setIsMoreOpen(true)}
       />
       <RoleBar roles={roles} activeSpeakerId={activeSpeakerId} />
+      {!canIntervene && session && (
+        <div className="px-4 py-2 text-xs text-center text-muted-foreground bg-muted/50">
+          当前会话不可继续操作或需要恢复
+        </div>
+      )}
       <MessageList
         messages={messages}
         isLoading={isLoading}
         error={error}
+        intentError={intentError}
         typingSpeakerName={typingSpeakerName}
         onRetry={() => actions.loadMessages(sessionId)}
         onMessageRetry={(clientMessageId) => actions.retryMessage(sessionId, clientMessageId)}
+        onRewriteCommand={() => actions.fillComposer(sessionId, state.pendingCommandBySessionId?.[sessionId] ?? '')}
+        onContinueAsPlainMessage={() => actions.continueAsPlainMessage(sessionId)}
       />
       <MessageInput
         onSend={(content) => actions.sendMessage(sessionId, content)}
-        disabled={isLoading}
+        disabled={isLoading || !canIntervene}
       />
-      <MoreSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} />
+      <MoreSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} canIntervene={canIntervene} />
     </div>
   )
 }

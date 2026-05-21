@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface MessageInputProps {
   onSend: (content: string) => void
@@ -14,10 +14,19 @@ export function MessageInput({
   onSend,
   disabled = false,
   isRecognizingIntent = false,
-  draftContent: _draftContent = null,
-  onDraftConsumed: _onDraftConsumed,
+  draftContent,
+  onDraftConsumed,
 }: MessageInputProps) {
   const [content, setContent] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (draftContent) {
+      setContent(draftContent)
+      inputRef.current?.focus()
+      onDraftConsumed?.()
+    }
+  }, [draftContent, onDraftConsumed])
 
   const handleSend = () => {
     const trimmed = content.trim()
@@ -28,7 +37,11 @@ export function MessageInput({
 
   return (
     <div className="flex gap-2 p-4 border-t border-border">
+      <button type="button" className="text-sm text-muted-foreground" disabled={disabled} aria-label="@" onClick={() => { setContent('@'); }}>@</button>
+      <button type="button" className="text-sm text-muted-foreground" disabled={disabled} aria-label="#" onClick={() => { setContent('#'); }}>#</button>
+      <button type="button" className="text-sm text-muted-foreground" disabled={disabled} aria-label="总结" onClick={() => { setContent('总结当前结论'); }}>总结</button>
       <input
+        ref={inputRef}
         className="flex-1 rounded-lg border border-border px-3 py-2 text-sm"
         value={content}
         onChange={(event) => setContent(event.target.value)}

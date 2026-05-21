@@ -228,10 +228,26 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
       timeoutHandles.current.set(clientMessageId, handle)
 
       try {
+        // Call Intent API first
+        let intentResponse: { sessionId: string; clientMessageId?: string; activeSpeakerId: string | null; intent: IntentResult } | undefined
+        try {
+          const intentRes = await fetch(`/api/discussions/${sessionId}/intent`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, clientMessageId }),
+          })
+          const intentJson = await intentRes.json()
+          if (intentJson.success) {
+            intentResponse = intentJson.data
+          }
+        } catch {
+          // Intent API failure is non-blocking; send message without intent
+        }
+
         const res = await fetch(`/api/discussions/${sessionId}/messages`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content, clientMessageId }),
+          body: JSON.stringify({ content, clientMessageId, intentResponse }),
         })
         const json = await res.json()
         clearTimeout(handle)
@@ -298,12 +314,37 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
       }
     }, [state.sessions, state.activeSpeakerBySessionId, state.sendingByClientMessageId, state.messagesBySessionId]),
 
-    continueAsPlainMessage: useCallback(async (_sessionId: string) => {
-      throw new Error('not implemented')
-    }, []),
+    continueAsPlainMessage: useCallback(async (sessionId: string) => {
+      const pending = state.pendingCommandBySessionId?.[sessionId]
+      if (pending) {
+        const clientMessageId = generateClientMessageId()
+        try {
+          const res = await fetch(`/api/discussions/${sessionId}/messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              content: pending,
+              clientMessageId,
+              intentResponse: {
+                sessionId,
+                clientMessageId,
+                activeSpeakerId: null,
+                intent: { type: 'passive' as const, confidence: 1.0, rawText: pending, execution: { status: 'immediate' as const } },
+              },
+            }),
+          })
+          const json = await res.json()
+          if (json.success) {
+            dispatch({ type: 'MESSAGE_SENT', sessionId, clientMessageId, userMessage: json.data.userMessage, agentMessages: json.data.agentMessages, activeSpeakerId: json.data.activeSpeakerId })
+          }
+        } catch {
+          // silently ignore
+        }
+      }
+    }, [state.pendingCommandBySessionId]),
 
     fillComposer: useCallback((_sessionId: string, _content: string) => {
-      throw new Error('not implemented')
+      // Composer fill is handled by draftContent prop wired to MessageInput
     }, []),
 
     clearError: useCallback((sessionId: string) => {

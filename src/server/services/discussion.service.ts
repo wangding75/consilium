@@ -1,5 +1,5 @@
 import type { DefaultStateMachine } from '@/engine/state-machine'
-import type { Discussion, AgentCallLog } from '@/types'
+import type { Discussion, AgentCallLog, AgentProfile, IntentResult } from '@/types'
 import type { DiscussionRepository } from '@/server/repositories/discussion.repository'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
@@ -8,6 +8,7 @@ import type { AgentCallLogRepository } from '@/server/repositories/agent-call-lo
 import type { DiscussionOrchestrator } from '@/engine/orchestrator'
 import type { SessionDetailResult, MessageListResult, SendMessageResult, IntentRequest, IntentResponse } from '@/types/api'
 import { ServiceError } from '@/server/errors'
+import { RuleBasedIntentClassifier } from '@/engine/intent'
 
 const DEFAULT_MODEL = 'claude-3-5-haiku-latest'
 
@@ -79,10 +80,67 @@ export class DiscussionService {
   }
 
   async recognizeIntent(
-    _sessionId: string,
-    _params: IntentRequest
+    sessionId: string,
+    params: IntentRequest
   ): Promise<IntentResponse> {
-    throw new Error('not implemented')
+    const content = params.content?.trim()
+    if (!content) {
+      throw new ServiceError('MESSAGE_EMPTY', 'Message content cannot be empty')
+    }
+
+    const session = await this.sessionRepo?.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
+
+    if (session.status !== 'running') {
+      throw new ServiceError('SESSION_NOT_OPERABLE', 'Session cannot accept intervention in current status')
+    }
+
+    const template = await this.templateRepo?.findById(session.templateId)
+    const roles = (template?.roles ?? []).map((r) => ({
+      roleId: r.id,
+      name: r.name,
+      agentType: r.agentType ?? (r.isHost ? ('host' as const) : ('expert' as const)),
+      avatar: r.avatarEmoji ?? '',
+      model: DEFAULT_MODEL,
+    }))
+
+    const profiles: AgentProfile[] = (template?.roles ?? []).map((r) => ({
+      agentId: r.id,
+      roleId: r.id,
+      agentType: r.agentType ?? (r.isHost ? ('host' as const) : ('expert' as const)),
+      name: r.name,
+      persona: r.persona,
+      systemPrompt: r.systemPrompt,
+      model: DEFAULT_MODEL,
+      visible: true,
+    }))
+
+    const messages = await this.messageRepo?.findBySessionId(sessionId) ?? []
+
+    // INSUFFICIENT_CONTEXT: summarize/decide intent requires >= 2 non-system messages
+    const classifier = new RuleBasedIntentClassifier()
+    const intent: IntentResult = await classifier.classify({
+      sessionId,
+      content,
+      roles: profiles,
+      messages,
+      debug: params.debug,
+      forceAsPlainMessage: params.forceAsPlainMessage,
+    })
+
+    if (intent.type === 'decide' && intent.target?.action === 'summarize') {
+      const nonSystemMessages = messages.filter(m => m.type !== 'system')
+      if (nonSystemMessages.length < 2) {
+        throw new ServiceError('INSUFFICIENT_CONTEXT', 'Not enough discussion history to summarize')
+      }
+    }
+
+    return {
+      sessionId,
+      clientMessageId: params.clientMessageId,
+      intent,
+      activeSpeakerId: session.state.lastSpeakerId ?? null,
+    }
   }
 
   async sendUserMessage(
@@ -93,6 +151,15 @@ export class DiscussionService {
   ): Promise<SendMessageResult> {
     const session = await this.sessionRepo?.findById(sessionId)
     if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
+
+    if (session.status !== 'running') {
+      throw new ServiceError('SESSION_NOT_OPERABLE', 'Session cannot accept messages in current status')
+    }
+
+    // SESSION_CONTEXT_MISMATCH: intentResponse must belong to the same session
+    if (intentResponse && intentResponse.sessionId !== sessionId) {
+      throw new ServiceError('SESSION_CONTEXT_MISMATCH', 'Intent response does not match the current session')
+    }
 
     const template = await this.templateRepo?.findById(session.templateId)
     const existingMessages = await this.messageRepo?.findBySessionId(sessionId) ?? []
@@ -178,6 +245,18 @@ export class DiscussionService {
     } catch (err) {
       if (userMessage) await this.messageRepo?.updateStatus(userMessage.messageId, 'failed')
       throw new ServiceError('AGENT_GENERATION_FAILED', 'Agent generation failed', err)
+    }
+
+    // Vote boundary: record system message for deferred intents with a message
+    if (intentResponse?.intent.execution.status === 'deferred' && intentResponse.intent.execution.message) {
+      await this.messageRepo?.save({
+        messageId: `msg-system-${crypto.randomUUID()}`,
+        sessionId,
+        type: 'system',
+        content: intentResponse.intent.execution.message,
+        status: 'completed',
+        createdAt: new Date().toISOString(),
+      })
     }
 
     const agentMessages = orchestratorResult?.agentMessages ?? []

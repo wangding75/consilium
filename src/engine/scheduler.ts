@@ -10,6 +10,7 @@ export class RoundRobinScheduler implements Scheduler {
     if (schedulerHint?.preferredSpeakerId) {
       const preferred = roles.find((r) => r.roleId === schedulerHint.preferredSpeakerId)
       if (preferred) return { speakerIds: [preferred.roleId], reason: schedulerHint.reason }
+      return { speakerIds: [], reason: `preferred speaker ${schedulerHint.preferredSpeakerId} not found in roles` }
     }
     if (schedulerHint?.preferredAgentType) {
       const preferred = roles.find((r) => r.agentType === schedulerHint.preferredAgentType)

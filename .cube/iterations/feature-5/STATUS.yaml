@@ -12,42 +12,71 @@ tasks:
     module: engine/intent
     test_file: src/engine/intent.test.ts
     test_cases: 7
-    phase: green
+    phase: done
     started_at: "2026-05-21 16:30"
     test_passed: 7
     test_total: 7
+    completed_at: "2026-05-21 16:36"
   - task: "Task-03：实现 Intent API 服务与路由契约"
     module: app/api/discussions
     test_file: src/app/api/discussions/intent-post.test.ts
     test_cases: 6
-    phase: locked
+    phase: done
+    started_at: "2026-05-21 16:46"
+    test_passed: 6
+    test_total: 6
+    completed_at: "2026-05-21 16:48"
   - task: "Task-04：实现 schedulerHint 调度消费链路"
     module: server/services
     test_file: src/server/services/intent-integration.test.ts
     test_cases: 2
-    phase: locked
+    phase: done
+    started_at: "2026-05-21 16:49"
+    test_passed: 2
+    test_total: 2
+    completed_at: "2026-05-21 16:53"
   - task: "Task-05：实现用户消息 intent metadata 与投票边界反馈"
     module: server/services
     test_file: src/server/services/message-intent-metadata.test.ts
     test_cases: 4
-    phase: locked
+    phase: done
+    started_at: "2026-05-21 16:54"
+    test_passed: 4
+    test_total: 4
+    completed_at: "2026-05-21 16:55"
   - task: "Task-06：实现讨论页会话恢复与可介入状态门禁"
     module: modules/discussion
     test_file: src/modules/discussion/session-gate.test.tsx
     test_cases: 1
-    phase: locked
+    phase: done
+    started_at: "2026-05-21 16:57"
+    test_passed: 1
+    test_total: 1
+    completed_at: "2026-05-21 17:00"
   - task: "Task-07：实现讨论页 Composer 快捷指令填入"
     module: modules/discussion
     test_file: src/modules/discussion/composer-shortcuts.test.tsx
     test_cases: 2
-    phase: locked
+    phase: done
+    started_at: "2026-05-21 17:00"
+    test_passed: 2
+    test_total: 2
+    completed_at: "2026-05-21 17:02"
   - task: "Task-08：实现前端 intent 解析状态与不可识别提示"
     module: modules/discussion
     test_file: src/modules/discussion/intent-ui-state.test.tsx
     test_cases: 3
-    phase: locked
+    phase: done
+    started_at: "2026-05-21 17:02"
+    test_passed: 3
+    test_total: 3
+    completed_at: "2026-05-21 17:07"
   - task: "Task-09：实现指令型消息展示与目标角色高亮"
     module: modules/discussion
     test_file: src/modules/discussion/command-display.test.tsx
     test_cases: 2
-    phase: locked
+    phase: done
+    started_at: "2026-05-21 17:07"
+    test_passed: 2
+    test_total: 2
+    completed_at: "2026-05-21 17:08"

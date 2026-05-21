@@ -14,6 +14,7 @@ import { ContextBuilder } from '@/engine/context-builder'
 import { DefaultAgentRuntime } from '@/engine/agent-runtime'
 import { MockLLMClient } from '@/llm/mock-llm-client'
 import { ServiceError } from '@/server/errors'
+import { IntentClassificationError } from '@/engine/intent'
 
 function createService(): DiscussionService {
   const orchestrator = new DiscussionOrchestrator(
@@ -43,18 +44,27 @@ export async function POST(
     const data = await service.recognizeIntent(sessionId, body)
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
+    if (err instanceof IntentClassificationError) {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: err.code, message: err.message }, requestId },
+        { status: 422 }
+      )
+    }
     if (err instanceof ServiceError) {
       const httpStatus =
         err.code === 'SESSION_NOT_FOUND'
           ? 404
-          : err.code === 'INTENT_CLASSIFICATION_FAILED'
-            ? 422
-            : err.code === 'MESSAGE_EMPTY' ||
-                err.code === 'ROLE_NOT_FOUND' ||
-                err.code === 'AMBIGUOUS_TARGET' ||
-                err.code === 'UNSUPPORTED_COMMAND'
-              ? 400
-              : 500
+          : err.code === 'SESSION_NOT_OPERABLE'
+            ? 409
+            : err.code === 'INTENT_CLASSIFICATION_FAILED'
+              ? 422
+              : err.code === 'MESSAGE_EMPTY' ||
+                  err.code === 'ROLE_NOT_FOUND' ||
+                  err.code === 'AMBIGUOUS_TARGET' ||
+                  err.code === 'UNSUPPORTED_COMMAND' ||
+                  err.code === 'INSUFFICIENT_CONTEXT'
+                ? 400
+                : 500
       return NextResponse.json(
         { success: false, data: null, error: { code: err.code, message: err.message }, requestId },
         { status: httpStatus }

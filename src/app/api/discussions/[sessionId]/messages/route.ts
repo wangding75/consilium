@@ -98,7 +98,7 @@ export async function POST(
     const body = (await req.json()) as Partial<SendMessageParams>
     const content = body.content ?? ''
     const service = createService()
-    const data = await service.sendUserMessage(sessionId, content, body.clientMessageId, body.intentResponse)
+    const data = await service.sendUserMessage(sessionId, content, body.clientMessageId, body.intentResponse as SendMessageParams['intentResponse'])
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
     const errorCode = err instanceof ServiceError ? err.code : (err as { code?: string })?.code
@@ -113,8 +113,10 @@ export async function POST(
       const httpStatus =
         err.code === 'TEMPLATE_NOT_FOUND'
           ? 404
-          : err.code === 'MESSAGE_EMPTY'
+          : err.code === 'MESSAGE_EMPTY' || err.code === 'SESSION_CONTEXT_MISMATCH'
             ? 400
+          : err.code === 'SESSION_NOT_OPERABLE'
+            ? 409
             : err.code === 'LLM_PROVIDER_ERROR'
               ? 502
               : 500

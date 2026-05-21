@@ -12,6 +12,7 @@ interface MessageListProps {
   error?: ApiError | null
   intentError?: ApiError | null
   typingSpeakerName?: string | null
+  debugIntent?: boolean
   onRetry?: () => void
   onMessageRetry?: (clientMessageId: string) => void
   onRewriteCommand?: () => void
@@ -24,6 +25,7 @@ export function MessageList({
   error,
   intentError,
   typingSpeakerName,
+  debugIntent,
   onRetry,
   onMessageRetry,
   onRewriteCommand,
@@ -78,7 +80,7 @@ export function MessageList({
         <div className="text-sm text-text-secondary">暂无消息</div>
       )}
       {messages.map((message) => (
-        <MessageBubble key={message.messageId} msg={message} onRetry={onMessageRetry} />
+        <MessageBubble key={message.messageId} msg={message} onRetry={onMessageRetry} debugIntent={debugIntent} />
       ))}
       {typingSpeakerName !== undefined && typingSpeakerName !== null && (
         <TypingIndicator speakerName={typingSpeakerName} />

@@ -1,4 +1,4 @@
-import type { AgentProfile, DiscussionMessage, IntentResult, IntentDebugSummary, IntentType, CommandAction } from '@/types'
+import type { AgentProfile, DiscussionMessage, IntentResult, IntentDebugSummary, IntentType, CommandAction, Message } from '@/types'
 
 export interface IntentClassifierInput {
   sessionId: string
@@ -92,7 +92,13 @@ const VOTE_MESSAGE = '已识别投票意图；本迭代暂不创建真实投票�
 export class RuleBasedIntentClassifier implements IntentClassifier {
   async classify(input: IntentClassifierInput): Promise<IntentResult> {
     if (input.forceAsPlainMessage) {
-      return { type: 'passive', confidence: 1.0, rawText: input.content, execution: { status: 'immediate' } }
+      return {
+        type: 'passive',
+        confidence: 1.0,
+        rawText: input.content,
+        execution: { status: 'immediate' },
+        debugSummary: input.debug ? { classifierMode: 'rule', matchedRule: 'force-plain', confidence: 1.0, type: 'passive' } : undefined,
+      }
     }
 
     const text = input.content
