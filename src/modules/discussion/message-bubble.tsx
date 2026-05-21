@@ -8,7 +8,7 @@ interface MessageBubbleProps {
 }
 
 export function MessageBubble({ msg, onRetry }: MessageBubbleProps) {
-  const { type, content, status, clientMessageId } = msg
+  const { type, content, status, clientMessageId, metadata } = msg
 
   const isLeft = type === 'host' || type === 'character'
   const isRight = type === 'user'
@@ -25,6 +25,7 @@ export function MessageBubble({ msg, onRetry }: MessageBubbleProps) {
       }}
     >
       <div>
+        {metadata?.intentLabel && <span>{metadata.intentLabel}</span>}
         <span>{content}</span>
         {status === 'failed' && onRetry && clientMessageId && (
           <button onClick={() => onRetry(clientMessageId)}>重试</button>

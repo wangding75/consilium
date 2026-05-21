@@ -6,6 +6,10 @@ export type NormalizedSessionLifecycleStatus = Exclude<SessionLifecycleStatus, '
 export type LegacySessionLifecycleStatus = SessionLifecycleStatus
 export type SessionStatusAction = 'archive' | 'complete' | 'resume'
 
+export type IntentType = 'interrupt' | 'command' | 'decide' | 'passive'
+export type CommandAction = 'reply' | 'rebut' | 'summarize' | 'vote' | 'end'
+export type IntentExecutionStatus = 'immediate' | 'deferred' | 'recorded' | 'unsupported'
+
 export interface StateHistoryEntry {
   from: string
   to: string
@@ -33,6 +37,41 @@ export interface Role {
 }
 
 export type EventType = 'face-slap' | 'side-taking' | 'vote' | 'reversal'
+
+export interface CommandTarget {
+  roleId?: string
+  action?: CommandAction
+  eventType?: EventType
+  referenceRoleId?: string
+}
+
+export interface SchedulerHint {
+  preferredSpeakerId?: string
+  preferredAgentType?: AgentType
+  reason: string
+}
+
+export interface IntentDebugSummary {
+  classifierMode: 'mock' | 'rule' | 'llm'
+  matchedRule?: string
+  confidence: number
+  type: IntentType
+  target?: CommandTarget
+  schedulerHint?: SchedulerHint
+}
+
+export interface IntentResult {
+  type: IntentType
+  confidence: number
+  rawText: string
+  target?: CommandTarget
+  schedulerHint?: SchedulerHint
+  execution: {
+    status: IntentExecutionStatus
+    message?: string
+  }
+  debugSummary?: IntentDebugSummary
+}
 
 export interface DiscussionEvent {
   id: string
@@ -139,6 +178,8 @@ export interface DiscussionMessage {
     completionTokens?: number
     durationMs?: number
     replyToClientMessageId?: string
+    intent?: IntentResult
+    intentLabel?: string
   }
 }
 
@@ -177,6 +218,7 @@ export interface SpeakerSelectionInput {
   roundIndex: number
   lastSpeakerId?: string
   policy?: string
+  schedulerHint?: SchedulerHint
 }
 
 export interface SpeakerSelectionResult {
@@ -193,6 +235,8 @@ export interface OrchestratorInput {
   profiles: AgentProfile[]
   messageHistory: DiscussionMessage[]
   triggerContent: string | null
+  intent?: IntentResult
+  schedulerHint?: SchedulerHint
 }
 
 export interface OrchestratorResult {

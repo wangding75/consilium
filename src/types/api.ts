@@ -3,6 +3,7 @@ import type {
   DiscussionMessage,
   DiscussionStage,
   DiscussionState,
+  IntentResult,
   LegacySessionLifecycleStatus,
   SessionLifecycleStatus,
   SessionStatusAction,
@@ -63,6 +64,21 @@ export interface MessageListResult {
 export interface SendMessageParams {
   content: string
   clientMessageId?: string
+  intentResponse?: IntentResponse
+}
+
+export interface IntentRequest {
+  content: string
+  clientMessageId?: string
+  debug?: boolean
+  forceAsPlainMessage?: boolean
+}
+
+export interface IntentResponse {
+  sessionId: string
+  clientMessageId?: string
+  intent: IntentResult
+  activeSpeakerId: string | null
 }
 
 export interface SendMessageResult {

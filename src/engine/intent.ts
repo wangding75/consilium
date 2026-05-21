@@ -1,10 +1,47 @@
-import type { Message } from '@/types'
+import type { AgentProfile, DiscussionMessage, IntentResult, Message } from '@/types'
 
-export type IntentType = 'interrupt' | 'command' | 'passive'
+export interface IntentClassifierInput {
+  sessionId: string
+  content: string
+  roles: AgentProfile[]
+  messages: DiscussionMessage[]
+  debug?: boolean
+  forceAsPlainMessage?: boolean
+}
 
-export interface IntentResult {
-  type: IntentType
-  confidence: number
+export interface IntentClassifier {
+  classify(input: IntentClassifierInput): Promise<IntentResult>
+}
+
+export class IntentClassificationError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+    readonly details?: unknown
+  ) {
+    super(message)
+    this.name = 'IntentClassificationError'
+  }
+}
+
+export class MockIntentClassifier implements IntentClassifier {
+  async classify(_input: IntentClassifierInput): Promise<IntentResult> {
+    throw new Error('not implemented')
+  }
+}
+
+export class RuleBasedIntentClassifier implements IntentClassifier {
+  async classify(_input: IntentClassifierInput): Promise<IntentResult> {
+    throw new Error('not implemented')
+  }
+}
+
+export class DefaultIntentClassifier implements IntentClassifier {
+  constructor(private readonly fallback: IntentClassifier = new RuleBasedIntentClassifier()) {}
+
+  async classify(input: IntentClassifierInput): Promise<IntentResult> {
+    return this.fallback.classify(input)
+  }
 }
 
 export interface IntentRecognizer {
@@ -12,7 +49,14 @@ export interface IntentRecognizer {
 }
 
 export class DefaultIntentRecognizer implements IntentRecognizer {
-  async recognize(_message: Message): Promise<IntentResult> {
-    throw new Error('not implemented — will be built in iteration 5')
+  constructor(private readonly classifier: IntentClassifier = new DefaultIntentClassifier()) {}
+
+  async recognize(message: Message): Promise<IntentResult> {
+    return this.classifier.classify({
+      sessionId: message.sessionId,
+      content: message.content,
+      roles: [],
+      messages: [],
+    })
   }
 }

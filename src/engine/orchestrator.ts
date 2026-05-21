@@ -17,6 +17,7 @@ export class DiscussionOrchestrator {
       roles: profiles,
       messageHistory,
       roundIndex: messageHistory.length,
+      schedulerHint: input.schedulerHint ?? input.intent?.schedulerHint,
     })
 
     const agentMessages: DiscussionMessage[] = []

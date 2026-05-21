@@ -6,7 +6,7 @@ import type { TemplateRepository } from '@/server/repositories/template.reposito
 import type { MessageRepository } from '@/server/repositories/message.repository'
 import type { AgentCallLogRepository } from '@/server/repositories/agent-call-log.repository'
 import type { DiscussionOrchestrator } from '@/engine/orchestrator'
-import type { SessionDetailResult, MessageListResult, SendMessageResult } from '@/types/api'
+import type { SessionDetailResult, MessageListResult, SendMessageResult, IntentRequest, IntentResponse } from '@/types/api'
 import { ServiceError } from '@/server/errors'
 
 const DEFAULT_MODEL = 'claude-3-5-haiku-latest'
@@ -78,10 +78,18 @@ export class DiscussionService {
     }
   }
 
+  async recognizeIntent(
+    _sessionId: string,
+    _params: IntentRequest
+  ): Promise<IntentResponse> {
+    throw new Error('not implemented')
+  }
+
   async sendUserMessage(
     sessionId: string,
     content: string,
-    clientMessageId?: string
+    clientMessageId?: string,
+    intentResponse?: IntentResponse
   ): Promise<SendMessageResult> {
     const session = await this.sessionRepo?.findById(sessionId)
     if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
@@ -134,6 +142,10 @@ export class DiscussionService {
           status: 'completed',
           clientMessageId,
           createdAt: new Date().toISOString(),
+          metadata: intentResponse ? {
+            intent: intentResponse.intent,
+            intentLabel: intentResponse.intent.type === 'command' || intentResponse.intent.type === 'decide' ? '指令' : undefined,
+          } : undefined,
         })
         userMessage = msg ?? null
       }
@@ -160,6 +172,8 @@ export class DiscussionService {
         profiles,
         messageHistory: [...existingMessages, ...(userMessage ? [userMessage] : [])],
         triggerContent: isOpening ? null : content,
+        intent: intentResponse?.intent,
+        schedulerHint: intentResponse?.intent.schedulerHint,
       })
     } catch (err) {
       if (userMessage) await this.messageRepo?.updateStatus(userMessage.messageId, 'failed')

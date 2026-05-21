@@ -5,9 +5,18 @@ import { useState } from 'react'
 interface MessageInputProps {
   onSend: (content: string) => void
   disabled?: boolean
+  isRecognizingIntent?: boolean
+  draftContent?: string | null
+  onDraftConsumed?: () => void
 }
 
-export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
+export function MessageInput({
+  onSend,
+  disabled = false,
+  isRecognizingIntent = false,
+  draftContent: _draftContent = null,
+  onDraftConsumed: _onDraftConsumed,
+}: MessageInputProps) {
   const [content, setContent] = useState('')
 
   const handleSend = () => {
@@ -26,14 +35,14 @@ export function MessageInput({ onSend, disabled = false }: MessageInputProps) {
         onKeyDown={(event) => {
           if (event.key === 'Enter') handleSend()
         }}
-        disabled={disabled}
+        disabled={disabled || isRecognizingIntent}
       />
       <button
         className="rounded-lg bg-primary px-4 py-2 text-sm text-white disabled:opacity-50"
         onClick={handleSend}
-        disabled={disabled || !content.trim()}
+        disabled={disabled || isRecognizingIntent || !content.trim()}
       >
-        发送
+        {isRecognizingIntent ? '解析中...' : '发送'}
       </button>
     </div>
   )

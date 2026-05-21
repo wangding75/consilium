@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, createElement, useContext, useReducer, useRef, useCallback, type ReactNode } from 'react'
-import type { DiscussionMessage } from '@/types'
+import type { DiscussionMessage, IntentResult } from '@/types'
 import type { ApiError, SessionDetailResult } from '@/types/api'
 
 export type SessionSummary = SessionDetailResult
@@ -15,6 +15,9 @@ export interface DiscussionStoreState {
   typingBySessionId: Record<string, boolean>
   typingSpeakerBySessionId: Record<string, { roleId: string; name: string } | null>
   errorBySessionId: Record<string, ApiError | null>
+  recognizingIntentBySessionId?: Record<string, boolean>
+  intentErrorBySessionId?: Record<string, ApiError | null>
+  pendingCommandBySessionId?: Record<string, string | null>
 }
 
 export interface DiscussionActions {
@@ -23,6 +26,8 @@ export interface DiscussionActions {
   sendMessage(sessionId: string, content: string): Promise<void>
   retryMessage(sessionId: string, clientMessageId: string): Promise<void>
   clearError(sessionId: string): void
+  continueAsPlainMessage(sessionId: string): Promise<void>
+  fillComposer(sessionId: string, content: string): void
 }
 
 export function generateClientMessageId(): string {
@@ -43,6 +48,9 @@ const initialState: DiscussionStoreState = {
   typingBySessionId: {},
   typingSpeakerBySessionId: {},
   errorBySessionId: {},
+  recognizingIntentBySessionId: {},
+  intentErrorBySessionId: {},
+  pendingCommandBySessionId: {},
 }
 
 export type DiscussionAction =
@@ -289,6 +297,14 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
         dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
       }
     }, [state.sessions, state.activeSpeakerBySessionId, state.sendingByClientMessageId, state.messagesBySessionId]),
+
+    continueAsPlainMessage: useCallback(async (_sessionId: string) => {
+      throw new Error('not implemented')
+    }, []),
+
+    fillComposer: useCallback((_sessionId: string, _content: string) => {
+      throw new Error('not implemented')
+    }, []),
 
     clearError: useCallback((sessionId: string) => {
       dispatch({ type: 'ERROR_SET', sessionId, error: null })
