@@ -3,10 +3,11 @@ tasks:
     module: types
     test_file: src/types/intent-contract.test.ts
     test_cases: 3
-    phase: green
+    phase: done
     started_at: "2026-05-21 16:25"
     test_passed: 3
     test_total: 3
+    completed_at: "2026-05-21 16:28"
   - task: "Task-02：实现 IntentClassifier 接口与 Mock/规则分类骨架"
     module: engine/intent
     test_file: src/engine/intent.test.ts
