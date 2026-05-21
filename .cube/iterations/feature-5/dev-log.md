@@ -50,3 +50,13 @@
 - 修改：src/modules/discussion/message-bubble.tsx
 
 ---
+
+## 任务 1：Task-01：定义用户意图领域类型与 API DTO（完成时间：2026-05-21 16:28）
+
+- 测试文件：src/types/intent-contract.test.ts
+- 测试结果：3/3 通过
+- 文件变更：修改 [src/types/index.ts, src/types/api.ts]（与计划一致）
+- phase：locked → green → done
+
+---
+

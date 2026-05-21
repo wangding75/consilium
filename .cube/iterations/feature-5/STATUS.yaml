@@ -12,7 +12,10 @@ tasks:
     module: engine/intent
     test_file: src/engine/intent.test.ts
     test_cases: 7
-    phase: locked
+    phase: green
+    started_at: "2026-05-21 16:30"
+    test_passed: 7
+    test_total: 7
   - task: "Task-03：实现 Intent API 服务与路由契约"
     module: app/api/discussions
     test_file: src/app/api/discussions/intent-post.test.ts
