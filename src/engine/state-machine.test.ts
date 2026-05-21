@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { DefaultStateMachine } from '@/engine/state-machine'
-import { createMockSession } from '@/tests/utils/mock-factories'
+import { mockSession } from '@/tests/utils/mock-factories'
 
 // Task-02: Discussion state machine legal transitions & message-driven advancement
 describe('DefaultStateMachine — Task-02', () => {
@@ -31,18 +31,18 @@ describe('DefaultStateMachine — Task-02', () => {
   })
 
   it('transition returns new DiscussionState with updated stage', () => {
-    const session = createMockSession({ state: { stage: 'idle', turnCount: 0, lastSpeakerId: null } })
+    const session = mockSession({ state: { stage: 'idle', turnCount: 0, lastSpeakerId: null } })
     const result = machine.transition(session, 'opening', 'first message')
     expect(result.stage).toBe('opening')
   })
 
   it('transition rejects invalid transition and throws', () => {
-    const session = createMockSession({ state: { stage: 'idle', turnCount: 0, lastSpeakerId: null } })
+    const session = mockSession({ state: { stage: 'idle', turnCount: 0, lastSpeakerId: null } })
     expect(() => machine.transition(session, 'closing', 'skip')).toThrow()
   })
 
   it('advanceAfterMessage advances from idle to opening on first message', () => {
-    const session = createMockSession({ state: { stage: 'idle', turnCount: 0, lastSpeakerId: null } })
+    const session = mockSession({ state: { stage: 'idle', turnCount: 0, lastSpeakerId: null } })
     const result = machine.advanceAfterMessage(session, [])
     expect(result.stage).toBe('opening')
   })

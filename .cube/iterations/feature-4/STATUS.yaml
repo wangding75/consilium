@@ -1,0 +1,68 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/4
+
+tasks:
+  - task: "Task-01：统一会话生命周期状态与状态历史类型"
+    test_file: session-lifecycle-types.test.ts
+    phase: done
+    started_at: "2026-05-20T08:47:00"
+    completed_at: "2026-05-20T08:47:00"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-02：实现讨论状态机合法转换与消息后推进接口"
+    test_file: state-machine.test.ts
+    phase: done
+    started_at: "2026-05-20T08:51:00"
+    completed_at: "2026-05-20T08:52:00"
+    test_passed: 9
+    test_total: 9
+  - task: "Task-03：扩展会话仓储查询与状态更新接口"
+    test_file: session-lifecycle.test.ts
+    phase: done
+    started_at: "2026-05-20T08:53:00"
+    completed_at: "2026-05-20T08:53:00"
+    test_passed: 8
+    test_total: 8
+  - task: "Task-04：实现 SessionService 会话查询与生命周期动作"
+    test_file: session-lifecycle.test.ts
+    phase: done
+    started_at: "2026-05-20T08:54:00"
+    completed_at: "2026-05-20T08:56:00"
+    test_passed: 8
+    test_total: 8
+  - task: "Task-05：实现会话列表、状态更新和状态查询 API"
+    test_file: session-lifecycle-api.test.ts
+    phase: done
+    started_at: "2026-05-20T08:57:00"
+    completed_at: "2026-05-20T08:59:00"
+    test_passed: 9
+    test_total: 9
+  - task: "Task-06：实现会话中心搜索筛选归档恢复 UI"
+    test_file: sessions-module.test.tsx
+    phase: done
+    started_at: "2026-05-20T17:04:00"
+    completed_at: "2026-05-20T17:09:00"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-07：统一首页最近讨论与讨论详情入口状态处理"
+    test_file: home-discussion-lifecycle.test.tsx
+    phase: done
+    started_at: "2026-05-20T17:10:00"
+    completed_at: "2026-05-20T17:12:00"
+    test_passed: 4
+    test_total: 4
+  - task: "Task-08：在消息发送后推进 phase 并支持人工确认完成"
+    test_file: discussion-phase-advance.test.ts
+    phase: done
+    started_at: "2026-05-20T17:13:00"
+    completed_at: "2026-05-20T17:13:00"
+    test_passed: 5
+    test_total: 5

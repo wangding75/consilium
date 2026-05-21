@@ -1,4 +1,13 @@
 import type { Session, DiscussionState, DiscussionStage, DiscussionMessage } from '@/types'
+import { ServiceError } from '@/server/errors'
+
+const VALID_TRANSITIONS: Record<DiscussionStage, DiscussionStage[]> = {
+  idle: ['opening'],
+  opening: ['developing'],
+  developing: ['climax'],
+  climax: ['closing'],
+  closing: [],
+}
 
 export interface StateMachine {
   getState(session: Session): DiscussionState
@@ -12,15 +21,42 @@ export class DefaultStateMachine implements StateMachine {
     return session.state
   }
 
-  canTransition(_from: DiscussionStage, _to: DiscussionStage): boolean {
-    throw new Error('not implemented — will be built in iteration 4')
+  canTransition(from: DiscussionStage, to: DiscussionStage): boolean {
+    return VALID_TRANSITIONS[from]?.includes(to) ?? false
   }
 
-  transition(_session: Session, _nextStage: DiscussionStage, _reason: string): DiscussionState {
-    throw new Error('not implemented — will be built in iteration 4')
+  transition(session: Session, nextStage: DiscussionStage, reason: string): DiscussionState {
+    if (!this.canTransition(session.state.stage, nextStage)) {
+      throw new ServiceError('INVALID_STATE_TRANSITION', `Cannot transition from ${session.state.stage} to ${nextStage}`)
+    }
+    return {
+      stage: nextStage,
+      turnCount: session.state.turnCount,
+      lastSpeakerId: session.state.lastSpeakerId,
+    }
   }
 
-  advanceAfterMessage(_session: Session, _messages: DiscussionMessage[]): DiscussionState {
-    throw new Error('not implemented — will be built in iteration 4')
+  advanceAfterMessage(session: Session, messages: DiscussionMessage[]): DiscussionState {
+    const { stage, turnCount, lastSpeakerId } = session.state
+    const newTurnCount = turnCount + 1
+    const newLastSpeakerId = messages.length > 0 ? (messages[messages.length - 1].roleId ?? null) : lastSpeakerId
+
+    if (stage === 'idle' && this.canTransition('idle', 'opening')) {
+      return { stage: 'opening', turnCount: newTurnCount, lastSpeakerId: newLastSpeakerId }
+    }
+
+    if (stage === 'opening' && newTurnCount >= 2) {
+      return { stage: 'developing', turnCount: newTurnCount, lastSpeakerId: newLastSpeakerId }
+    }
+
+    if (stage === 'developing' && newTurnCount >= 6) {
+      return { stage: 'climax', turnCount: newTurnCount, lastSpeakerId: newLastSpeakerId }
+    }
+
+    if (stage === 'climax' && newTurnCount >= 10) {
+      return { stage: 'closing', turnCount: newTurnCount, lastSpeakerId: newLastSpeakerId }
+    }
+
+    return { stage, turnCount: newTurnCount, lastSpeakerId: newLastSpeakerId }
   }
 }

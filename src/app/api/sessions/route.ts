@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { ApiResponse, CreateSessionParams, CreateSessionResult, ListSessionsQuery } from '@/types/api'
-import type { Session } from '@/types'
+import type { Session, SessionLifecycleStatus } from '@/types'
 import { SessionService } from '@/server/services/session.service'
 import { sharedSessionRepo, sharedTemplateRepo } from '@/server/repositories/mock/instances'
 import { ServiceError } from '@/server/errors'
@@ -11,8 +11,16 @@ export async function GET(request?: Request): Promise<NextResponse<ApiResponse<S
   const requestId = crypto.randomUUID()
   try {
     const searchParams = request ? new URL(request.url).searchParams : new URLSearchParams()
+    const rawStatus = searchParams.get('status')
+    const validStatuses = new Set<string>(['running', 'completed', 'archived'])
+    if (rawStatus && !validStatuses.has(rawStatus)) {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: `Invalid status: ${rawStatus}` }, requestId },
+        { status: 400 }
+      )
+    }
     const query: ListSessionsQuery = {
-      status: searchParams.get('status') as ListSessionsQuery['status'] | undefined,
+      status: rawStatus as SessionLifecycleStatus | undefined,
       keyword: searchParams.get('keyword') ?? undefined,
       limit: searchParams.has('limit') ? Number(searchParams.get('limit')) : undefined,
     }

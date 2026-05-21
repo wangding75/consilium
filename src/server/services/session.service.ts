@@ -70,11 +70,51 @@ export class SessionService {
     }
   }
 
-  async updateSessionStatus(_sessionId: string, _action: SessionStatusAction): Promise<Session> {
-    throw new Error('not implemented — will be built in iteration 4')
+  async updateSessionStatus(sessionId: string, action: SessionStatusAction): Promise<Session> {
+    const session = await this.repo.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session not found: ${sessionId}`)
+
+    let nextStatus: string
+    let reason: string
+
+    switch (action) {
+      case 'archive':
+        nextStatus = 'archived'
+        reason = 'user archive'
+        break
+      case 'resume':
+        nextStatus = 'running'
+        reason = 'user resume'
+        break
+      case 'complete': {
+        if (session.state.stage !== 'closing') {
+          throw new ServiceError('SUMMARY_REQUIRED', 'Session must be in closing phase to complete')
+        }
+        nextStatus = 'completed'
+        reason = 'user complete'
+        break
+      }
+      default:
+        throw new ServiceError('VALIDATION_ERROR', `Invalid action: ${action}`)
+    }
+
+    if (session.status === nextStatus) return session
+
+    const updated = await this.repo.updateStatus(sessionId, nextStatus as any, reason)
+    if (!updated) throw new ServiceError('INTERNAL_ERROR', 'Failed to update session status')
+    return updated
   }
 
-  async getSessionState(_sessionId: string): Promise<SessionStateResult> {
-    throw new Error('not implemented — will be built in iteration 4')
+  async getSessionState(sessionId: string): Promise<SessionStateResult> {
+    const session = await this.repo.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session not found: ${sessionId}`)
+
+    return {
+      sessionId: session.id,
+      status: session.status,
+      phase: session.state.stage,
+      state: session.state,
+      history: session.state.history ?? [],
+    }
   }
 }
