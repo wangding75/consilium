@@ -27,7 +27,7 @@ describe('POST /api/discussions/[sessionId]/messages — Task-08', () => {
       body: JSON.stringify({ content: 'hello', clientMessageId: 'client_echo_test' }),
     })
     await POST(req as unknown as Request, { params: makeParams('sess-1') })
-    expect(spy).toHaveBeenCalledWith('sess-1', 'hello', 'client_echo_test')
+    expect(spy).toHaveBeenCalledWith('sess-1', 'hello', 'client_echo_test', undefined)
   })
 
   it('returns clientMessageId echo in response', async () => {

@@ -1,0 +1,76 @@
+files:
+  - path: src/types/index.ts
+    type: interface
+    tasks:
+      - "Task-01：定义用户意图领域类型与 API DTO"
+      - "Task-04：实现 schedulerHint 调度消费链路"
+      - "Task-05：实现用户消息 intent metadata 与投票边界反馈"
+  - path: src/types/api.ts
+    type: dto
+    tasks:
+      - "Task-01：定义用户意图领域类型与 API DTO"
+      - "Task-03：实现 Intent API 服务与路由契约"
+      - "Task-05：实现用户消息 intent metadata 与投票边界反馈"
+  - path: src/engine/intent.ts
+    type: interface
+    tasks:
+      - "Task-02：实现 IntentClassifier 接口与 Mock/规则分类骨架"
+      - "Task-03：实现 Intent API 服务与路由契约"
+  - path: src/engine/scheduler.ts
+    type: class
+    tasks:
+      - "Task-04：实现 schedulerHint 调度消费链路"
+  - path: src/engine/orchestrator.ts
+    type: class
+    tasks:
+      - "Task-04：实现 schedulerHint 调度消费链路"
+      - "Task-05：实现用户消息 intent metadata 与投票边界反馈"
+  - path: src/server/services/discussion.service.ts
+    type: class
+    tasks:
+      - "Task-03：实现 Intent API 服务与路由契约"
+      - "Task-05：实现用户消息 intent metadata 与投票边界反馈"
+  - path: src/app/api/discussions/[sessionId]/intent/route.ts
+    type: function
+    tasks:
+      - "Task-03：实现 Intent API 服务与路由契约"
+  - path: src/app/api/discussions/[sessionId]/messages/route.ts
+    type: function
+    tasks:
+      - "Task-05：实现用户消息 intent metadata 与投票边界反馈"
+  - path: src/store/discussion.store.ts
+    type: interface
+    tasks:
+      - "Task-06：实现讨论页会话恢复与可介入状态门禁"
+      - "Task-07：实现讨论页 Composer 快捷指令填入"
+      - "Task-08：实现前端 intent 解析状态与不可识别提示"
+      - "Task-09：实现指令型消息展示与目标角色高亮"
+  - path: src/modules/discussion/index.tsx
+    type: function
+    tasks:
+      - "Task-06：实现讨论页会话恢复与可介入状态门禁"
+      - "Task-07：实现讨论页 Composer 快捷指令填入"
+      - "Task-08：实现前端 intent 解析状态与不可识别提示"
+  - path: src/modules/discussion/message-input.tsx
+    type: function
+    tasks:
+      - "Task-06：实现讨论页会话恢复与可介入状态门禁"
+      - "Task-07：实现讨论页 Composer 快捷指令填入"
+      - "Task-08：实现前端 intent 解析状态与不可识别提示"
+  - path: src/modules/discussion/more-sheet.tsx
+    type: function
+    tasks:
+      - "Task-06：实现讨论页会话恢复与可介入状态门禁"
+      - "Task-07：实现讨论页 Composer 快捷指令填入"
+  - path: src/modules/discussion/message-list.tsx
+    type: function
+    tasks:
+      - "Task-08：实现前端 intent 解析状态与不可识别提示"
+  - path: src/modules/discussion/message-bubble.tsx
+    type: function
+    tasks:
+      - "Task-09：实现指令型消息展示与目标角色高亮"
+  - path: src/modules/discussion/role-bar.tsx
+    type: function
+    tasks:
+      - "Task-09：实现指令型消息展示与目标角色高亮"

@@ -6,7 +6,16 @@ export interface Scheduler {
 
 export class RoundRobinScheduler implements Scheduler {
   selectSpeakers(input: SpeakerSelectionInput): SpeakerSelectionResult {
-    const { roles, messageHistory, lastSpeakerId, roundIndex } = input
+    const { roles, messageHistory, lastSpeakerId, roundIndex, schedulerHint } = input
+    if (schedulerHint?.preferredSpeakerId) {
+      const preferred = roles.find((r) => r.roleId === schedulerHint.preferredSpeakerId)
+      if (preferred) return { speakerIds: [preferred.roleId], reason: schedulerHint.reason }
+      return { speakerIds: [], reason: `preferred speaker ${schedulerHint.preferredSpeakerId} not found in roles` }
+    }
+    if (schedulerHint?.preferredAgentType) {
+      const preferred = roles.find((r) => r.agentType === schedulerHint.preferredAgentType)
+      if (preferred) return { speakerIds: [preferred.roleId], reason: schedulerHint.reason }
+    }
     if (messageHistory.length === 0) {
       const host = roles.find((r) => r.agentType === 'host')
       if (host) return { speakerIds: [host.roleId], reason: '空历史，Host 开场' }

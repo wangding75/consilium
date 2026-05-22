@@ -10,18 +10,26 @@ interface MessageListProps {
   messages: DiscussionMessage[]
   isLoading: boolean
   error?: ApiError | null
+  intentError?: ApiError | null
   typingSpeakerName?: string | null
+  debugIntent?: boolean
   onRetry?: () => void
   onMessageRetry?: (clientMessageId: string) => void
+  onRewriteCommand?: () => void
+  onContinueAsPlainMessage?: () => void
 }
 
 export function MessageList({
   messages,
   isLoading,
   error,
+  intentError,
   typingSpeakerName,
+  debugIntent,
   onRetry,
   onMessageRetry,
+  onRewriteCommand,
+  onContinueAsPlainMessage,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -58,12 +66,21 @@ export function MessageList({
           )}
         </div>
       )}
+      {intentError && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          <p>{intentError.message}</p>
+          <div className="mt-2 flex gap-2 text-xs">
+            {onRewriteCommand && <button className="underline" onClick={onRewriteCommand}>改写指令</button>}
+            {onContinueAsPlainMessage && <button className="underline" onClick={onContinueAsPlainMessage}>按普通发言继续</button>}
+          </div>
+        </div>
+      )}
       {isLoading && messages.length === 0 && <div className="text-sm text-text-secondary">加载中...</div>}
       {!isLoading && messages.length === 0 && !error && (
         <div className="text-sm text-text-secondary">暂无消息</div>
       )}
       {messages.map((message) => (
-        <MessageBubble key={message.messageId} msg={message} onRetry={onMessageRetry} />
+        <MessageBubble key={message.messageId} msg={message} onRetry={onMessageRetry} debugIntent={debugIntent} />
       ))}
       {typingSpeakerName !== undefined && typingSpeakerName !== null && (
         <TypingIndicator speakerName={typingSpeakerName} />

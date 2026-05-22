@@ -31,7 +31,7 @@ describe('DiscussionModule', () => {
             sessionId: 'sess-1',
             topic: '三国战略讨论',
             template: { templateId: 'tpl-1', name: '三国谋士' },
-            status: 'active',
+            status: 'running',
             roles: [
               { roleId: 'xunyu', name: '荀彧', agentType: 'host', avatar: '荀', model: 'mock' },
               { roleId: 'zhuge-liang', name: '诸葛亮', agentType: 'expert', avatar: '诸', model: 'mock' },
@@ -39,6 +39,16 @@ describe('DiscussionModule', () => {
             activeSpeakerId: null,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
+          },
+        })
+      }
+      if (url.includes('/api/discussions/') && url.includes('/intent')) {
+        return mockFetchResponse({
+          success: true,
+          data: {
+            sessionId: 'sess-1',
+            intent: { type: 'passive', confidence: 0.5, rawText: '', execution: { status: 'immediate' } },
+            activeSpeakerId: null,
           },
         })
       }
