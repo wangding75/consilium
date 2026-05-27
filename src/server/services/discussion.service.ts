@@ -459,11 +459,71 @@ export class DiscussionService {
   }
 
   async skipInvitation(
-    _sessionId: string,
-    _invitationId: string,
-    _params: SkipInvitationRequest
+    sessionId: string,
+    invitationId: string,
+    params: SkipInvitationRequest
   ): Promise<SkipInvitationResult> {
-    throw new Error('not implemented')
+    const session = await this.sessionRepo?.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session ${sessionId} not found`)
+
+    const invitation = await this.invitationRepo?.findById(invitationId)
+    if (!invitation || invitation.sessionId !== sessionId) {
+      throw new ServiceError('INVITATION_INVALID', 'INVITATION_INVALID: Invitation is not valid for skip')
+    }
+
+    // Idempotent: already skipped
+    if (invitation.status === 'skipped') {
+      const directorResult = await this.runDirectorAndProduceSideEffects(
+        session,
+        await this.messageRepo?.findBySessionId(sessionId) ?? [],
+        [],
+        'invitation_skip',
+      )
+      return {
+        sessionId,
+        invitation,
+        agentMessages: [],
+        activeSpeakerId: session.state.lastSpeakerId ?? null,
+        directorDecision: directorResult.directorDecision,
+        pendingInvitation: directorResult.pendingInvitation,
+      }
+    }
+
+    if (invitation.status !== 'pending') {
+      throw new ServiceError('INVITATION_INVALID', 'INVITATION_INVALID: Invitation is not valid for skip')
+    }
+
+    await this.invitationRepo?.updateStatus(invitationId, 'skipped', {
+      clientMessageId: params.clientMessageId,
+    })
+
+    const updatedInvitation = await this.invitationRepo?.findById(invitationId)
+
+    const directorResult = await this.runDirectorAndProduceSideEffects(
+      session,
+      await this.messageRepo?.findBySessionId(sessionId) ?? [],
+      [],
+      'invitation_skip',
+    )
+
+    const orchestratorResult = await this.orchestrator?.run({
+      sessionId,
+      runId: `run-${crypto.randomUUID()}`,
+      topic: session.topic,
+      templateName: '',
+      profiles: [],
+      messageHistory: await this.messageRepo?.findBySessionId(sessionId) ?? [],
+      triggerContent: null,
+    })
+
+    return {
+      sessionId,
+      invitation: updatedInvitation!,
+      agentMessages: orchestratorResult?.agentMessages ?? [],
+      activeSpeakerId: orchestratorResult?.activeSpeakerId ?? session.state.lastSpeakerId ?? null,
+      directorDecision: directorResult.directorDecision,
+      pendingInvitation: directorResult.pendingInvitation,
+    }
   }
 
   async requestSummary(

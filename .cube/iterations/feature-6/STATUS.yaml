@@ -47,7 +47,11 @@ tasks:
     test_total: 12
   - task: "Task-06：实现跳过邀请业务逻辑"
     test_file: discussion-skip-invitation.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:25"
+    completed_at: "2026-05-27 18:26"
+    test_passed: 7
+    test_total: 7
   - task: "Task-07：实现主动总结和完成会话业务逻辑"
     test_file: discussion-summary.test.ts
     phase: locked
