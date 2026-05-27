@@ -52,7 +52,7 @@ Implemented Director logic, invitation lifecycle, and discussion summary for the
 - HostMessage summary/event/invitation display (11 tests)
 - MoreSheet summary trigger (5 tests)
 
-## Code Review
+## 代码审查
 
 Reviewed discussion.service.ts, session.service.ts, and director.ts. No CRITICAL or HIGH issues found.
 
