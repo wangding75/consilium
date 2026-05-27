@@ -1,367 +1,463 @@
-# Design：迭代 6 — 导演逻辑、邀请与收束
+# 迭代 6 技术设计：导演逻辑、邀请与收束
 
 ## 1. 概述
 
-本次设计在现有 client-first Next.js 架构上补齐迭代 6 的 Director 导演控制闭环：由 `DirectorService` 基于当前 session、消息历史、用户意图和最近调度状态输出结构化决策，再由服务层把决策落到消息流、邀请记录、状态机推进和调度提示中。
+本次设计在现有 `/discussion/[sessionId]` 会话详情页和消息发送链路中接入 Director 导演逻辑，使讨论从单纯轮转发言升级为由主持人根据会话阶段、消息历史、用户意图和调度结果进行控场。
 
-整体方案采用最小改动：
+整体采用“服务层内聚方案”：以 `DiscussionService` 作为编排入口，复用现有 `IntentClassifier`、`RoundRobinScheduler`、`DiscussionOrchestrator`、`MessageRepository` 和 `SessionRepository`，新增 Director 决策模型、邀请仓储与 UI 组件。该方案避免重写调度器和运行时，只在现有消息链路中插入可测试的 Director 决策、邀请状态变更、主持人消息和总结完成逻辑。
 
-- 扩展现有 `src/engine/director.ts` 预留 stub，不替代 `AgentRuntime`、`Scheduler`、`IntentClassifier` 或 `StateMachine`。
-- 复用现有 `DiscussionStage`：`idle / opening / developing / climax / closing`，不新增阶段枚举。
-- 新增本地 mock repository 保存 `DirectorDecisionRecord` 和 `InvitationRecord`，符合 MVP 本地持久化方向。
-- 新增两个 HTTP endpoint：Director 下一步决策、邀请回应/跳过。
-- 扩展 discussion store 和 discussion UI，以现有消息流、角色栏、输入区和 MoreSheet 为载体展示邀请与总结动作。
+核心原则：
 
-核心约束：
-
-- 总结消息生成成功后，才允许推进 `closing` 并将 session 标记为 `completed`。
-- `trigger_event` 本迭代只输出候选事件和主持人解释，不创建真实 EventRecord、投票接口或投票交互。
-- pending 邀请在同一 session 内唯一，且必须满足冷却窗口和总次数上限；节流时选择 `continue` 或非打断动作。
-- 邀请回应和跳过必须幂等：相同重复请求返回成功且不创建重复消息，冲突请求返回明确错误。
-- 总结后的“继续追问”复用现有 session resume 能力，将 session 恢复为 `running`，并保留总结 checkpoint。
-- 需求文档和原型文件只读，不在本阶段修改。
+- 最小改动：保留现有 `/api/discussions/[sessionId]/messages`、`/intent`、session status API 与 mock repository 架构。
+- 可测试：Director 使用规则化默认实现和可注入接口，不依赖真实 LLM 随机输出。
+- 状态一致：邀请、消息、阶段、session status 均通过服务层顺序更新。
+- 前端轻量：邀请和阶段变化进入现有消息流与输入区，不新增独立阶段评估面板。
+- 安全展示：用户回应和指令内容继续按 React 文本节点渲染，不使用 HTML 注入。
 
 ## 2. Impact Analysis
 
-| 模块 / 文件 | 影响程度 | 说明 |
-|---|---:|---|
-| `src/types/index.ts` | 修改 | 新增 Director、Invitation、Summary metadata、扩展 scheduler hint action 与 message metadata。 |
-| `src/types/api.ts` | 修改 | 新增 Director API、Invitation respond API 的请求/响应 DTO。 |
-| `src/engine/director.ts` | 修改 | 将 stub 扩展为可测试接口和默认骨架实现。 |
-| `src/engine/state-machine.ts` | 修改 | 保持阶段枚举不变，暴露 Director phase transition 验证入口。 |
-| `src/engine/scheduler.ts` | 修改 | 复用现有 hint，兼容 `preferredAction`。 |
-| `src/server/repositories/director.repository.ts` | 新增 | DirectorDecisionRecord 持久化接口。 |
-| `src/server/repositories/invitation.repository.ts` | 新增 | InvitationRecord 持久化与幂等查询接口。 |
-| `src/server/repositories/mock/mock-director.repository.ts` | 新增 | 本地 mock Director 决策仓储。 |
-| `src/server/repositories/mock/mock-invitation.repository.ts` | 新增 | 本地 mock 邀请仓储。 |
-| `src/server/repositories/mock/instances.ts` | 修改 | 导出共享 mock Director / Invitation repository。 |
-| `src/server/services/discussion.service.ts` | 修改 | 新增 `runDirectorNext()`、`respondInvitation()` 服务方法，集成 Director、StateMachine、Scheduler、MessageRepository。 |
-| `src/app/api/discussions/[sessionId]/director/next/route.ts` | 新增 | Director next HTTP endpoint。 |
-| `src/app/api/discussions/[sessionId]/invitations/[invitationId]/respond/route.ts` | 新增 | Invitation respond/skip HTTP endpoint。 |
-| `src/store/discussion.store.ts` | 修改 | 增加 pending invitation、director next、invitation respond/skip 状态和 actions。 |
-| `src/modules/discussion/index.tsx` | 修改 | 串接 InviteCard、summary actions、MoreSheet 总结触发。 |
-| `src/modules/discussion/invite-card.tsx` | 新增 | 展示邀请说明、回应、跳过。 |
-| `src/modules/discussion/summary-actions.tsx` | 新增 | 总结完成后的返回首页、查看会话页、继续追问入口。 |
-| `src/modules/discussion/message-list.tsx` | 修改 | 在消息流内渲染 InviteCard 和 summary actions。 |
-| `src/modules/discussion/message-bubble.tsx` | 修改 | 支持主持人消息 renderType / summary metadata 的差异化展示。 |
-| `src/modules/discussion/message-input.tsx` | 修改 | 支持邀请高亮提示和邀请回应提交。 |
-| `src/modules/discussion/more-sheet.tsx` | 修改 | “总结当前结论”触发 Director conclude，不再仅作为占位提示。 |
+| 模块/文件 | 影响程度 | 影响说明 |
+|---|---|---|
+| `src/types/index.ts` | 修改 | 新增 Director、Invitation、Summary、消息 metadata 类型；调整 Director action 为 PRD 要求的 `continue`、`invite_user`、`trigger_event`、`conclude`。 |
+| `src/types/api.ts` | 修改 | 新增邀请查询、邀请回应、邀请跳过、总结触发的请求/响应类型；扩展 `SendMessageResult` 携带 Director 后续状态。 |
+| `src/engine/director.ts` | 修改 | 将占位 `DefaultDirector` 扩展为规则化结构化决策接口与骨架实现。 |
+| `src/engine/orchestrator.ts` | 修改 | 扩展输入支持 Director scheduler hint 和 host message kind；保留现有 speaker selection 与 agent runtime。 |
+| `src/server/repositories/invitation.repository.ts` | 新增 | 定义 invitation 持久化接口。 |
+| `src/server/repositories/director-decision.repository.ts` | 新增 | 定义 Director 决策记录持久化接口。 |
+| `src/server/repositories/mock/mock-invitation.repository.ts` | 新增 | Mock invitation repository 骨架。 |
+| `src/server/repositories/mock/mock-director-decision.repository.ts` | 新增 | Mock Director decision repository 骨架。 |
+| `src/server/repositories/mock/instances.ts` | 修改 | 暴露 shared invitation/director decision repositories。 |
+| `src/server/repositories/message.repository.ts` | 修改 | 增加按消息 ID 查询或追加 metadata 的接口，用于邀请幂等与总结 checkpoint。 |
+| `src/server/services/discussion.service.ts` | 修改 | 在发送消息、邀请回应、跳过邀请、总结触发中编排 Director、仓储和消息产出。 |
+| `src/app/api/discussions/[sessionId]/messages/route.ts` | 修改 | 复用现有消息发送 endpoint，返回 pending invitation/summary 状态；邀请回应不经此 endpoint。 |
+| `src/app/api/discussions/[sessionId]/invitations/route.ts` | 新增 | 查询当前 session 的 pending invitation。 |
+| `src/app/api/discussions/[sessionId]/invitations/[invitationId]/response/route.ts` | 新增 | 处理邀请文本回应。 |
+| `src/app/api/discussions/[sessionId]/invitations/[invitationId]/skip/route.ts` | 新增 | 处理跳过邀请。 |
+| `src/app/api/discussions/[sessionId]/summary/route.ts` | 新增 | 处理“总结当前结论”主动触发。 |
+| `src/app/api/sessions/[sessionId]/status/route.ts` | 修改 | 扩展 resume action 对总结后继续追问的状态恢复语义。 |
+| `src/server/services/session.service.ts` | 修改 | 扩展 resume action：当 completed + closing 且存在 summary checkpoint 时恢复为 running 并保留 checkpoint。 |
+| `src/modules/discussion/index.tsx` | 修改 | 装配 InviteCard、总结完成入口、更多操作真实触发、输入区高亮。 |
+| `src/modules/discussion/invite-card.tsx` | 新增 | 邀请卡 UI 骨架。 |
+| `src/modules/discussion/summary-actions.tsx` | 新增 | 总结后返回首页、查看会话页、继续追问入口骨架。 |
+| `src/modules/discussion/message-bubble.tsx` | 修改 | 支持主持人消息类型样式与 summary metadata 展示。 |
+| `src/modules/discussion/message-list.tsx` | 修改 | 在消息流内展示主持人控场、事件候选、总结反馈。 |
+| `src/modules/discussion/message-input.tsx` | 修改 | 增加 invitation 高亮提示与邀请回应模式。 |
+| `src/modules/discussion/more-sheet.tsx` | 修改 | “总结当前结论”调用真实 summary action，不再只显示占位提示。 |
+| `src/store/discussion.store.ts` | 修改 | 增加 invitation、summary、director error 状态与 actions。 |
 
 ### 现有接口兼容性
 
-- 现有 `/api/discussions/[sessionId]/messages`、`/api/discussions/[sessionId]/intent` 不删除、不改路径。
-- `DiscussionService` 构造函数新增依赖必须为可选参数，现有 route 的实例化方式保持兼容。
-- `SchedulerHint` 新增字段为可选字段，不破坏现有调用方。
-- `DiscussionMessage.metadata` 新增字段均为可选字段，不破坏历史消息渲染。
+- 保持统一响应 envelope：`{ success, data, error, requestId }`。
+- `POST /api/discussions/[sessionId]/messages` 仅处理普通用户发言；邀请回应必须走 dedicated invitation response endpoint，以保证邀请状态机和幂等语义唯一。
+- 新增 endpoint 不改变既有 session、messages、intent endpoint 行为。
+- `SendMessageResult` 新增字段为可选或向后兼容字段，旧调用方可忽略。
 
 ### 现有数据兼容性
 
-- MVP 无远端数据库；新增记录保存在本地 mock repository / IndexedDB 方向的数据模型中。
-- 历史 session 没有 DirectorDecisionRecord 或 InvitationRecord 时，默认视为无 pending 邀请、无 Director 历史。
-- 不迁移、不删除现有消息、session、template 数据。
+- 不引入远端数据库，不修改 `Session` 已有必填字段。
+- 邀请和 Director 决策使用新增 mock repositories 保存，后续可替换为 IndexedDB 或真实持久层。
+- 已有消息继续保留；新增主持人控场、事件候选、总结消息通过 `DiscussionMessage.metadata` 区分语义。
+- session 只有在总结消息成功保存后才允许更新为 `completed`。
 
 ## 3. Flow Design
 
-### 3.1 Director 下一步决策流程
+### 3.1 普通发言与 Director 决策流程
 
-1. 前端在以下场景调用 `POST /api/discussions/:sessionId/director/next`：
-   - 用户点击“总结当前结论”。
-   - 角色消息生成后需要判断是否邀请、事件候选或收束。
-   - 从会话页恢复当前 session 后用户主动触发继续推进。
-2. API route 解析请求，创建 `DiscussionService`。
-3. `DiscussionService.runDirectorNext()` 读取 session、template roles、messages、最近 invitation、最近 Director decisions。
-4. `DefaultDirector.decide()` 输出结构化 `DirectorDecisionRecord`。
-5. 服务层校验 phase transition：
-   - 合法 transition 才更新 session state。
-   - 非法 transition 返回 `INVALID_PHASE_TRANSITION`，不更新消息和状态。
-6. 按 action 分支：
-   - `continue`：返回 scheduler hint 和 activeSpeakerId，不创建邀请。
-   - `invite_user`：创建主持人邀请消息和 pending invitation；同 session 已有 pending invitation 时返回既有邀请。
-   - `trigger_event`：创建主持人事件候选解释消息，不创建 EventRecord。
-   - `conclude`：先创建主持人总结消息；成功后推进 `closing` 并标记 session `completed`。
-7. 返回统一 `ApiResponse<DirectorNextResult>`。
+1. UI 调用 `actions.sendMessage(sessionId, content)`。
+2. Store 生成 `clientMessageId` 并插入 optimistic user message。
+3. Store 调用 `POST /api/discussions/[sessionId]/intent` 获取可选 `IntentResult`。
+4. Store 调用 `POST /api/discussions/[sessionId]/messages`。
+5. `DiscussionService.sendUserMessage()` 校验 session 存在且可操作。
+6. 服务层根据 `clientMessageId` 做幂等检查，避免重复用户消息。
+7. 服务层保存或复用用户消息。
+8. 服务层读取 session、messages、roles、pending invitation 和 intent。
+9. `DefaultDirector.decide()` 输出结构化 `DirectorDecisionRecord`。
+10. 服务层保存 Director 决策记录。
+11. 当 action 为 `continue`：调用现有 `DiscussionOrchestrator.run()` 生成下一条角色或主持人消息。
+12. 当 action 为 `invite_user`：创建 pending invitation，保存主持人邀请消息，返回 InviteCard 数据。
+13. 当 action 为 `trigger_event`：保存主持人事件候选解释消息，不创建真实 EventRecord 或投票交互。
+14. 当 action 为 `conclude`：生成主持人总结消息；保存成功后推进 state 到 `closing` 并将 session 标记为 `completed`。
+15. API 返回 user message、agent/host messages、active speaker、pending invitation 和 summary 状态。
+16. Store 合并消息并更新 invitation/summary 状态。
 
-### 3.2 邀请节流与回应流程
+异常流程：
 
-#### 邀请节流规则
+- Director 决策失败：返回 `DIRECTOR_DECISION_FAILED`，用户看到“暂时无法判断下一步”，已保存用户消息标记为 failed 或保留为可重试状态；session 不完成。
+- 无可调度角色：返回 `NO_AVAILABLE_AGENT`，用户可重试或继续普通发言。
+- 非法阶段变化：返回 `INVALID_STATE_TRANSITION`，保留原 session state。
+- 消息保存失败：不得创建 invitation 或完成 session。
 
-1. `DefaultDirector.decide()` 读取 `pendingInvitation`、`recentInvitations` 和当前消息数。
-2. 同一 session 已存在 `pending` invitation 时，不得创建新 invitation，返回既有 pending invitation 或改为 `continue`。
-3. 冷却窗口：同一 session 最近 3 条非系统消息内已经创建过 invitation 时，不得再次邀请。
-4. 总次数上限：同一 session 最多创建 3 次 invitation；超过后 `invite_user` 候选必须降级为 `continue` 或 `trigger_event` 候选解释。
-5. 节流降级时必须在 decision.reason 中说明原因，方便测试和 UI 反馈。
+### 3.2 邀请创建与频率控制流程
 
-#### 邀请回应规则
+1. Director 判断是否满足邀请条件：明显分歧、分叉、接近收束或角色质疑用户。
+2. 服务层查询 `InvitationRepository.findPendingBySessionId(sessionId)`。
+3. 若存在 pending invitation，Director 不得创建新邀请，改为 `continue` 或返回已有 invitation。
+4. 服务层查询最近 invitation 历史，检查冷却窗口和总次数。
+5. 满足节流条件时创建 `Invitation`，状态为 `pending`。
+6. 保存主持人邀请消息，metadata 写入 `hostMessageKind: 'invitation'` 和 `invitationId`。
+7. API 返回 pending invitation，UI 展示 InviteCard 并高亮输入区。
 
-1. InviteCard 提供文本回应与跳过按钮。
-2. 前端调用 `POST /api/discussions/:sessionId/invitations/:invitationId/respond`。
-3. 服务层读取 session 与 invitation，校验 invitation 属于当前 session。
-4. 幂等矩阵：
-   - `pending + respond`：保存用户消息，将 invitation 标记为 `responded`。
-   - `pending + skip`：将 invitation 标记为 `skipped`，不创建用户消息。
-   - `responded + 相同 clientMessageId`：返回成功和既有 invitation / userMessage，不创建重复消息。
-   - `responded + 不同 content 或不同 clientMessageId`：返回 `INVITATION_ALREADY_HANDLED`。
-   - `skipped + skip`：返回成功和既有 skipped invitation。
-   - `skipped + respond`：返回 `INVITATION_ALREADY_HANDLED`。
-   - `expired + 任意 action`：返回 `INVITATION_ALREADY_HANDLED`。
-5. `respond` 成功后返回 Director follow-up 为 `continue`，使讨论围绕用户输入继续。
-6. 前端合并返回消息，隐藏 InviteCard，讨论继续。
+异常流程：
 
-### 3.3 总结收束与继续追问流程
+- pending invitation 已存在：不重复创建，返回当前 invitation。
+- repository 保存失败：不保存邀请消息，返回 `INVITATION_CREATE_FAILED`。
 
-1. 用户输入“总结/结束”或 MoreSheet 点击“总结当前结论”。
-2. Intent 可识别为 `decide`，但最终是否收束由 Director 决策。
-3. `conclude` 分支先创建主持人总结消息，消息 metadata 标记 `summaryType: stage | final`，并写入 `sourceMessageIds`。
-4. 仅当总结消息保存成功后：
-   - phase 推进至 `closing`。
-   - session status 更新为 `completed`。
-5. 若总结生成或保存失败，返回 `SUMMARY_GENERATION_FAILED`，session 保持原状态。
-6. 若总结消息已保存但 session status 更新失败，返回 `SESSION_STATUS_UPDATE_FAILED`，保留总结消息和当前 phase，前端提示可重试完成/继续追问。
-7. 用户点击“继续追问”时，前端调用现有 `PATCH /api/sessions/:sessionId/status`，请求 `{ action: 'resume' }`。
-8. resume 成功后 session status 恢复为 `running`，输入区恢复可用；后续用户消息 metadata.summary.resumedFromSummaryId 指向最近 final summary messageId。
-9. resume 失败返回现有 session status API 错误，前端保持总结可见并提示重试。
+### 3.3 回应邀请流程
 
-### 3.4 异常流程
+1. UI 在 InviteCard 输入文本并调用 `respondInvitation(sessionId, invitationId, content)`。
+2. API 校验 content 非空。
+3. 服务层查找 invitation，确认属于当前 session 且状态为 `pending`。
+4. 根据 `clientMessageId` 检查是否已有回应消息。
+5. 首次提交：将 invitation 状态更新为 `responded`，保存用户消息，调用 Director 决定后续推进。
+6. 重复提交：返回既有回应和后续消息，不创建重复消息。
+7. UI 隐藏 InviteCard，消息流继续生成后续角色或主持人消息。
 
-| 场景 | 处理 |
-|---|---|
-| session 不存在 | 返回 `SESSION_NOT_FOUND`，前端引导返回首页或会话页。 |
-| Director 无法决策 | 返回 `DIRECTOR_DECISION_FAILED`，前端允许重试或继续普通发言。 |
-| 非法阶段变化 | 返回 `INVALID_PHASE_TRANSITION`，不更新状态。 |
-| pending 邀请已存在 | 返回既有 pending invitation，不重复创建。 |
-| invitation 不存在或不属于 session | 返回 `INVITATION_NOT_FOUND`，前端隐藏失效卡片并提示。 |
-| invitation 已处理 | 相同重复请求返回成功和当前处理结果；冲突请求返回 `INVITATION_ALREADY_HANDLED`，不重复创建消息。 |
-| 总结生成失败 | 返回 `SUMMARY_GENERATION_FAILED`，不标记 completed。 |
-| 总结已保存但状态更新失败 | 返回 `SESSION_STATUS_UPDATE_FAILED`，保留总结消息并允许重试或继续追问。 |
-| 邀请创建/更新失败 | 返回 `INVITATION_CREATE_FAILED` 或 `INVITATION_UPDATE_FAILED`，不产生重复 pending invitation。 |
-| 用户回应消息保存失败 | 返回 `MESSAGE_SAVE_FAILED`，不将 invitation 更新为 responded。 |
-| 无可调度角色 | 返回 `NO_AVAILABLE_AGENT`，允许主持人兜底或重试。 |
+异常流程：
+
+- 空内容：返回 `MESSAGE_EMPTY`。
+- invitation 不存在、已失效或跨 session：返回 `INVITATION_INVALID`，UI 隐藏失效 InviteCard 并提示邀请已失效。
+- 重复提交：幂等返回已有结果。
+
+### 3.4 跳过邀请流程
+
+1. UI 点击跳过，调用 `skipInvitation(sessionId, invitationId, clientMessageId)`。
+2. 服务层查找 invitation，确认属于当前 session。
+3. 若已 `skipped`，幂等返回当前状态。
+4. 若为 `pending`，更新为 `skipped`，保存轻量系统或主持人消息。
+5. 服务层触发 Director 后续 `continue` 决策，讨论不被阻塞。
+6. UI 隐藏 InviteCard 并更新消息流。
+
+异常流程：
+
+- 跳过失败：InviteCard 保持可操作并展示错误反馈。
+
+### 3.5 主动总结与自动收束流程
+
+1. 用户输入总结/结束指令，或点击 MoreSheet “总结当前结论”。
+2. Store 调用 summary endpoint；普通消息 endpoint 只保留用户发言入口，不承载邀请回应或总结专用状态机。
+3. 服务层校验讨论历史不少于最小上下文。
+4. Director 输出 `conclude`，并提供 summary hint。
+5. 服务层通过主持人生成结构化总结消息，metadata 写入 `summary`。
+6. 总结消息保存成功后：更新 session state 为 `closing`，再更新 session status 为 `completed`。
+7. UI 显示总结消息和 SummaryActions：返回首页、查看会话页、继续追问。
+8. 用户点击继续追问时调用现有 `PATCH /api/sessions/[sessionId]/status`，body 为 `{ action: 'resume' }`；`SessionService.updateSessionStatus()` 在 completed + closing + 存在 summary checkpoint 时恢复为 running，将 state stage 推回 `developing`，并保留 summary checkpoint metadata。
+
+异常流程：
+
+- 总结生成失败：返回 `SUMMARY_GENERATION_FAILED`，session 不进入 completed。
+- 状态更新失败：保留总结消息但返回 `SESSION_STATE_UPDATE_FAILED`，避免丢失总结内容，UI 显示可重试恢复提示。
 
 ## 4. Table Design
 
-本迭代不引入 SQL 数据库和远端表结构。以下为本地持久化记录模型，后续可映射到 IndexedDB object store 或真实数据库表。
+本迭代不新增远端数据库表，不编写 SQL，不修改现有远端数据结构。新增本地/Mock 数据模型如下：
 
-### 4.1 director_decisions（逻辑表）
-
-| 字段 | 类型 | 约束 | 说明 |
-|---|---|---|---|
-| decisionId | string | PK | Director 决策 ID。 |
-| sessionId | string | required, indexed | 所属 session。 |
-| action | union | required | `continue / invite_user / trigger_event / conclude`。 |
-| reason | string | required | 决策原因，面向用户/调试可读。 |
-| confidence | number | required, 0-1 | 决策置信度。 |
-| phaseTransition | object/null | optional | 阶段变化建议。 |
-| schedulerHint | object/null | optional | 给 Scheduler 的下一步提示。 |
-| eventCandidate | object/null | optional | 事件候选，仅 `status: candidate`。 |
-| createdAt | string | required | ISO 时间。 |
-
-索引：`sessionId + createdAt`，用于查询最近决策。
-
-### 4.2 invitations（逻辑表）
+### Invitation
 
 | 字段 | 类型 | 约束 | 说明 |
 |---|---|---|---|
-| invitationId | string | PK | 邀请 ID。 |
-| sessionId | string | required, indexed | 所属 session。 |
-| decisionId | string | required | 来源 Director 决策。 |
-| status | union | required | `pending / responded / skipped / expired`。 |
-| reason | string | required | 邀请原因。 |
-| prompt | string | required | InviteCard 展示提示。 |
-| createdAt | string | required | 创建时间。 |
-| respondedAt | string | optional | 回应/跳过时间。 |
-| responseMessageId | string | optional | 用户回应消息 ID。 |
-| sourceMessageCount | number | required | 创建邀请时的非系统消息数量，用于冷却窗口判断。 |
+| `invitationId` | `string` | required, unique | 邀请 ID |
+| `sessionId` | `string` | required | 所属 session |
+| `status` | `'pending' \| 'responded' \| 'skipped' \| 'expired'` | required | 邀请状态 |
+| `prompt` | `string` | required | InviteCard 展示文案 |
+| `reason` | `string` | required | Director 创建邀请原因 |
+| `createdByMessageId` | `string` | optional | 主持人邀请消息 ID |
+| `respondedByMessageId` | `string` | optional | 用户回应消息 ID |
+| `clientMessageId` | `string` | optional | 幂等键 |
+| `createdAt` | `string` | required | ISO 时间 |
+| `updatedAt` | `string` | required | ISO 时间 |
 
-约束：同一 session 同一时刻最多一个 `pending` invitation；同一 session 最近 3 条非系统消息内不得重复创建 invitation；同一 session invitation 总数不得超过 3。
+索引/查询规则：
+
+- `sessionId + status`：查询当前 pending invitation。
+- `sessionId + clientMessageId`：邀请回应/跳过幂等。
+- `sessionId + createdAt`：邀请频率控制。
+
+### DirectorDecisionRecord
+
+| 字段 | 类型 | 约束 | 说明 |
+|---|---|---|---|
+| `decisionId` | `string` | required, unique | 决策 ID |
+| `sessionId` | `string` | required | 所属 session |
+| `action` | `'continue' \| 'invite_user' \| 'trigger_event' \| 'conclude'` | required | Director 动作 |
+| `reason` | `string` | required | 决策原因 |
+| `confidence` | `number` | required, 0-1 | 置信度 |
+| `schedulerHint` | `SchedulerHint` | optional | 调度提示 |
+| `stageSuggestion` | `DiscussionStage` | optional | 阶段变化建议 |
+| `eventCandidate` | `DirectorEventCandidate` | optional | 事件候选 |
+| `summaryHint` | `DirectorSummaryHint` | optional | 总结结构提示 |
+| `createdAt` | `string` | required | ISO 时间 |
+
+索引/查询规则：
+
+- `sessionId + createdAt`：查询最近决策与审计。
 
 ## 5. API Design
 
-所有 API 遵循 `.cube/config/api-spec.md` 统一响应格式：
+### 5.1 获取消息
+
+现有 API 保持：
+
+| Method | Path | 说明 |
+|---|---|---|
+| GET | `/api/discussions/[sessionId]/messages?limit=50&before=msg-id` | 获取消息列表 |
+
+响应：
 
 ```ts
-{ success: boolean, data: T | null, error?: { code: string, message: string, details?: unknown }, requestId: string }
+ApiResponse<MessageListResult>
 ```
 
-### 5.1 POST `/api/discussions/[sessionId]/director/next`
+错误码：
 
-用于让 Director 基于当前 session 状态和消息历史决定下一步动作。
+- `VALIDATION_ERROR`：limit 非法。
+- `SESSION_NOT_FOUND`：session 不存在。
+- `INTERNAL_ERROR`：未知错误。
 
-#### Request
+### 5.2 发送普通消息并触发 Director
+
+| Method | Path | 说明 |
+|---|---|---|
+| POST | `/api/discussions/[sessionId]/messages` | 发送用户消息并由 Director 推进讨论 |
+
+请求：
 
 ```ts
-interface DirectorNextRequest {
-  trigger: 'after_agent_message' | 'user_request_summary' | 'session_resumed' | 'manual'
-  clientRequestId?: string
-  intentResultId?: string
-  lastMessageId?: string
-  debug?: boolean
+interface SendMessageParams {
+  content: string
+  clientMessageId?: string
+  intentResponse?: IntentResponse
 }
 ```
 
-#### Response
+成功响应：
 
 ```ts
-interface DirectorNextResult {
+interface SendMessageResult {
   sessionId: string
-  decisionId: string
-  decision: DirectorDecisionRecord
+  runId: string
+  clientMessageId?: string
+  userMessage: DiscussionMessage | null
+  agentMessages: DiscussionMessage[]
   activeSpeakerId: string | null
-  createdMessages: DiscussionMessage[]
-  invitation: InvitationRecord | null
-  sessionStatus: SessionLifecycleStatus
+  directorDecision?: DirectorDecisionRecord
+  pendingInvitation?: Invitation | null
+  summary?: DiscussionSummary | null
 }
 ```
 
-#### 错误码
+错误码：
 
-| code | HTTP | 场景 |
-|---|---:|---|
-| `SESSION_NOT_FOUND` | 404 | session 不存在。 |
-| `DIRECTOR_DECISION_FAILED` | 500 | Director 无法产出有效决策。 |
-| `INVALID_PHASE_TRANSITION` | 409 | 决策请求非法阶段变化。 |
-| `SUMMARY_GENERATION_FAILED` | 502 | 主持人总结生成或保存失败。 |
-| `SESSION_STATUS_UPDATE_FAILED` | 500 | 总结消息已保存但 session status 更新失败。 |
-| `INVITATION_CREATE_FAILED` | 500 | 邀请消息或邀请记录创建失败。 |
-| `SESSION_NOT_OPERABLE` | 409 | 当前 session 不可执行该 Director trigger。 |
-| `NO_AVAILABLE_AGENT` | 409 | 没有可调度角色。 |
-| `VALIDATION_ERROR` | 400 | trigger 或请求体不合法。 |
+- `SESSION_NOT_FOUND`：session 不存在。
+- `SESSION_NOT_OPERABLE`：session 不可继续操作。
+- `SESSION_CONTEXT_MISMATCH`：intent 或 invitation 不属于当前 session。
+- `MESSAGE_EMPTY`：非开场消息内容为空。
+- `DIRECTOR_DECISION_FAILED`：Director 决策失败。
+- `INVITATION_CREATE_FAILED`：邀请创建失败，消息流和 session 状态保持不变。
+- `NO_AVAILABLE_AGENT`：无可调度角色。
+- `AGENT_GENERATION_FAILED`：角色或主持人消息生成失败。
+- `SUMMARY_GENERATION_FAILED`：总结生成失败。
+- `INVALID_STATE_TRANSITION`：非法阶段变化。
+- `SESSION_STATE_UPDATE_FAILED`：总结消息已保存但 session 状态更新失败。
+- `INTERNAL_ERROR`：未知错误。
 
-#### 五项生产契约
+### 5.3 获取当前邀请
 
-| 合同 | 内容 |
-|---|---|
-| Functional Contract | Schema source：`DirectorNextRequest` / `DirectorNextResult` in `src/types/api.ts`。 |
-| SLO Contract | 本地 mock P50 < 50ms，P99 < 300ms；LLM 总结分支允许 P99 < 3000ms。 |
-| Observability Contract | 记录 requestId、sessionId、trigger、decisionId、action、durationMs；不得记录用户完整敏感内容。 |
-| Degradation Contract | Director 失败返回显式错误；trigger_event 失败退化为 continue；总结失败不 completed。 |
-| Security Contract | 无认证；请求体只接受 schema 字段；错误不暴露堆栈和密钥。 |
+| Method | Path | 说明 |
+|---|---|---|
+| GET | `/api/discussions/[sessionId]/invitations` | 获取当前 pending invitation |
 
-### 5.2 POST `/api/discussions/[sessionId]/invitations/[invitationId]/respond`
-
-用于回应或跳过当前 session 内的 pending invitation。
-
-#### Request
+响应：
 
 ```ts
-interface InvitationRespondRequest {
-  action: 'respond' | 'skip'
-  content?: string
+ApiResponse<{ sessionId: string; invitation: Invitation | null }>
+```
+
+错误码：
+
+- `SESSION_NOT_FOUND`
+- `INTERNAL_ERROR`
+
+### 5.4 回应邀请
+
+| Method | Path | 说明 |
+|---|---|---|
+| POST | `/api/discussions/[sessionId]/invitations/[invitationId]/response` | 文本回应邀请 |
+
+请求：
+
+```ts
+interface RespondInvitationRequest {
+  content: string
   clientMessageId?: string
 }
 ```
 
-#### Response
+响应：
 
 ```ts
-interface InvitationRespondResult {
-  sessionId: string
-  invitation: InvitationRecord
-  userMessage: DiscussionMessage | null
-  directorFollowUp: {
-    action: 'continue'
-    activeSpeakerId: string | null
-    reason: string
-  }
+ApiResponse<RespondInvitationResult>
+```
+
+错误码：
+
+- `MESSAGE_EMPTY`
+- `SESSION_NOT_FOUND`
+- `INVITATION_INVALID`
+- `SESSION_CONTEXT_MISMATCH`
+- `AGENT_GENERATION_FAILED`
+- `DIRECTOR_DECISION_FAILED`
+- `INTERNAL_ERROR`
+
+### 5.5 跳过邀请
+
+| Method | Path | 说明 |
+|---|---|---|
+| POST | `/api/discussions/[sessionId]/invitations/[invitationId]/skip` | 跳过邀请 |
+
+请求：
+
+```ts
+interface SkipInvitationRequest {
+  clientMessageId?: string
 }
 ```
 
-#### 错误码
+响应：
 
-| code | HTTP | 场景 |
-|---|---:|---|
-| `SESSION_NOT_FOUND` | 404 | session 不存在。 |
-| `INVITATION_NOT_FOUND` | 404 | invitation 不存在或不属于当前 session。 |
-| `INVITATION_ALREADY_HANDLED` | 409 | 已处理 invitation 收到冲突请求；相同重复请求返回 200 成功。 |
-| `MESSAGE_EMPTY` | 400 | respond 缺少有效内容。 |
-| `MESSAGE_SAVE_FAILED` | 500 | respond 用户消息保存失败。 |
-| `INVITATION_UPDATE_FAILED` | 500 | invitation 状态更新失败。 |
-| `VALIDATION_ERROR` | 400 | action 非法。 |
-| `SESSION_NOT_OPERABLE` | 409 | 当前 session 不可操作。 |
+```ts
+ApiResponse<SkipInvitationResult>
+```
 
-#### 五项生产契约
+错误码：
 
-| 合同 | 内容 |
-|---|---|
-| Functional Contract | Schema source：`InvitationRespondRequest` / `InvitationRespondResult` in `src/types/api.ts`。 |
-| SLO Contract | P50 < 50ms，P99 < 300ms。 |
-| Observability Contract | 记录 requestId、sessionId、invitationId、action、resultStatus、durationMs。 |
-| Degradation Contract | 相同重复提交返回 200 和既有处理状态；冲突重复提交返回 409；保存用户消息失败则不更新 invitation 为 responded。 |
-| Security Contract | respond content 作为用户输入，进入 React 渲染时按文本展示；错误不包含内部堆栈。 |
+- `SESSION_NOT_FOUND`
+- `INVITATION_INVALID`
+- `DIRECTOR_DECISION_FAILED`
+- `INTERNAL_ERROR`
+
+### 5.6 主动总结
+
+| Method | Path | 说明 |
+|---|---|---|
+| POST | `/api/discussions/[sessionId]/summary` | 主动触发总结当前结论 |
+
+请求：
+
+```ts
+interface RequestSummaryRequest {
+  clientMessageId?: string
+  source: 'more_sheet' | 'composer' | 'auto'
+}
+```
+
+响应：
+
+```ts
+ApiResponse<RequestSummaryResult>
+```
+
+错误码：
+
+- `SESSION_NOT_FOUND`
+- `SESSION_NOT_OPERABLE`
+- `INSUFFICIENT_CONTEXT`
+- `SUMMARY_GENERATION_FAILED`
+- `INVALID_STATE_TRANSITION`
+- `SESSION_STATE_UPDATE_FAILED`
+- `INTERNAL_ERROR`
+
+
+### 5.7 总结后继续追问
+
+| Method | Path | 说明 |
+|---|---|---|
+| PATCH | `/api/sessions/[sessionId]/status` | 总结后恢复当前 session 继续追问 |
+
+请求：
+
+```ts
+interface UpdateSessionStatusRequest {
+  action: 'resume'
+}
+```
+
+响应：
+
+```ts
+ApiResponse<Session>
+```
+
+正确性规则：
+
+- 仅当 session 为 `completed` 且 state stage 为 `closing`，并且存在最终总结 checkpoint 时，resume 才恢复为 `running`。
+- resume 后 state stage 变为 `developing`，summary checkpoint 继续保留在最终总结消息 metadata 中。
+- resume 不删除总结消息，不清空历史消息，不新建 session。
+
+错误码：
+
+- `SESSION_NOT_FOUND`
+- `SESSION_NOT_RESUMABLE`
+- `INTERNAL_ERROR`
+
+### 5.8 Result Payload Shapes
+
+```ts
+interface GetInvitationResult {
+  sessionId: string
+  invitation: Invitation | null
+}
+
+interface RespondInvitationResult {
+  sessionId: string
+  invitation: Invitation
+  userMessage: DiscussionMessage | null
+  agentMessages: DiscussionMessage[]
+  activeSpeakerId: string | null
+  directorDecision?: DirectorDecisionRecord
+  pendingInvitation?: Invitation | null
+  summary?: DiscussionSummary | null
+}
+
+interface SkipInvitationResult {
+  sessionId: string
+  invitation: Invitation
+  agentMessages: DiscussionMessage[]
+  activeSpeakerId: string | null
+  directorDecision?: DirectorDecisionRecord
+  pendingInvitation?: Invitation | null
+}
+
+interface RequestSummaryResult {
+  sessionId: string
+  summary: DiscussionSummary
+  summaryMessage: DiscussionMessage
+  sessionStatus: SessionLifecycleStatus
+  directorDecision: DirectorDecisionRecord
+}
+
+interface DiscussionSummary {
+  summaryId: string
+  sessionId: string
+  messageId: string
+  consensus: string[]
+  disagreements: string[]
+  recommendations: string[]
+  nextSteps: string[]
+  checkpointCreatedAt: string
+}
+```
 
 ## 6. Module Design
 
-### 6.1 类型层：`src/types/index.ts` / `src/types/api.ts`
+### 6.1 Director 模块
 
-新增和扩展公共类型：
+文件：`src/engine/director.ts`
 
-```ts
-type DirectorAction = 'continue' | 'invite_user' | 'trigger_event' | 'conclude'
-type InvitationStatus = 'pending' | 'responded' | 'skipped' | 'expired'
-type DirectorTrigger = 'after_agent_message' | 'user_request_summary' | 'session_resumed' | 'manual'
-```
+职责：
 
-完整公共类型形状：
-
-```ts
-interface DirectorPhaseTransition {
-  from: DiscussionStage
-  to: DiscussionStage
-}
-
-interface DirectorSchedulerHint extends SchedulerHint {
-  preferredAction?: 'continue' | 'challenge' | 'invite_user' | 'stage_summary' | 'final_summary' | 'explain_event_candidate'
-}
-
-interface DirectorEventCandidate {
-  eventType: 'slap' | 'camp' | 'vote' | 'reverse'
-  title: string
-  reason: string
-  status: 'candidate'
-}
-
-interface DirectorDecisionRecord {
-  decisionId: string
-  sessionId: string
-  action: DirectorAction
-  reason: string
-  confidence: number
-  phaseTransition?: DirectorPhaseTransition | null
-  schedulerHint?: DirectorSchedulerHint | null
-  eventCandidate?: DirectorEventCandidate | null
-  createdAt: string
-}
-
-interface InvitationRecord {
-  invitationId: string
-  sessionId: string
-  decisionId: string
-  status: InvitationStatus
-  reason: string
-  prompt: string
-  createdAt: string
-  respondedAt?: string
-  responseMessageId?: string
-  sourceMessageCount: number
-}
-
-interface DiscussionSummaryMetadata {
-  summaryType: 'stage' | 'final'
-  sections: Array<'背景' | '共识' | '分歧' | '风险' | '建议' | '下一步'>
-  sourceMessageIds: string[]
-  resumedFromSummaryId?: string
-}
-```
-
-`SchedulerHint` 增加可选 `preferredAction`，供 Director 向 Scheduler/Service 传递意图，不影响既有 preferredSpeakerId / preferredAgentType。
-
-`DiscussionMessage.metadata` 增加：
-
-- `renderType?: 'opening' | 'transition' | 'invitation' | 'event_candidate' | 'stage_summary' | 'final_summary'`
-- `summary?: DiscussionSummaryMetadata`
-- `directorDecisionId?: string`
-- `invitationId?: string`
-
-### 6.2 Director 引擎：`src/engine/director.ts`
+- 接收 session、messages、roles、intent、pending invitation、最近调度信息。
+- 输出结构化 `DirectorDecisionRecord`。
+- 只做节奏决策，不直接保存消息、修改 session 或调用 repository。
 
 接口：
 
@@ -371,236 +467,410 @@ interface Director {
 }
 ```
 
-输入包括 session、messages、roles、trigger、intent、lastDecision、pendingInvitation、recentInvitations。`DiscussionService` 构造函数新增可选 `director?: Director`，测试可注入 `MockDirector` 或固定决策 fixture。默认实现 `DefaultDirector` 按规则实现：
+输入：`DirectorInput`
 
-- 用户总结/结束信号优先 conclude。
-- pending invitation 存在时不得再次 invite。
-- 最近 3 条非系统消息内创建过 invitation 时不得再次 invite。
-- 同 session invitation 总数达到 3 时不得再次 invite。
-- message count 未达开场阈值时 continue。
-- 出现分歧/分叉关键词时 invite_user 或 trigger_event。
-- 达到轮次上限或连续同意时 conclude。
+- `session: Session`
+- `messages: DiscussionMessage[]`
+- `roles: AgentProfile[]`
+- `trigger: DirectorTrigger`
+- `intent?: IntentResult`
+- `pendingInvitation?: Invitation | null`
+- `lastSchedulerHint?: SchedulerHint`
 
-### 6.3 Service 层：`src/server/services/discussion.service.ts`
+输出：`DirectorDecisionRecord`
 
-新增方法：
+异常：
 
-```ts
-runDirectorNext(sessionId: string, request: DirectorNextRequest): Promise<DirectorNextResult>
-respondInvitation(sessionId: string, invitationId: string, request: InvitationRespondRequest): Promise<InvitationRespondResult>
-```
+- 抛出 `ServiceError('DIRECTOR_DECISION_FAILED', ...)` 或普通错误由服务层映射。
+
+### 6.2 DiscussionService 编排模块
+
+文件：`src/server/services/discussion.service.ts`
 
 职责：
 
-- 读取 session/messages/template roles。
-- 调用 Director 并保存 decision。
-- 处理 phase transition、邀请创建、总结消息创建、session completed。
-- 处理 invitation 幂等回应/跳过。
-- 映射 ServiceError 到 API route。
+- 作为 Director 决策、消息保存、邀请状态、总结完成的事务边界。
+- 保持现有发送消息、意图识别、幂等逻辑。
+- 新增邀请回应、跳过邀请、主动总结方法。
+- 继续追问复用 `SessionService.updateSessionStatus(sessionId, 'resume')`，由 session service 负责从 completed/closing 恢复为 running/developing 并保留 summary checkpoint。
 
-### 6.4 Repository 层
+新增/扩展方法：
 
-新增接口：
+```ts
+getPendingInvitation(sessionId: string): Promise<GetInvitationResult>
+respondInvitation(sessionId: string, invitationId: string, params: RespondInvitationRequest): Promise<RespondInvitationResult>
+skipInvitation(sessionId: string, invitationId: string, params: SkipInvitationRequest): Promise<SkipInvitationResult>
+requestSummary(sessionId: string, params: RequestSummaryRequest): Promise<RequestSummaryResult>
+```
+
+异常：
+
+- repository 返回 null 时映射为对应业务错误。
+- 总结成功前不得调用 complete status 更新。
+
+### 6.3 Invitation Repository
+
+文件：`src/server/repositories/invitation.repository.ts`
+
+职责：
+
+- 按 session 查询 pending invitation。
+- 保存 invitation。
+- 按 invitation ID 查询和更新状态。
+- 支持按 session 查询最近 invitation 用于频率控制。
+
+接口：
+
+```ts
+interface InvitationRepository {
+  findPendingBySessionId(sessionId: string): Promise<Invitation | null>
+  findById(invitationId: string): Promise<Invitation | null>
+  findRecentBySessionId(sessionId: string, limit?: number): Promise<Invitation[]>
+  findByClientMessageId(sessionId: string, clientMessageId: string): Promise<Invitation | null>
+  save(invitation: Invitation): Promise<Invitation>
+  updateStatus(invitationId: string, status: InvitationStatus, patch?: InvitationStatusPatch): Promise<Invitation | null>
+}
+```
+
+### 6.4 Director Decision Repository
+
+文件：`src/server/repositories/director-decision.repository.ts`
+
+职责：
+
+- 保存 Director 决策，方便测试和审计。
+- 查询 session 最近决策。
+
+接口：
 
 ```ts
 interface DirectorDecisionRepository {
-  save(record: DirectorDecisionRecord): Promise<DirectorDecisionRecord>
-  findLatestBySessionId(sessionId: string): Promise<DirectorDecisionRecord | null>
-  findBySessionId(sessionId: string): Promise<DirectorDecisionRecord[]>
-}
-
-interface InvitationRepository {
-  save(record: InvitationRecord): Promise<InvitationRecord>
-  findById(invitationId: string): Promise<InvitationRecord | null>
-  findPendingBySessionId(sessionId: string): Promise<InvitationRecord | null>
-  findRecentBySessionId(sessionId: string, limit: number): Promise<InvitationRecord[]>
-  countBySessionId(sessionId: string): Promise<number>
-  update(record: InvitationRecord): Promise<InvitationRecord>
+  save(decision: DirectorDecisionRecord): Promise<DirectorDecisionRecord>
+  findRecentBySessionId(sessionId: string, limit?: number): Promise<DirectorDecisionRecord[]>
 }
 ```
 
-### 6.5 UI 层
+### 6.5 Message Repository 扩展
 
-- `InviteCard`：展示 prompt/reason，支持输入回应和跳过。
-- `SummaryActions`：总结完成后展示返回首页、查看会话页、继续追问；继续追问复用现有 `PATCH /api/sessions/:sessionId/status` 的 `resume` action。
-- `MessageList`：接收 pending invitation 和 summary action props，在消息流内插入轻量卡片。
-- `MessageInput`：pending invitation 时显示高亮提示，并可作为回应输入。
-- `MoreSheet`：点击“总结当前结论”调用 `actions.runDirectorNext(sessionId, { trigger: 'user_request_summary' })`。
+文件：`src/server/repositories/message.repository.ts`、`src/server/repositories/mock/mock-message.repository.ts`
 
-### 6.6 依赖关系
+职责：
 
-```text
-DiscussionModule
-  -> discussion.store
-    -> /api/discussions/:sessionId/director/next
-    -> /api/discussions/:sessionId/invitations/:invitationId/respond
-      -> DiscussionService
-        -> DefaultDirector
-        -> DefaultStateMachine
-        -> MessageRepository
-        -> DirectorDecisionRepository
-        -> InvitationRepository
+- 支持按 messageId 查询总结 checkpoint 消息。
+- 支持以不可变方式合并 message metadata，用于记录 summary checkpoint 与邀请关联。
+- 保留现有 clientMessageId 幂等查询和 reply 查询语义。
+
+扩展接口：
+
+```ts
+interface MessageRepository {
+  findById(messageId: string): Promise<DiscussionMessage | null>
+  updateMetadata(messageId: string, metadata: DiscussionMessage['metadata']): Promise<DiscussionMessage | null>
+}
 ```
+
+正确性规则：
+
+- `updateMetadata()` 必须合并既有 metadata，不得清空 `replyToClientMessageId`、`intent` 或 `intentLabel`。
+- 找不到 message 时返回 null，由 service 映射为 `SESSION_STATE_UPDATE_FAILED` 或领域错误。
+
+### 6.5 API Routes
+
+新增或修改 Next.js App Router route 文件，只做：
+
+- 解析 params/body。
+- 做边界输入校验。
+- 调用 `DiscussionService`。
+- 按统一 envelope 返回。
+- 映射 ServiceError 到 HTTP status。
+
+### 6.6 前端 Store
+
+文件：`src/store/discussion.store.ts`
+
+职责：
+
+- 保存 `pendingInvitationBySessionId`、`summaryBySessionId`、`directorErrorBySessionId`。
+- 提供 actions：`loadPendingInvitation`、`respondInvitation`、`skipInvitation`、`requestSummary`、`resumeAfterSummary`。
+- 继续使用 immutable reducer 更新。
+
+### 6.7 讨论 UI
+
+文件：`src/modules/discussion/*`
+
+职责：
+
+- `InviteCard` 展示邀请文案、回应输入、跳过按钮、错误状态。
+- `MessageInput` 在 pending invitation 时高亮提示，并支持邀请回应模式。
+- `MoreSheet` 的“总结当前结论”触发 `requestSummary()`。
+- `MessageBubble` 根据 `metadata.hostMessageKind` 区分开场、转场、邀请、事件候选、阶段总结、最终总结。
+- `SummaryActions` 在最终总结后提供返回首页、查看会话页、继续追问。
 
 ## 7. Output Contract
 
-### 7.1 功能类型识别
+### 7.1 功能类型核对
 
-项目 `workflow.yaml` 的 `project.features` 包含 `web-api`。本迭代新增 HTTP endpoint，因此触发 `web-e2e`。本迭代跨越 UI、store、API route、service、engine、repository，因此触发 `integration`。
+`workflow.yaml` 中 `project.features` 包含：`web-api`。
 
-引用测试规范：
+本次迭代变更 HTTP endpoints、服务层、前端讨论页面和跨组件消息链路，因此触发：
 
-- `standards/testing/web-e2e.md`
-- `standards/testing/integration.md`
+| 业务描述 | type id | 测试规范 |
+|---|---|---|
+| Director 确定性规则覆盖（03 阶段可生成单元级测试文件，但 cube type id 归入 integration） | `integration` | `standards/testing/integration.md` |
+| 讨论 API 发送消息、邀请、总结 endpoint | `web-e2e` | `standards/testing/web-e2e.md` |
+| UI -> Store -> API -> Service -> Repository -> Engine 跨组件链路 | `integration` | `standards/testing/integration.md` |
 
-### 7.2 对外 API 契约
+本次不涉及 SQL/query generator，不触发 `sql-query`，无 SQL Contract。
 
-| 产物 | 输入 | 输出 | 正确性规则 | 产出类型 |
-|---|---|---|---|---|
-| `POST /api/discussions/:sessionId/director/next` | `DirectorNextRequest` | `DirectorNextResult` | action 合法；非法 phase 不更新状态；总结失败不 completed；pending 邀请唯一；邀请满足 3 条消息冷却和 3 次总上限。 | web-e2e |
-| `POST /api/discussions/:sessionId/invitations/:invitationId/respond` | `InvitationRespondRequest` | `InvitationRespondResult` | respond 必须有内容；相同重复请求 200 幂等；冲突重复请求 409；invitation 必须属于 session。 | web-e2e |
-| `PATCH /api/sessions/:sessionId/status` resume | `{ action: 'resume' }` | `Session` | 总结后继续追问恢复 running，保留 final summary checkpoint；失败时总结仍可见。 | web-e2e |
+### 7.2 自动化测试契约
 
-### 7.3 公共方法契约
+03 阶段不得从 Development Tasks 复制测试任务，而应根据本 Output Contract 生成 test-map：
 
-| 方法 | 输入 | 输出 | 正确性规则 | 产出类型 |
-|---|---|---|---|---|
-| `DefaultDirector.decide()` | `DirectorInput` | `DirectorDecisionRecord` | action 在允许集合内；confidence 0-1；invite 前检查 pending invitation；conclude 提供 host scheduler hint。 | integration |
-| `DiscussionService.runDirectorNext()` | sessionId + `DirectorNextRequest` | `DirectorNextResult` | 保存 decision；按 action 创建消息/邀请/状态；错误不产生部分完成状态。 | integration |
-| `DiscussionService.respondInvitation()` | sessionId + invitationId + `InvitationRespondRequest` | `InvitationRespondResult` | 幂等；respond 创建用户消息；skip 不创建用户消息；跨 session 拒绝。 | integration |
-| `InvitationRepository.findPendingBySessionId()` | sessionId | `InvitationRecord | null` | 同 session 最多返回一个 pending invitation。 | none |
-| `DirectorDecisionRepository.findLatestBySessionId()` | sessionId | `DirectorDecisionRecord | null` | 返回当前 session 最新 decision。 | none |
+- Director 确定性测试必须覆盖 `continue`、`invite_user`、`trigger_event`、`conclude` 四类动作，以及 pending invitation 存在时不得重复邀请；由于 cube type id 不包含 `unit`，03 阶段将该测试映射为 `integration` 类型下的 engine/director 确定性测试。
+- Invitation 集成测试必须覆盖创建邀请、回应邀请、跳过邀请、冷却窗口、重复回应/跳过幂等、跨 session invitation 拒绝。
+- Summary 集成测试必须覆盖主动总结、总结失败不 complete、总结成功后 complete、resume 后保留 summary checkpoint 并恢复可输入。
+- Web/API E2E 必须按 `{PLUGIN_ROOT}/standards/testing/web-e2e.md` 执行真实 HTTP 请求，覆盖 messages、invitations response/skip、summary、session status resume 的成功、校验失败和领域失败。
+- Feature integration 必须按 `{PLUGIN_ROOT}/standards/testing/integration.md` 覆盖 `UI -> Store -> API -> DiscussionService -> Repository -> Director/Orchestrator` 链路；如 05 阶段无法启动浏览器，必须记录 Known Issue，但 HTTP 请求验证不可省略。
+- Session 恢复路径必须覆盖 FR-013：从 `/sessions` 进入 running session 后，仍能加载 pending invitation、触发 Director、回应邀请和请求总结，行为与首页新建 session 进入一致。
 
-### 7.4 Development Task 契约映射
+### 7.3 对外 API 契约
 
-| Task | 业务描述 | type id | 跨组件链路 |
-|---|---|---|---|
-| Task-01 | 公共类型承载 Director、Invitation、Summary 和 API 数据流 | integration | 类型 -> Engine -> Service -> API -> Store -> UI |
-| Task-02 | Director 产出可测试的四类动作并执行邀请节流 | integration | Director -> SchedulerHint -> StateMachine |
-| Task-03 | 本地仓储保存决策、邀请、pending 状态和幂等查询 | none | 否 |
-| Task-04 | Director next 服务按 action 创建消息、邀请、事件候选或总结并维护 session 状态 | integration | Service -> Director -> Repositories -> StateMachine |
-| Task-05 | Invitation respond 服务实现 respond/skip 幂等和 follow-up continue | integration | Service -> InvitationRepository -> MessageRepository |
-| Task-06 | Director next API route 暴露统一响应和错误语义 | web-e2e | HTTP -> Route -> Service -> Engine |
-| Task-07 | Invitation respond API route 暴露回应/跳过和幂等错误语义 | web-e2e | HTTP -> Route -> Service -> Repository |
-| Task-08 | Discussion store 驱动 Director、邀请回应、跳过和总结后 resume 状态 | integration | UI Store -> HTTP -> API |
-| Task-09 | InviteCard 和输入区完成邀请展示、回应、跳过交互 | integration | UI -> Store -> API |
-| Task-10 | MoreSheet 总结触发和 SummaryActions 完成收束后操作入口 | integration | UI -> Store -> Director API -> Session status API |
+- 所有 API 响应必须符合 `ApiResponse<T>`。
+- 失败响应 `data` 必须为 `null`。
+- 错误码必须使用 API Design 中列出的 code。
+- sessionId、invitationId 必须来自路径参数，不信任 body 中跨 session 数据。
+- 用户输入内容按字符串处理，UI 不使用 `dangerouslySetInnerHTML`。
+
+### 7.4 公共方法契约
+
+- `Director.decide(input)`：返回合法 action 和 reason；当 pending invitation 存在时不得返回创建新邀请的决策。
+- `DiscussionService.respondInvitation()`：同一 invitation + clientMessageId 重复调用不得创建重复消息。
+- `DiscussionService.skipInvitation()`：重复跳过同一 invitation 幂等。
+- `DiscussionService.requestSummary()`：总结消息保存成功前不得 complete session。
+- `SessionService.updateSessionStatus(sessionId, 'resume')`：对 completed + closing + summary checkpoint 的 session 恢复为 running/developing，checkpoint 不得删除。
+- `InvitationRepository.updateStatus()`：返回更新后的 invitation；不存在时返回 null。
+
+### 7.5 任务产物正确性规则
+
+- Director action 只能为 `continue`、`invite_user`、`trigger_event`、`conclude`。
+- 事件候选只保存解释消息，不创建 EventRecord、投票 API 或投票交互。
+- 总结成功后 session status 才能变为 `completed`。
+- 继续追问必须保留 summary checkpoint，并恢复为可输入状态。
+- 任何失败不得重复消息、丢失已保存消息、跨 session 污染 invitation。
 
 ## 8. Change Log
 
 | 文件 | 类型 | 原因 |
 |---|---|---|
-| `src/types/index.ts` | 修改 | 承载 Director、Invitation、Summary metadata、message metadata 和 scheduler hint 扩展。 |
-| `src/types/api.ts` | 修改 | 承载 Director next、invitation respond 和 session resume 相关 DTO 契约。 |
-| `src/engine/director.ts` | 修改 | 实现可注入、可测试的 Director 决策入口和节流规则。 |
-| `src/engine/state-machine.ts` | 修改 | 为 Director phase transition 提供合法性校验入口。 |
-| `src/engine/scheduler.ts` | 修改 | 兼容 Director preferredAction hint 并保留现有 speaker hint 行为。 |
-| `src/server/repositories/director.repository.ts` | 新增 | 保存和查询当前 session 的 Director decision 历史。 |
-| `src/server/repositories/invitation.repository.ts` | 新增 | 保存、查询、统计和更新 invitation，支撑 pending 唯一、冷却和幂等。 |
-| `src/server/repositories/mock/mock-director.repository.ts` | 新增 | 提供本地 Director decision 仓储实现。 |
-| `src/server/repositories/mock/mock-invitation.repository.ts` | 新增 | 提供本地 invitation 仓储实现。 |
-| `src/server/repositories/mock/instances.ts` | 修改 | 导出共享 mock Director / Invitation repository 实例。 |
-| `src/server/services/discussion.service.ts` | 修改 | 编排 Director next、invitation respond、总结完成和错误回滚语义。 |
-| `src/app/api/discussions/[sessionId]/director/next/route.ts` | 新增 | 暴露 Director next API，映射统一响应和错误码。 |
-| `src/app/api/discussions/[sessionId]/invitations/[invitationId]/respond/route.ts` | 新增 | 暴露 invitation respond/skip API，映射幂等和冲突错误码。 |
-| `src/store/discussion.store.ts` | 修改 | 管理 pending invitation、Director action、respond/skip、summary actions 和 resume 后状态。 |
-| `src/modules/discussion/index.tsx` | 修改 | 串接邀请、总结和 MoreSheet 的 UI 状态与 actions。 |
-| `src/modules/discussion/invite-card.tsx` | 新增 | 展示 invitation prompt/reason，并提交回应或跳过。 |
-| `src/modules/discussion/summary-actions.tsx` | 新增 | 展示返回首页、查看会话页、继续追问入口，并触发 resume。 |
-| `src/modules/discussion/message-list.tsx` | 修改 | 在消息流内插入 InviteCard 和 SummaryActions。 |
-| `src/modules/discussion/message-bubble.tsx` | 修改 | 根据主持人 renderType 和 summary metadata 区分开场、转场、邀请、事件候选和总结。 |
-| `src/modules/discussion/message-input.tsx` | 修改 | 在 pending invitation 时展示高亮提示并提交回应内容。 |
-| `src/modules/discussion/more-sheet.tsx` | 修改 | “总结当前结论”直接触发 Director conclude 流程。 |
+| `src/types/index.ts` | 修改 | 新增 Director、Invitation、Summary、主持人消息 metadata 类型。 |
+| `src/types/api.ts` | 修改 | 新增邀请/总结 API DTO，扩展消息发送响应。 |
+| `src/engine/director.ts` | 修改 | 实现结构化 Director 接口和默认规则决策骨架。 |
+| `src/engine/orchestrator.ts` | 修改 | 支持 Director 传入的调度提示和主持人消息语义。 |
+| `src/server/repositories/invitation.repository.ts` | 新增 | 定义邀请仓储接口。 |
+| `src/server/repositories/director-decision.repository.ts` | 新增 | 定义 Director 决策仓储接口。 |
+| `src/server/repositories/mock/mock-invitation.repository.ts` | 新增 | 提供 mock 邀请仓储骨架。 |
+| `src/server/repositories/mock/mock-director-decision.repository.ts` | 新增 | 提供 mock Director 决策仓储骨架。 |
+| `src/server/repositories/mock/instances.ts` | 修改 | 注册 shared repositories。 |
+| `src/server/repositories/message.repository.ts` | 修改 | 支持邀请/总结所需的消息查询与 metadata 更新接口。 |
+| `src/server/repositories/mock/mock-message.repository.ts` | 修改 | 实现 messageId 查询和 metadata 合并更新，支撑 summary checkpoint 与 resume。 |
+| `src/server/services/discussion.service.ts` | 修改 | 编排 Director、邀请、总结和状态更新。 |
+| `src/app/api/discussions/[sessionId]/messages/route.ts` | 修改 | 支持 Director 扩展返回；不承载 invitation response 状态机。 |
+| `src/app/api/discussions/[sessionId]/invitations/route.ts` | 新增 | 查询当前 pending invitation。 |
+| `src/app/api/discussions/[sessionId]/invitations/[invitationId]/response/route.ts` | 新增 | 回应邀请。 |
+| `src/app/api/discussions/[sessionId]/invitations/[invitationId]/skip/route.ts` | 新增 | 跳过邀请。 |
+| `src/app/api/discussions/[sessionId]/summary/route.ts` | 新增 | 主动总结。 |
+| `src/store/discussion.store.ts` | 修改 | 增加邀请、总结和 Director 错误状态/actions。 |
+| `src/modules/discussion/index.tsx` | 修改 | 装配邀请卡、总结入口和总结后操作。 |
+| `src/modules/discussion/invite-card.tsx` | 新增 | 邀请卡组件。 |
+| `src/modules/discussion/summary-actions.tsx` | 新增 | 总结后操作组件。 |
+| `src/modules/discussion/message-bubble.tsx` | 修改 | 主持人消息和总结样式。 |
+| `src/modules/discussion/message-list.tsx` | 修改 | 消息流展示新增语义状态。 |
+| `src/modules/discussion/message-input.tsx` | 修改 | 邀请回应高亮和输入模式。 |
+| `src/modules/discussion/more-sheet.tsx` | 修改 | 总结当前结论触发真实流程。 |
+| `src/app/api/sessions/[sessionId]/status/route.ts` | 修改 | 将 resume action 映射到总结后继续追问恢复语义。 |
+| `src/server/services/session.service.ts` | 修改 | 扩展 resume：completed + closing + summary checkpoint 时恢复 running/developing，并保留 checkpoint。 |
 
 ## 9. Development Tasks
 
-- Task-01：落地 Director 与 Invitation 公共类型契约
-  - 所属模块：types
-  - 简要描述：让 Director、Invitation、Summary metadata、Director API DTO 和 Invitation API DTO 成为 engine、service、route、store、UI 的共享类型来源。
-  - 涉及接口/方法：DirectorDecisionRecord, InvitationRecord, DirectorNextRequest, DirectorNextResult, InvitationRespondRequest, InvitationRespondResult
-  - 输入：session、message、intent、invitation、director request 的类型定义
-  - 输出：可被 engine、service、route、store、UI 共同 import 的公共类型
+- Task-01：定义 Director、邀请、总结和消息语义契约
+  - 任务类型：contract
+  - 所属模块：types/engine
+  - 简要描述：定义 Director 输入输出、Invitation、Summary、主持人消息语义 metadata、邀请/总结 API DTO，供后续服务层、API 和 UI 测试引用。
+  - 涉及接口/方法：DirectorInput、DirectorDecisionRecord、Invitation、DiscussionSummary、SendMessageResult、RespondInvitationRequest、SkipInvitationRequest、RequestSummaryRequest
+  - 输入：无运行时输入，仅类型定义
+  - 输出：可导入的 TypeScript 类型和常量
+  - 依赖任务：无
+  - 数据操作：无
+  - 修改边界：只新增或扩展 `src/types/index.ts`、`src/types/api.ts` 中的类型声明和导出字段；不得删除既有类型字段
+  - 禁止行为：不得写业务逻辑；不得修改 API envelope；不得引入运行时依赖
   - 产出类型：integration
-  - 功能类型：跨层 DTO 契约（type id: integration）
-  - 是否跨组件：是（组件链路：types -> engine -> service -> route -> store -> UI）
-- Task-02：实现 Director 四类动作与邀请节流决策
-  - 所属模块：engine
-  - 简要描述：让 `DefaultDirector.decide()` 根据 trigger、messages、pending invitation、recent invitations 和轮次输出 `continue`、`invite_user`、`trigger_event`、`conclude`，并在 pending、冷却窗口和总次数上限下禁止重复邀请。
-  - 涉及接口/方法：DefaultDirector.decide()
+  - 功能类型：跨层契约定义（type id: integration）
+  - 是否跨组件：是（组件链路：Types -> Engine -> Service -> API -> Store -> UI）
+- Task-02：实现 Director 结构化决策骨架
+  - 任务类型：business-implementation
+  - 所属模块：engine/director
+  - 简要描述：基于 session 阶段、消息历史、intent、pending invitation 和邀请频率信号输出 continue、invite_user、trigger_event、conclude 四类结构化决策。
+  - 涉及接口/方法：Director.decide()、DefaultDirector.decide()
   - 输入：DirectorInput
-  - 输出：DirectorDecisionRecord
+  - 输出：DirectorDecisionRecord 或错误
+  - 依赖任务：Task-01（Director 类型契约）
+  - 数据操作：无
+  - 修改边界：只替换 `src/engine/director.ts` 中现有占位类型和 `DefaultDirector.decide()` 方法体；不得修改 scheduler 或 runtime 职责
+  - 禁止行为：不得直接保存消息、邀请或 session；不得调用 LLM；不得创建真实 EventRecord
   - 产出类型：integration
-  - 功能类型：引擎决策规则（type id: integration）
-  - 是否跨组件：是（组件链路：Director -> StateMachine -> Scheduler）
-- Task-03：实现 Director 与 Invitation 本地仓储行为
+  - 功能类型：Director 决策业务实现（type id: integration）
+  - 是否跨组件：是（组件链路：DiscussionService -> Director -> SchedulerHint）
+- Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+  - 任务类型：contract
   - 所属模块：server/repositories
-  - 简要描述：保存 Director decision，查询最新 decision；保存 invitation，查询 pending/recent/count，并更新 responded、skipped、expired 状态以支持节流和幂等。
-  - 涉及接口/方法：DirectorDecisionRepository.save(), DirectorDecisionRepository.findLatestBySessionId(), InvitationRepository.findPendingBySessionId(), InvitationRepository.findRecentBySessionId(), InvitationRepository.countBySessionId(), InvitationRepository.update()
-  - 输入：DirectorDecisionRecord, InvitationRecord, sessionId, invitationId
-  - 输出：保存或查询到的记录
-  - 产出类型：none
-  - 功能类型：本地仓储契约（type id: none）
-  - 是否跨组件：否
-- Task-04：实现 Director next 服务编排
-  - 所属模块：server/services
-  - 简要描述：在 `runDirectorNext()` 中读取 session/messages/roles，保存 decision，并按 action 创建角色推进提示、邀请消息、事件候选解释或主持人总结；总结消息保存成功后才推进 `closing` 并完成 session。
-  - 涉及接口/方法：DiscussionService.runDirectorNext()
-  - 输入：sessionId, DirectorNextRequest
-  - 输出：DirectorNextResult
+  - 简要描述：定义并提供 mock invitation repository、Director decision repository，并扩展 message repository 的 messageId 查询与 metadata 合并更新能力，支持 pending 查询、状态更新、幂等键查询、最近记录查询和 summary checkpoint 读取。
+  - 涉及接口/方法：InvitationRepository、DirectorDecisionRepository、MessageRepository.findById()、MessageRepository.updateMetadata()、MockInvitationRepository、MockDirectorDecisionRepository、MockMessageRepository
+  - 输入：Invitation、DirectorDecisionRecord、sessionId、invitationId、clientMessageId、messageId、DiscussionMessage.metadata
+  - 输出：Invitation、DirectorDecisionRecord、DiscussionMessage、数组或 null
+  - 依赖任务：Task-01（Invitation 和 DirectorDecisionRecord 类型）
+  - 数据操作：读写 mock repository 内存 Map；读写 message repository 内存 Map 中的 metadata；读写 global shared repository instances
+  - 修改边界：只新增 invitation/director decision repository 接口和 mock 实现文件；只扩展 `message.repository.ts` 与 `mock-message.repository.ts` 的 findById/updateMetadata 方法；只在 `instances.ts` 增加 shared repository 字段；不得修改 session/template repository 既有语义
+  - 禁止行为：不得引入数据库；不得用跨 session 全局单值保存 pending invitation；不得在 updateMetadata 时覆盖既有 metadata；不得删除既有 shared instances
   - 产出类型：integration
-  - 功能类型：跨组件服务编排（type id: integration）
-  - 是否跨组件：是（组件链路：Service -> Director -> StateMachine -> Repository）
-- Task-05：实现 Invitation respond/skip 幂等服务
-  - 所属模块：server/services
-  - 简要描述：在 `respondInvitation()` 中校验 invitation 归属和 session 可操作性，处理 respond/skip、空内容、相同重复请求、冲突重复请求、用户消息保存和 follow-up continue。
+  - 功能类型：本地持久化与 summary checkpoint 仓储契约（type id: integration）
+  - 是否跨组件：是（组件链路：DiscussionService/SessionService -> InvitationRepository/DirectorDecisionRepository/MessageRepository -> MockStore）
+- Task-04：实现普通消息发送链路中的 Director 推进
+  - 任务类型：business-implementation
+  - 所属模块：server/services/discussion
+  - 简要描述：在发送用户消息后调用 Director，保存决策，并按 continue、invite_user、trigger_event、conclude 分支生成对应主持人或角色消息。
+  - 涉及接口/方法：DiscussionService.sendUserMessage()
+  - 输入：sessionId、content、clientMessageId、IntentResponse
+  - 输出：SendMessageResult
+  - 依赖任务：Task-01（DTO）、Task-02（Director）、Task-03（repositories）
+  - 数据操作：读 session repository；读写 message repository；读写 invitation repository；写 director decision repository；写 call log repository；按总结成功条件更新 session repository
+  - 修改边界：只扩展 `sendUserMessage()` 内用户消息保存后、orchestrator 调用前后的编排逻辑；只新增私有辅助方法；不得重写整个 service 文件
+  - 禁止行为：不得绕过 clientMessageId 幂等；不得在总结消息保存前完成 session；不得让 trigger_event 创建真实投票或 EventRecord
+  - 产出类型：web-e2e
+  - 功能类型：消息发送 API 导演推进（type id: web-e2e）
+  - 是否跨组件：是（组件链路：API Route -> DiscussionService -> Director -> Repository -> Orchestrator）
+- Task-05：实现邀请回应业务逻辑
+  - 任务类型：business-implementation
+  - 所属模块：server/services/discussion
+  - 简要描述：校验 pending invitation，保存用户回应消息，将 invitation 更新为 responded，并触发后续 Director 推进，重复提交不创建重复消息。
   - 涉及接口/方法：DiscussionService.respondInvitation()
-  - 输入：sessionId, invitationId, InvitationRespondRequest
-  - 输出：InvitationRespondResult
-  - 产出类型：integration
-  - 功能类型：跨组件邀请回应流程（type id: integration）
-  - 是否跨组件：是（组件链路：Service -> InvitationRepository -> MessageRepository）
-- Task-06：实现 Director next API route
-  - 所属模块：app/api
-  - 简要描述：新增 `POST /api/discussions/[sessionId]/director/next` route，校验 trigger，请求 `DiscussionService.runDirectorNext()`，并按设计错误码返回统一 ApiResponse。
-  - 涉及接口/方法：POST()
-  - 输入：DirectorNextRequest
-  - 输出：ApiResponse<DirectorNextResult>
+  - 输入：sessionId、invitationId、RespondInvitationRequest
+  - 输出：RespondInvitationResult
+  - 依赖任务：Task-03（InvitationRepository）、Task-04（Director 推进辅助逻辑）
+  - 数据操作：读 session repository；读写 invitation repository；读写 message repository；写 director decision repository；可写 call log repository
+  - 修改边界：只在 `DiscussionService` 新增 `respondInvitation()` 和必要私有复用方法；不得修改普通消息幂等规则的既有输入含义
+  - 禁止行为：不得接受空回应；不得回应跨 session invitation；不得重复创建用户消息
   - 产出类型：web-e2e
-  - 功能类型：Web/API endpoint（type id: web-e2e）
-  - 是否跨组件：是（组件链路：HTTP -> Route -> Service -> Engine）
-- Task-07：实现 Invitation respond API route
-  - 所属模块：app/api
-  - 简要描述：新增 `POST /api/discussions/[sessionId]/invitations/[invitationId]/respond` route，校验 action/content，请求 `DiscussionService.respondInvitation()`，并区分相同重复请求和冲突重复请求。
-  - 涉及接口/方法：POST()
-  - 输入：InvitationRespondRequest
-  - 输出：ApiResponse<InvitationRespondResult>
+  - 功能类型：邀请回应 API 业务实现（type id: web-e2e）
+  - 是否跨组件：是（组件链路：Invitation API -> DiscussionService -> InvitationRepository -> MessageRepository -> Director）
+- Task-06：实现跳过邀请业务逻辑
+  - 任务类型：business-implementation
+  - 所属模块：server/services/discussion
+  - 简要描述：将 pending invitation 幂等更新为 skipped，保存跳过后的轻量消息或状态，并触发后续继续讨论。
+  - 涉及接口/方法：DiscussionService.skipInvitation()
+  - 输入：sessionId、invitationId、SkipInvitationRequest
+  - 输出：SkipInvitationResult
+  - 依赖任务：Task-03（InvitationRepository）、Task-04（Director 推进辅助逻辑）
+  - 数据操作：读 session repository；读写 invitation repository；可写 message repository；写 director decision repository
+  - 修改边界：只在 `DiscussionService` 新增 `skipInvitation()` 和必要私有复用方法；不得修改 invitation response 方法体以外无关逻辑
+  - 禁止行为：不得重复更新已 skipped invitation 造成重复消息；不得阻塞后续普通发言
   - 产出类型：web-e2e
-  - 功能类型：Web/API endpoint（type id: web-e2e）
-  - 是否跨组件：是（组件链路：HTTP -> Route -> Service -> Repository）
-- Task-08：实现 Discussion store 的 Director、Invitation 与 resume 状态流
-  - 所属模块：store
-  - 简要描述：扩展 discussion store 状态和 actions，支持 pending invitation 展示、Director next 请求、respond invitation、skip invitation、错误反馈，以及总结后通过 session status resume 恢复输入。
-  - 涉及接口/方法：runDirectorNext(), respondInvitation(), skipInvitation(), resumeFromSummary()
-  - 输入：sessionId, DirectorTrigger, invitationId, content, summaryMessageId
-  - 输出：store state 更新
+  - 功能类型：跳过邀请 API 业务实现（type id: web-e2e）
+  - 是否跨组件：是（组件链路：Invitation API -> DiscussionService -> InvitationRepository -> Director）
+- Task-07：实现主动总结和完成会话业务逻辑
+  - 任务类型：business-implementation
+  - 所属模块：server/services/discussion
+  - 简要描述：处理总结当前结论请求，生成结构化主持人总结消息，保存成功后推进 closing 并完成 session。
+  - 涉及接口/方法：DiscussionService.requestSummary()
+  - 输入：sessionId、RequestSummaryRequest
+  - 输出：RequestSummaryResult
+  - 依赖任务：Task-01（总结 DTO 与 metadata 契约）、Task-02（Director conclude 决策）、Task-03（DirectorDecisionRepository）
+  - 数据操作：读 session repository；读 message repository；写 message repository；写 director decision repository；更新 session repository state/status
+  - 修改边界：只在 `DiscussionService` 新增 `requestSummary()` 和总结私有辅助方法；不得修改 `SessionService.updateSessionStatus()` 的既有 public contract
+  - 禁止行为：不得在总结消息保存失败时 complete session；不得丢失 summary checkpoint；不得要求真实 LLM
+  - 产出类型：web-e2e
+  - 功能类型：主动总结 API 业务实现（type id: web-e2e）
+  - 是否跨组件：是（组件链路：Summary API -> DiscussionService -> Director -> MessageRepository -> SessionRepository）
+- Task-08：实现总结后继续追问恢复语义
+  - 任务类型：business-implementation
+  - 所属模块：server/services/session
+  - 简要描述：扩展 resume action，使 completed + closing 且存在最终总结 checkpoint 的 session 可恢复为 running/developing，并保留总结 checkpoint 供当前 session 继续追问。
+  - 涉及接口/方法：SessionService.updateSessionStatus()、PATCH `/api/sessions/[sessionId]/status`
+  - 输入：sessionId、UpdateSessionStatusRequest(action: 'resume')
+  - 输出：恢复后的 Session 或 `SESSION_NOT_RESUMABLE` 错误
+  - 依赖任务：Task-01（summary metadata 契约）、Task-03（MessageRepository checkpoint 查询）、Task-07（总结 checkpoint 产出）
+  - 数据操作：读 session repository；读 message repository 查找 summary checkpoint；更新 session repository status/state/history
+  - 修改边界：只扩展 `SessionService.updateSessionStatus()` 的 resume 分支和 session status route 的错误码映射；不得修改 archive/complete 分支既有语义
+  - 禁止行为：不得删除总结消息；不得清空 session 历史；不得新建 session 替代恢复；没有 summary checkpoint 时不得恢复 completed session
+  - 产出类型：web-e2e
+  - 功能类型：总结后继续追问恢复（type id: web-e2e）
+  - 是否跨组件：是（组件链路：SummaryActions -> Store -> Session Status API -> SessionService -> SessionRepository）
+- Task-09：实现邀请和总结 API endpoints
+  - 任务类型：api
+  - 所属模块：app/api/discussions
+  - 简要描述：新增 pending invitation 查询、回应邀请、跳过邀请、主动总结 endpoint，并扩展 messages route 返回 Director 状态。
+  - 涉及接口/方法：GET invitations、POST response、POST skip、POST summary、POST messages、PATCH session status resume
+  - 输入：路径参数 sessionId/invitationId，请求 body DTO
+  - 输出：ApiResponse<GetInvitationResult | RespondInvitationResult | SkipInvitationResult | RequestSummaryResult | SendMessageResult>
+  - 依赖任务：Task-04（普通消息 Director 推进）、Task-05（回应邀请）、Task-06（跳过邀请）、Task-07（主动总结）、Task-08（继续追问恢复）
+  - 数据操作：调用 DiscussionService；不直接读写 repository
+  - 修改边界：只新增声明的 route 文件；只在 messages route 的 response mapping 处透出 Director 字段；只在 session status route 的 resume 分支复用 SessionService
+  - 禁止行为：不得改变统一响应 envelope；不得把 body 中 sessionId 覆盖 path sessionId；不得暴露内部堆栈
+  - 产出类型：web-e2e
+  - 功能类型：讨论邀请和总结 HTTP API（type id: web-e2e）
+  - 是否跨组件：是（组件链路：HTTP Route -> DiscussionService -> Repository）
+- Task-10：实现前端邀请状态管理
+  - 任务类型：ui
+  - 所属模块：store/discussion
+  - 简要描述：在 discussion store 中维护 pending invitation、邀请提交状态、summary 状态和 Director 错误，提供加载、回应、跳过和总结 actions。
+  - 涉及接口/方法：DiscussionActions.loadPendingInvitation()、respondInvitation()、skipInvitation()、requestSummary()、resumeAfterSummary()
+  - 输入：sessionId、invitationId、content、clientMessageId
+  - 输出：更新后的 DiscussionStoreState
+  - 依赖任务：Task-09（API endpoints）
+  - 数据操作：调用 `/api/discussions/[sessionId]/invitations*`、`/summary`、`/messages`；更新 React reducer state
+  - 修改边界：只扩展 `DiscussionStoreState`、`DiscussionAction`、reducer case 和 `actions` 对象；不得重写 provider 或移除现有 actions
+  - 禁止行为：不得直接操作 DOM；不得用可变方式更新 state；不得吞掉需要展示给用户的错误
   - 产出类型：integration
-  - 功能类型：前端状态到 API 链路（type id: integration）
-  - 是否跨组件：是（组件链路：UI -> Store -> HTTP API）
-- Task-09：实现 InviteCard 与邀请回应 UI
+  - 功能类型：前端状态跨 API 集成（type id: integration）
+  - 是否跨组件：是（组件链路：DiscussionModule -> Store -> API）
+- Task-11：实现讨论页邀请交互 UI
+  - 任务类型：ui
   - 所属模块：modules/discussion
-  - 简要描述：新增 InviteCard 并串接 MessageList/MessageInput，在 pending invitation 时展示 prompt/reason、高亮输入区，支持文本回应、空内容拦截、跳过和失败反馈。
-  - 涉及接口/方法：InviteCard(), MessageList(), MessageInput()
-  - 输入：InvitationRecord, disabled, onRespond, onSkip
-  - 输出：React UI 和 invitation action 调用
+  - 简要描述：展示 InviteCard、支持用户回应和跳过、在输入区展示邀请高亮提示，并在 session 加载和消息更新后同步 pending invitation。
+  - 涉及接口/方法：InviteCard、DiscussionModuleInner、MessageInput
+  - 输入：Invitation、用户回应内容、跳过点击
+  - 输出：InviteCard 状态变化、消息流更新、输入区高亮提示
+  - 依赖任务：Task-10（前端邀请状态管理）
+  - 数据操作：调用 discussion store actions；不直接调用 repository 或 API route
+  - 修改边界：只新增 `invite-card.tsx`；只在 `index.tsx` 装配组件和 actions；只在 `message-input.tsx` 增加 invitation props 与提示区域
+  - 禁止行为：不得新增独立阶段评估面板；不得使用 `dangerouslySetInnerHTML`；不得阻塞普通重试能力
   - 产出类型：integration
-  - 功能类型：UI 与 store 交互（type id: integration）
-  - 是否跨组件：是（组件链路：InviteCard -> DiscussionStore -> API）
-- Task-10：实现总结触发、总结展示与继续追问入口
+  - 功能类型：邀请 UI 跨组件交互（type id: integration）
+  - 是否跨组件：是（组件链路：InviteCard -> Store -> API -> Service）
+- Task-12：实现主持人消息、事件候选和总结展示
+  - 任务类型：ui
   - 所属模块：modules/discussion
-  - 简要描述：让 MoreSheet 的“总结当前结论”触发 `user_request_summary` Director flow；在最终总结消息后展示 SummaryActions，并让继续追问调用 session resume、保留 summary checkpoint、恢复输入区。
-  - 涉及接口/方法：SummaryActions(), MoreSheet.onSummarize, resumeFromSummary()
-  - 输入：summaryMessageId, onBackHome, onViewSessions, onContinue
-  - 输出：React UI、Director trigger action 和 session resume action
+  - 简要描述：根据消息 metadata 展示主持人开场、转场、邀请、事件候选解释、阶段总结和最终总结样式，并提供总结后操作入口。
+  - 涉及接口/方法：MessageBubble、MessageList、SummaryActions
+  - 输入：DiscussionMessage.metadata.hostMessageKind、DiscussionSummary
+  - 输出：语义化消息展示、返回首页、查看会话页、继续追问入口
+  - 依赖任务：Task-01（消息 metadata 类型）、Task-10（summary 状态）
+  - 数据操作：调用 store resume action 或页面跳转；不直接读写 repository
+  - 修改边界：只新增 `summary-actions.tsx`；只扩展 `message-bubble.tsx`、`message-list.tsx` 的渲染分支；不得改写整个消息流组件
+  - 禁止行为：不得创建真实事件投票 UI；未知 hostMessageKind 必须退化为普通主持人消息；不得隐藏失败消息重试按钮
   - 产出类型：integration
-  - 功能类型：UI 到 Director API 与 Session status API 触发链路（type id: integration）
-  - 是否跨组件：是（组件链路：MoreSheet -> DiscussionStore -> Director API -> Session status API）
+  - 功能类型：主持人消息和总结 UI 展示（type id: integration）
+  - 是否跨组件：是（组件链路：MessageRepository -> API -> Store -> MessageList -> MessageBubble）
+- Task-13：实现更多操作总结入口
+  - 任务类型：ui
+  - 所属模块：modules/discussion
+  - 简要描述：将 MoreSheet 中“总结当前结论”从占位提示改为调用 requestSummary，并把失败反馈展示到现有错误区域。
+  - 涉及接口/方法：MoreSheet、DiscussionModuleInner、DiscussionActions.requestSummary()
+  - 输入：用户点击“总结当前结论”
+  - 输出：触发 summary API、总结消息进入消息流或展示错误
+  - 依赖任务：Task-07（主动总结业务逻辑）、Task-10（store summary action）
+  - 数据操作：调用 discussion store requestSummary action；不直接读写 repository
+  - 修改边界：只扩展 MoreSheet props 和 click handler；只在 `index.tsx` 传入总结 action；不得修改其他更多操作语义
+  - 禁止行为：不得继续显示“后续迭代”占位；不得在 summary 失败时把 session 标记为 completed
+  - 产出类型：integration
+  - 功能类型：更多操作总结入口（type id: integration）
+  - 是否跨组件：是（组件链路：MoreSheet -> Store -> Summary API -> DiscussionService）

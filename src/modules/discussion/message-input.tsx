@@ -8,6 +8,8 @@ interface MessageInputProps {
   isRecognizingIntent?: boolean
   draftContent?: string | null
   onDraftConsumed?: () => void
+  invitationPrompt?: string | null
+  invitationMode?: boolean
 }
 
 export function MessageInput({
@@ -16,6 +18,8 @@ export function MessageInput({
   isRecognizingIntent = false,
   draftContent,
   onDraftConsumed,
+  invitationPrompt: _invitationPrompt,
+  invitationMode: _invitationMode = false,
 }: MessageInputProps) {
   const [content, setContent] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)

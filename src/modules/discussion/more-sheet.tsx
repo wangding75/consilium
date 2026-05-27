@@ -10,9 +10,10 @@ interface MoreSheetProps {
   onArchive?: () => void
   onResume?: () => void
   onComplete?: () => void
+  onRequestSummary?: () => void
 }
 
-export function MoreSheet({ isOpen, onClose, onSelectCommand, canIntervene = true, onArchive, onResume: _onResume, onComplete: _onComplete }: MoreSheetProps) {
+export function MoreSheet({ isOpen, onClose, onSelectCommand, canIntervene = true, onArchive, onResume: _onResume, onComplete: _onComplete, onRequestSummary }: MoreSheetProps) {
   const [modalMessage, setModalMessage] = useState<string | null>(null)
 
   if (!isOpen) return null
@@ -25,6 +26,11 @@ export function MoreSheet({ isOpen, onClose, onSelectCommand, canIntervene = tru
 
   const handleClick = (label: string) => {
     onSelectCommand?.(label)
+    if (label === '总结当前结论' && onRequestSummary) {
+      onRequestSummary()
+      onClose()
+      return
+    }
     setModalMessage('后续迭代将支持此指令的完整功能')
     onClose()
   }

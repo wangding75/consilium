@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, createElement, useContext, useReducer, useRef, useCallback, type ReactNode } from 'react'
-import type { DiscussionMessage, IntentResult } from '@/types'
+import type { DiscussionMessage, DiscussionSummary, IntentResult, Invitation } from '@/types'
 import type { ApiError, SessionDetailResult } from '@/types/api'
 
 export type SessionSummary = SessionDetailResult
@@ -18,6 +18,9 @@ export interface DiscussionStoreState {
   recognizingIntentBySessionId?: Record<string, boolean>
   intentErrorBySessionId?: Record<string, ApiError | null>
   pendingCommandBySessionId?: Record<string, string | null>
+  pendingInvitationBySessionId?: Record<string, Invitation | null>
+  summaryBySessionId?: Record<string, DiscussionSummary | null>
+  directorErrorBySessionId?: Record<string, ApiError | null>
 }
 
 export interface DiscussionActions {
@@ -28,6 +31,11 @@ export interface DiscussionActions {
   clearError(sessionId: string): void
   continueAsPlainMessage(sessionId: string): Promise<void>
   fillComposer(sessionId: string, content: string): void
+  loadPendingInvitation(sessionId: string): Promise<void>
+  respondInvitation(sessionId: string, invitationId: string, content: string): Promise<void>
+  skipInvitation(sessionId: string, invitationId: string): Promise<void>
+  requestSummary(sessionId: string): Promise<void>
+  resumeAfterSummary(sessionId: string): Promise<void>
 }
 
 export function generateClientMessageId(): string {
@@ -51,6 +59,9 @@ const initialState: DiscussionStoreState = {
   recognizingIntentBySessionId: {},
   intentErrorBySessionId: {},
   pendingCommandBySessionId: {},
+  pendingInvitationBySessionId: {},
+  summaryBySessionId: {},
+  directorErrorBySessionId: {},
 }
 
 export type DiscussionAction =
@@ -347,6 +358,27 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
       // Composer fill is handled by draftContent prop wired to MessageInput
     }, []),
 
+
+
+    loadPendingInvitation: useCallback(async (_sessionId: string) => {
+      throw new Error('not implemented')
+    }, []),
+
+    respondInvitation: useCallback(async (_sessionId: string, _invitationId: string, _content: string) => {
+      throw new Error('not implemented')
+    }, []),
+
+    skipInvitation: useCallback(async (_sessionId: string, _invitationId: string) => {
+      throw new Error('not implemented')
+    }, []),
+
+    requestSummary: useCallback(async (_sessionId: string) => {
+      throw new Error('not implemented')
+    }, []),
+
+    resumeAfterSummary: useCallback(async (_sessionId: string) => {
+      throw new Error('not implemented')
+    }, []),
     clearError: useCallback((sessionId: string) => {
       dispatch({ type: 'ERROR_SET', sessionId, error: null })
     }, []),

@@ -1,0 +1,87 @@
+files:
+  - path: src/types/index.ts
+    tasks:
+      - Task-01：定义 Director、邀请、总结和消息语义契约
+  - path: src/types/api.ts
+    tasks:
+      - Task-01：定义 Director、邀请、总结和消息语义契约
+  - path: src/engine/director.ts
+    tasks:
+      - Task-02：实现 Director 结构化决策骨架
+  - path: src/server/repositories/invitation.repository.ts
+    tasks:
+      - Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+  - path: src/server/repositories/director-decision.repository.ts
+    tasks:
+      - Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+  - path: src/server/repositories/mock/mock-invitation.repository.ts
+    tasks:
+      - Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+  - path: src/server/repositories/mock/mock-director-decision.repository.ts
+    tasks:
+      - Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+  - path: src/server/repositories/message.repository.ts
+    tasks:
+      - Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+  - path: src/server/repositories/mock/mock-message.repository.ts
+    tasks:
+      - Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+  - path: src/server/repositories/mock/instances.ts
+    tasks:
+      - Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+  - path: src/server/services/discussion.service.ts
+    tasks:
+      - Task-04：实现普通消息发送链路中的 Director 推进
+      - Task-05：实现邀请回应业务逻辑
+      - Task-06：实现跳过邀请业务逻辑
+      - Task-07：实现主动总结和完成会话业务逻辑
+  - path: src/app/api/discussions/[sessionId]/messages/route.ts
+    tasks:
+      - Task-04：实现普通消息发送链路中的 Director 推进
+      - Task-09：实现邀请和总结 API endpoints
+  - path: src/app/api/discussions/[sessionId]/invitations/route.ts
+    tasks:
+      - Task-09：实现邀请和总结 API endpoints
+  - path: src/app/api/discussions/[sessionId]/invitations/[invitationId]/response/route.ts
+    tasks:
+      - Task-05：实现邀请回应业务逻辑
+      - Task-09：实现邀请和总结 API endpoints
+  - path: src/app/api/discussions/[sessionId]/invitations/[invitationId]/skip/route.ts
+    tasks:
+      - Task-06：实现跳过邀请业务逻辑
+      - Task-09：实现邀请和总结 API endpoints
+  - path: src/app/api/discussions/[sessionId]/summary/route.ts
+    tasks:
+      - Task-07：实现主动总结和完成会话业务逻辑
+      - Task-09：实现邀请和总结 API endpoints
+  - path: src/server/services/session.service.ts
+    tasks:
+      - Task-08：实现总结后继续追问恢复语义
+  - path: src/app/api/sessions/[sessionId]/status/route.ts
+    tasks:
+      - Task-08：实现总结后继续追问恢复语义
+      - Task-09：实现邀请和总结 API endpoints
+  - path: src/store/discussion.store.ts
+    tasks:
+      - Task-10：实现前端邀请状态管理
+  - path: src/modules/discussion/invite-card.tsx
+    tasks:
+      - Task-11：实现讨论页邀请交互 UI
+  - path: src/modules/discussion/index.tsx
+    tasks:
+      - Task-11：实现讨论页邀请交互 UI
+  - path: src/modules/discussion/message-input.tsx
+    tasks:
+      - Task-11：实现讨论页邀请交互 UI
+  - path: src/modules/discussion/summary-actions.tsx
+    tasks:
+      - Task-12：实现主持人消息、事件候选和总结展示
+  - path: src/modules/discussion/message-bubble.tsx
+    tasks:
+      - Task-12：实现主持人消息、事件候选和总结展示
+  - path: src/modules/discussion/message-list.tsx
+    tasks:
+      - Task-12：实现主持人消息、事件候选和总结展示
+  - path: src/modules/discussion/more-sheet.tsx
+    tasks:
+      - Task-13：实现更多操作总结入口

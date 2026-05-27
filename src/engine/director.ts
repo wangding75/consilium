@@ -1,13 +1,11 @@
-import type { Session, AgentOutput } from '@/types'
-
-export type DirectorDecision = 'continue' | 'invite' | 'conclude' | 'trigger-event'
+import type { DirectorDecisionRecord, DirectorInput } from '@/types'
 
 export interface Director {
-  decide(session: Session, lastOutput?: AgentOutput): Promise<DirectorDecision>
+  decide(input: DirectorInput): Promise<DirectorDecisionRecord>
 }
 
 export class DefaultDirector implements Director {
-  async decide(_session: Session, _lastOutput?: AgentOutput): Promise<DirectorDecision> {
-    throw new Error('not implemented — will be built in iteration 6')
+  async decide(_input: DirectorInput): Promise<DirectorDecisionRecord> {
+    throw new Error('not implemented')
   }
 }

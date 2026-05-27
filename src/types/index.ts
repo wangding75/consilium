@@ -1,3 +1,4 @@
+export type * from './api'
 // Core domain types for consilium — 智囊团 multi-agent discussion platform
 
 export type DiscussionStage = 'idle' | 'opening' | 'developing' | 'climax' | 'closing'
@@ -180,6 +181,9 @@ export interface DiscussionMessage {
     replyToClientMessageId?: string
     intent?: IntentResult
     intentLabel?: string
+    hostMessageKind?: HostMessageKind
+    invitationId?: string
+    summary?: DiscussionSummary
   }
 }
 
@@ -254,4 +258,72 @@ export interface ContextBuilderInput {
   messageHistory: DiscussionMessage[]
   maxMessages?: number
   maxChars?: number
+}
+
+
+export type DirectorAction = 'continue' | 'invite_user' | 'trigger_event' | 'conclude'
+export type DirectorTrigger = 'opening' | 'user_message' | 'invitation_response' | 'invitation_skip' | 'summary_request' | 'auto'
+export type HostMessageKind = 'opening' | 'transition' | 'invitation' | 'event_candidate' | 'stage_summary' | 'final_summary'
+export type InvitationStatus = 'pending' | 'responded' | 'skipped' | 'expired'
+
+export interface DirectorEventCandidate {
+  type: EventType
+  reason: string
+}
+
+export interface DirectorSummaryHint {
+  reason: string
+  sections: Array<'consensus' | 'disagreements' | 'recommendations' | 'nextSteps'>
+}
+
+export interface Invitation {
+  invitationId: string
+  sessionId: string
+  status: InvitationStatus
+  prompt: string
+  reason: string
+  createdByMessageId?: string
+  respondedByMessageId?: string
+  clientMessageId?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DiscussionSummary {
+  summaryId: string
+  sessionId: string
+  messageId: string
+  consensus: string[]
+  disagreements: string[]
+  recommendations: string[]
+  nextSteps: string[]
+  checkpointCreatedAt: string
+}
+
+export interface DirectorInput {
+  session: Session
+  messages: DiscussionMessage[]
+  roles: AgentProfile[]
+  trigger: DirectorTrigger
+  intent?: IntentResult
+  pendingInvitation?: Invitation | null
+  lastSchedulerHint?: SchedulerHint
+}
+
+export interface DirectorDecisionRecord {
+  decisionId: string
+  sessionId: string
+  action: DirectorAction
+  reason: string
+  confidence: number
+  schedulerHint?: SchedulerHint
+  stageSuggestion?: DiscussionStage
+  eventCandidate?: DirectorEventCandidate
+  summaryHint?: DirectorSummaryHint
+  createdAt: string
+}
+
+export interface InvitationStatusPatch {
+  respondedByMessageId?: string
+  clientMessageId?: string
 }

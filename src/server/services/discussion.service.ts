@@ -1,12 +1,15 @@
 import type { DefaultStateMachine } from '@/engine/state-machine'
+import type { Director } from '@/engine/director'
 import type { Discussion, AgentCallLog, AgentProfile, IntentResult } from '@/types'
 import type { DiscussionRepository } from '@/server/repositories/discussion.repository'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
 import type { MessageRepository } from '@/server/repositories/message.repository'
 import type { AgentCallLogRepository } from '@/server/repositories/agent-call-log.repository'
+import type { InvitationRepository } from '@/server/repositories/invitation.repository'
+import type { DirectorDecisionRepository } from '@/server/repositories/director-decision.repository'
 import type { DiscussionOrchestrator } from '@/engine/orchestrator'
-import type { SessionDetailResult, MessageListResult, SendMessageResult, IntentRequest, IntentResponse } from '@/types/api'
+import type { GetInvitationResult, MessageListResult, RequestSummaryRequest, RequestSummaryResult, RespondInvitationRequest, RespondInvitationResult, SessionDetailResult, SendMessageResult, IntentRequest, IntentResponse, SkipInvitationRequest, SkipInvitationResult } from '@/types/api'
 import { ServiceError } from '@/server/errors'
 import { RuleBasedIntentClassifier } from '@/engine/intent'
 
@@ -20,7 +23,10 @@ export class DiscussionService {
     private readonly messageRepo?: MessageRepository,
     private readonly callLogRepo?: AgentCallLogRepository,
     private readonly orchestrator?: DiscussionOrchestrator,
-    private readonly stateMachine?: DefaultStateMachine
+    private readonly stateMachine?: DefaultStateMachine,
+    private readonly director?: Director,
+    private readonly invitationRepo?: InvitationRepository,
+    private readonly directorDecisionRepo?: DirectorDecisionRepository
   ) {}
 
   async listDiscussions(): Promise<Discussion[]> {
@@ -291,4 +297,37 @@ export class DiscussionService {
       activeSpeakerId: orchestratorResult?.activeSpeakerId ?? null,
     }
   }
+
+  async getPendingInvitation(sessionId: string): Promise<GetInvitationResult> {
+    const session = await this.sessionRepo?.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
+    return {
+      sessionId,
+      invitation: await this.invitationRepo?.findPendingBySessionId(sessionId) ?? null,
+    }
+  }
+
+  async respondInvitation(
+    _sessionId: string,
+    _invitationId: string,
+    _params: RespondInvitationRequest
+  ): Promise<RespondInvitationResult> {
+    throw new Error('not implemented')
+  }
+
+  async skipInvitation(
+    _sessionId: string,
+    _invitationId: string,
+    _params: SkipInvitationRequest
+  ): Promise<SkipInvitationResult> {
+    throw new Error('not implemented')
+  }
+
+  async requestSummary(
+    _sessionId: string,
+    _params: RequestSummaryRequest
+  ): Promise<RequestSummaryResult> {
+    throw new Error('not implemented')
+  }
+
 }

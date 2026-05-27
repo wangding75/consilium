@@ -5,6 +5,10 @@ export class MockMessageRepository implements MessageRepository {
   private store = new Map<string, DiscussionMessage>()
   private clientIdIndex = new Map<string, string>()
 
+  async findById(messageId: string): Promise<DiscussionMessage | null> {
+    return this.store.get(messageId) ?? null
+  }
+
   async findBySessionId(
     sessionId: string,
     opts?: { limit: number; before?: string }
@@ -64,5 +68,13 @@ export class MockMessageRepository implements MessageRepository {
     const message = this.store.get(messageId)
     if (!message) return
     this.store.set(messageId, { ...message, status })
+  }
+
+  async updateMetadata(messageId: string, metadata: DiscussionMessage['metadata']): Promise<DiscussionMessage | null> {
+    const message = this.store.get(messageId)
+    if (!message) return null
+    const updated = { ...message, metadata: { ...message.metadata, ...metadata } }
+    this.store.set(messageId, updated)
+    return updated
   }
 }
