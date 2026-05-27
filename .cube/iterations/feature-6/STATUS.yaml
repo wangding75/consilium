@@ -19,7 +19,11 @@ tasks:
     test_total: 34
   - task: "Task-02：实现 Director 结构化决策骨架"
     test_file: director.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:13"
+    completed_at: "2026-05-27 18:15"
+    test_passed: 12
+    test_total: 12
   - task: "Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约"
     test_file: mock-invitation.repository.test.ts
     phase: locked
