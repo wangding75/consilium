@@ -40,7 +40,11 @@ tasks:
     test_total: 7
   - task: "Task-05：实现邀请回应业务逻辑"
     test_file: discussion-invitation.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:19"
+    completed_at: "2026-05-27 18:25"
+    test_passed: 12
+    test_total: 12
   - task: "Task-06：实现跳过邀请业务逻辑"
     test_file: discussion-skip-invitation.test.ts
     phase: locked

@@ -373,7 +373,7 @@ export class DiscussionService {
 
   async getPendingInvitation(sessionId: string): Promise<GetInvitationResult> {
     const session = await this.sessionRepo?.findById(sessionId)
-    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session ${sessionId} not found`)
     return {
       sessionId,
       invitation: await this.invitationRepo?.findPendingBySessionId(sessionId) ?? null,
@@ -381,11 +381,81 @@ export class DiscussionService {
   }
 
   async respondInvitation(
-    _sessionId: string,
-    _invitationId: string,
-    _params: RespondInvitationRequest
+    sessionId: string,
+    invitationId: string,
+    params: RespondInvitationRequest
   ): Promise<RespondInvitationResult> {
-    throw new Error('not implemented')
+    const content = params.content?.trim()
+    if (!content) {
+      throw new ServiceError('MESSAGE_EMPTY', 'MESSAGE_EMPTY: Invitation response content cannot be empty')
+    }
+
+    const session = await this.sessionRepo?.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session ${sessionId} not found`)
+
+    // Idempotent check via clientMessageId — must precede invitation status check
+    let userMessage = null
+    if (params.clientMessageId) {
+      const existing = await this.messageRepo?.findByClientMessageId(params.clientMessageId, sessionId)
+      if (existing) {
+        userMessage = existing
+      }
+    }
+
+    const invitation = await this.invitationRepo?.findById(invitationId)
+    if (!invitation || invitation.sessionId !== sessionId) {
+      throw new ServiceError('INVITATION_INVALID', 'INVITATION_INVALID: Invitation is not valid for response')
+    }
+
+    // Skip status check on idempotent retry — invitation may already be 'responded'
+    if (!userMessage && invitation.status !== 'pending') {
+      throw new ServiceError('INVITATION_INVALID', 'INVITATION_INVALID: Invitation is not valid for response')
+    }
+
+    if (!userMessage) {
+      userMessage = await this.messageRepo?.save({
+        messageId: `msg-user-${crypto.randomUUID()}`,
+        sessionId,
+        type: 'user',
+        content,
+        status: 'completed',
+        clientMessageId: params.clientMessageId,
+        createdAt: new Date().toISOString(),
+        metadata: { hostMessageKind: 'invitation', invitationId },
+      }) ?? null
+    }
+
+    await this.invitationRepo?.updateStatus(invitationId, 'responded', {
+      respondedByMessageId: userMessage?.messageId,
+      clientMessageId: params.clientMessageId,
+    })
+
+    const directorResult = await this.runDirectorAndProduceSideEffects(
+      session,
+      await this.messageRepo?.findBySessionId(sessionId) ?? [],
+      [],
+      'invitation_response',
+    )
+
+    const orchestratorResult = await this.orchestrator?.run({
+      sessionId,
+      runId: `run-${crypto.randomUUID()}`,
+      topic: session.topic,
+      templateName: '',
+      profiles: [],
+      messageHistory: await this.messageRepo?.findBySessionId(sessionId) ?? [],
+      triggerContent: content,
+    })
+
+    return {
+      sessionId,
+      invitation: (await this.invitationRepo?.findById(invitationId))!,
+      userMessage,
+      agentMessages: orchestratorResult?.agentMessages ?? [],
+      activeSpeakerId: orchestratorResult?.activeSpeakerId ?? session.state.lastSpeakerId ?? null,
+      directorDecision: directorResult.directorDecision,
+      pendingInvitation: directorResult.pendingInvitation,
+    }
   }
 
   async skipInvitation(
