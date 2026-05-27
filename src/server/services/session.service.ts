@@ -104,6 +104,11 @@ export class SessionService {
         reason = 'user archive'
         break
       case 'resume': {
+        if (session.status === 'archived') {
+          nextStatus = 'running'
+          reason = 'user resume from archive'
+          break
+        }
         if (session.status !== 'completed') {
           throw new ServiceError('SESSION_NOT_RESUMABLE', 'SESSION_NOT_RESUMABLE: Session is not completed')
         }
