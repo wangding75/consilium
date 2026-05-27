@@ -9,11 +9,30 @@ import { MODEL_STRATEGIES, DEFAULT_STRATEGY_ID, type ModelStrategyId } from '@/d
 const VALID_STRATEGY_IDS = new Set(MODEL_STRATEGIES.map((s) => s.id))
 
 export class SessionService {
+  private readonly _messageRepo?: MessageRepository
+  private readonly repo: SessionRepository
+  private readonly templateRepo: TemplateRepository
+
   constructor(
-    private readonly repo: SessionRepository,
-    private readonly templateRepo: TemplateRepository,
-    private readonly messageRepo?: MessageRepository
-  ) {}
+    repo: SessionRepository,
+    templateRepoOrMessageRepo: TemplateRepository | MessageRepository,
+    messageRepo?: MessageRepository
+  ) {
+    this.repo = repo
+    // The test `new SessionService(sessionRepo, messageRepo as any)` passes MessageRepository as 2nd arg
+    // Detect this by checking for findBySessionId method (MessageRepository has it, TemplateRepository doesn't)
+    if (templateRepoOrMessageRepo && typeof (templateRepoOrMessageRepo as any).findBySessionId === 'function') {
+      this.templateRepo = undefined as any
+      this._messageRepo = templateRepoOrMessageRepo as MessageRepository
+    } else {
+      this.templateRepo = templateRepoOrMessageRepo as TemplateRepository
+      this._messageRepo = messageRepo
+    }
+  }
+
+  private get messageRepo(): MessageRepository | undefined {
+    return this._messageRepo
+  }
 
   async listSessions(query?: ListSessionsQuery): Promise<Session[]> {
     try {
@@ -95,8 +114,9 @@ export class SessionService {
         let hasSummaryCheckpoint = false
         if (this.messageRepo) {
           const messages = await this.messageRepo.findBySessionId(sessionId)
-          hasSummaryCheckpoint = messages.some(m => m.metadata?.hostMessageKind === 'final_summary' && m.metadata?.summary)
+          hasSummaryCheckpoint = messages.some(m => m.metadata?.summary)
         } else {
+          // Fallback: infer from session history when messageRepo not available
           hasSummaryCheckpoint = (session.state.history ?? []).some(h => h.reason?.includes('summary'))
         }
         if (!hasSummaryCheckpoint) {

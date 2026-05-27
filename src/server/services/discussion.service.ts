@@ -539,7 +539,8 @@ export class DiscussionService {
 
     const messages = await this.messageRepo?.findBySessionId(sessionId) ?? []
     const nonSystemMessages = messages.filter(m => m.type !== 'system')
-    if (nonSystemMessages.length < 2) {
+    // In closing stage, skip INSUFFICIENT_CONTEXT check — director already concluded
+    if (nonSystemMessages.length < 2 && session.state.stage !== 'closing') {
       throw new ServiceError('INSUFFICIENT_CONTEXT', 'INSUFFICIENT_CONTEXT: Not enough discussion history to summarize')
     }
 
