@@ -2,6 +2,7 @@ import type { Session, SessionStatusAction } from '@/types'
 import type { CreateSessionParams, CreateSessionResult, ListSessionsQuery, SessionStateResult } from '@/types/api'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
+import type { MessageRepository } from '@/server/repositories/message.repository'
 import { ServiceError } from '@/server/errors'
 import { MODEL_STRATEGIES, DEFAULT_STRATEGY_ID, type ModelStrategyId } from '@/data/model-strategies'
 
@@ -10,7 +11,8 @@ const VALID_STRATEGY_IDS = new Set(MODEL_STRATEGIES.map((s) => s.id))
 export class SessionService {
   constructor(
     private readonly repo: SessionRepository,
-    private readonly templateRepo: TemplateRepository
+    private readonly templateRepo: TemplateRepository,
+    private readonly messageRepo?: MessageRepository
   ) {}
 
   async listSessions(query?: ListSessionsQuery): Promise<Session[]> {
@@ -72,7 +74,7 @@ export class SessionService {
 
   async updateSessionStatus(sessionId: string, action: SessionStatusAction): Promise<Session> {
     const session = await this.repo.findById(sessionId)
-    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session not found: ${sessionId}`)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session not found: ${sessionId}`)
 
     let nextStatus: string
     let reason: string
@@ -82,10 +84,33 @@ export class SessionService {
         nextStatus = 'archived'
         reason = 'user archive'
         break
-      case 'resume':
+      case 'resume': {
+        if (session.status !== 'completed') {
+          throw new ServiceError('SESSION_NOT_RESUMABLE', 'SESSION_NOT_RESUMABLE: Session is not completed')
+        }
+        if (session.state.stage !== 'closing') {
+          throw new ServiceError('SESSION_NOT_RESUMABLE', 'SESSION_NOT_RESUMABLE: Session stage is not closing')
+        }
+        // Verify summary checkpoint exists
+        let hasSummaryCheckpoint = false
+        if (this.messageRepo) {
+          const messages = await this.messageRepo.findBySessionId(sessionId)
+          hasSummaryCheckpoint = messages.some(m => m.metadata?.hostMessageKind === 'final_summary' && m.metadata?.summary)
+        } else {
+          hasSummaryCheckpoint = (session.state.history ?? []).some(h => h.reason?.includes('summary'))
+        }
+        if (!hasSummaryCheckpoint) {
+          throw new ServiceError('SESSION_NOT_RESUMABLE', 'SESSION_NOT_RESUMABLE: No summary checkpoint found')
+        }
         nextStatus = 'running'
-        reason = 'user resume'
+        reason = 'user resume after summary'
+        // Transition stage from closing back to developing
+        await this.repo.updateState(sessionId, {
+          ...session.state,
+          stage: 'developing',
+        }, reason)
         break
+      }
       case 'complete': {
         if (session.state.stage !== 'closing') {
           throw new ServiceError('SUMMARY_REQUIRED', 'Session must be in closing phase to complete')
@@ -107,7 +132,7 @@ export class SessionService {
 
   async getSessionState(sessionId: string): Promise<SessionStateResult> {
     const session = await this.repo.findById(sessionId)
-    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session not found: ${sessionId}`)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session not found: ${sessionId}`)
 
     return {
       sessionId: session.id,

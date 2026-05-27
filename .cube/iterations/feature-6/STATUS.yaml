@@ -61,7 +61,11 @@ tasks:
     test_total: 8
   - task: "Task-08：实现总结后继续追问恢复语义"
     test_file: session-resume-after-summary.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:28"
+    completed_at: "2026-05-27 18:42"
+    test_passed: 9
+    test_total: 9
   - task: "Task-09：实现邀请和总结 API endpoints"
     test_file: invitations-api.test.ts
     phase: locked
