@@ -94,6 +94,9 @@ export interface SendMessageResult {
   userMessage: DiscussionMessage | null
   agentMessages: DiscussionMessage[]
   activeSpeakerId: string | null
+  directorDecision?: DirectorDecisionRecord
+  pendingInvitation?: Invitation | null
+  summary?: DiscussionSummary | null
 }
 
 export interface ListSessionsQuery {

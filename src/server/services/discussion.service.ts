@@ -12,6 +12,8 @@ import type { DiscussionOrchestrator } from '@/engine/orchestrator'
 import type { GetInvitationResult, MessageListResult, RequestSummaryRequest, RequestSummaryResult, RespondInvitationRequest, RespondInvitationResult, SessionDetailResult, SendMessageResult, IntentRequest, IntentResponse, SkipInvitationRequest, SkipInvitationResult } from '@/types/api'
 import { ServiceError } from '@/server/errors'
 import { RuleBasedIntentClassifier } from '@/engine/intent'
+import { DefaultDirector } from '@/engine/director'
+import type { DirectorInput as DirectorInputType, DirectorDecisionRecord, Invitation, DiscussionSummary, DiscussionMessage as DMsg } from '@/types'
 
 const DEFAULT_MODEL = 'claude-3-5-haiku-latest'
 
@@ -295,7 +297,78 @@ export class DiscussionService {
       userMessage,
       agentMessages,
       activeSpeakerId: orchestratorResult?.activeSpeakerId ?? null,
+      ...(await this.runDirectorAndProduceSideEffects(session, [...existingMessages, ...(userMessage ? [userMessage] : [])], profiles, 'user_message', intentResponse?.intent)),
     }
+  }
+
+  private async runDirectorAndProduceSideEffects(
+    session: NonNullable<Parameters<SessionRepository['findById']>[0] extends undefined ? never : Awaited<ReturnType<SessionRepository['findById']>>>,
+    messages: DMsg[],
+    roles: AgentProfile[],
+    trigger: DirectorInputType['trigger'],
+    intent?: IntentResult
+  ): Promise<{ directorDecision?: DirectorDecisionRecord; pendingInvitation?: Invitation | null; summary?: DiscussionSummary | null }> {
+    if (!this.director || !this.directorDecisionRepo) {
+      return {}
+    }
+
+    const pendingInvitation = await this.invitationRepo?.findPendingBySessionId(session.id) ?? null
+    const input: DirectorInputType = {
+      session,
+      messages,
+      roles,
+      trigger,
+      intent,
+      pendingInvitation,
+    }
+
+    let decision: DirectorDecisionRecord
+    try {
+      decision = await this.director.decide(input)
+    } catch {
+      throw new ServiceError('DIRECTOR_DECISION_FAILED', 'Director decision failed')
+    }
+
+    await this.directorDecisionRepo.save(decision)
+
+    let resultInvitation: Invitation | undefined
+    let resultSummary: DiscussionSummary | null | undefined
+
+    if (decision.action === 'invite_user') {
+      const invitation: Invitation = {
+        invitationId: `inv-${crypto.randomUUID()}`,
+        sessionId: session.id,
+        status: 'pending',
+        prompt: '请发表您的看法',
+        reason: decision.reason,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      await this.invitationRepo?.save(invitation)
+      resultInvitation = invitation
+
+      await this.messageRepo?.save({
+        messageId: `msg-host-${crypto.randomUUID()}`,
+        sessionId: session.id,
+        type: 'host',
+        content: '主持人邀请您发表看法',
+        status: 'completed',
+        createdAt: new Date().toISOString(),
+        metadata: { hostMessageKind: 'invitation', invitationId: invitation.invitationId },
+      })
+    } else if (decision.action === 'trigger_event' && decision.eventCandidate) {
+      await this.messageRepo?.save({
+        messageId: `msg-host-${crypto.randomUUID()}`,
+        sessionId: session.id,
+        type: 'host',
+        content: `事件候选：${decision.eventCandidate.reason}`,
+        status: 'completed',
+        createdAt: new Date().toISOString(),
+        metadata: { hostMessageKind: 'event_candidate', eventCandidate: decision.eventCandidate },
+      })
+    }
+
+    return { directorDecision: decision, pendingInvitation: resultInvitation, summary: resultSummary }
   }
 
   async getPendingInvitation(sessionId: string): Promise<GetInvitationResult> {
