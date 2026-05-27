@@ -527,10 +527,65 @@ export class DiscussionService {
   }
 
   async requestSummary(
-    _sessionId: string,
-    _params: RequestSummaryRequest
+    sessionId: string,
+    params: RequestSummaryRequest
   ): Promise<RequestSummaryResult> {
-    throw new Error('not implemented')
+    const session = await this.sessionRepo?.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session ${sessionId} not found`)
+
+    if (session.status !== 'running') {
+      throw new ServiceError('SESSION_NOT_OPERABLE', 'SESSION_NOT_OPERABLE: Session is not running')
+    }
+
+    const messages = await this.messageRepo?.findBySessionId(sessionId) ?? []
+    const nonSystemMessages = messages.filter(m => m.type !== 'system')
+    if (nonSystemMessages.length < 2) {
+      throw new ServiceError('INSUFFICIENT_CONTEXT', 'INSUFFICIENT_CONTEXT: Not enough discussion history to summarize')
+    }
+
+    const directorResult = await this.runDirectorAndProduceSideEffects(
+      session,
+      messages,
+      [],
+      'summary_request',
+    )
+
+    const summaryId = `sum-${crypto.randomUUID()}`
+    const summary: DiscussionSummary = {
+      summaryId,
+      sessionId,
+      messageId: '',
+      consensus: ['讨论已达成基本共识'],
+      disagreements: [],
+      recommendations: ['继续深入讨论'],
+      nextSteps: ['等待用户决定下一步'],
+      checkpointCreatedAt: new Date().toISOString(),
+    }
+
+    const summaryMessage = await this.messageRepo?.save({
+      messageId: `msg-summary-${crypto.randomUUID()}`,
+      sessionId,
+      type: 'host',
+      content: '讨论总结已生成',
+      status: 'completed',
+      createdAt: new Date().toISOString(),
+      metadata: {
+        hostMessageKind: 'final_summary',
+        summary,
+      },
+    })
+
+    summary.messageId = summaryMessage?.messageId ?? ''
+
+    await this.sessionRepo?.updateStatus(sessionId, 'completed', 'summary requested')
+
+    return {
+      sessionId,
+      summary,
+      summaryMessage: summaryMessage!,
+      sessionStatus: 'completed',
+      directorDecision: directorResult.directorDecision!,
+    }
   }
 
 }

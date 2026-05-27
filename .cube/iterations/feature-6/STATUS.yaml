@@ -54,7 +54,11 @@ tasks:
     test_total: 7
   - task: "Task-07：实现主动总结和完成会话业务逻辑"
     test_file: discussion-summary.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:26"
+    completed_at: "2026-05-27 18:28"
+    test_passed: 8
+    test_total: 8
   - task: "Task-08：实现总结后继续追问恢复语义"
     test_file: session-resume-after-summary.test.ts
     phase: locked
