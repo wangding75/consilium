@@ -26,7 +26,11 @@ tasks:
     test_total: 12
   - task: "Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约"
     test_file: mock-invitation.repository.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:16"
+    completed_at: "2026-05-27 18:16"
+    test_passed: 33
+    test_total: 33
   - task: "Task-04：实现普通消息发送链路中的 Director 推进"
     test_file: discussion-director.test.ts
     phase: locked
