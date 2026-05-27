@@ -68,16 +68,36 @@ tasks:
     test_total: 9
   - task: "Task-09：实现邀请和总结 API endpoints"
     test_file: invitations-api.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:43"
+    test_passed: 6
+    test_total: 6
   - task: "Task-10：实现前端邀请状态管理"
     test_file: discussion-invitation-summary.store.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:43"
+    test_passed: 5
+    test_total: 5
   - task: "Task-11：实现讨论页邀请交互 UI"
     test_file: invite-card.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:43"
+    test_passed: 5
+    test_total: 5
   - task: "Task-12：实现主持人消息、事件候选和总结展示"
     test_file: host-message-summary.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:43"
+    test_passed: 11
+    test_total: 11
   - task: "Task-13：实现更多操作总结入口"
     test_file: more-sheet-summary-trigger.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:44"
+    test_passed: 5
+    test_total: 5
