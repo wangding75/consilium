@@ -50,7 +50,14 @@
    - `POST /api/discussions/{id}/invitations/{invId}/response` → 501 `NOT_IMPLEMENTED`（同上）
    - `POST /api/discussions/{id}/invitations/{invId}/skip` → 501 `NOT_IMPLEMENTED`（同上）
 
-**浏览器可用性**：`/usr/bin/google-chrome` 已检测到。服务端骨架端点（summary/response/skip route handler）尚未连接服务层，无法进行完整前端→后端链路验证。
+**浏览器级视觉验证**：已补做真实 Next.js dev server（port 3099）+ Playwright Chromium 验证。创建真实会话 `048f1a28-35f8-49a2-b201-271ff9e268f6`，完成讨论页、MoreSheet 总结入口、总结触发点击、首页会话卡片、移动端布局截图验证。
+
+**截图证据**：
+- `screenshots/10-discussion-live.png`：真实讨论页，包含 AppLayout、Header、RoleBar、消息区、输入区、发送按钮
+- `screenshots/11-more-sheet.png`：MoreSheet 展开，包含「让诸葛亮反驳一下」「总结当前结论」「触发投票」「归档会话」
+- `screenshots/12-after-summary-click.png`：点击「总结当前结论」后的界面状态
+- `screenshots/13-home-with-session.png`：首页会话列表视觉验证
+- `screenshots/14-discussion-mobile-live.png`：375x812 移动端讨论页布局验证
 
 **已知差距**：summary/response/skip 三个 API route handler 仍为 NOT_IMPLEMENTED 骨架，实际业务逻辑在 discussion.service.ts 中已完整实现并通过所有单元/集成测试，但未通过 HTTP 入口验证。此为下一迭代集成工作。
 
@@ -95,11 +102,11 @@
 | integration (director-integration) | Vitest 运行 director.test.ts + discussion-director.test.ts | 12 + 7 tests pass | PASS |
 | integration (feature-integration) | Vitest 运行 discussion-invitation/summary/skip/resume tests | 36 tests pass | PASS |
 | web-e2e | 启动 Next.js dev server, curl 真实 HTTP 请求 | 9 endpoints tested, 2 validation failures, 3 NOT_IMPLEMENTED | PARTIAL — 骨架端点未连接 |
-| frontend-ui | Vitest + jsdom 运行 React 组件测试 | 21 tests pass | PASS (单元级) |
+| frontend-ui | Vitest + jsdom 运行 React 组件测试；Playwright Chromium 真实浏览器截图验证 | 21 tests pass；screenshots/10-discussion-live.png、11-more-sheet.png、14-discussion-mobile-live.png | PASS |
 
 **未完整执行规范**：
 - `web-e2e`：summary/response/skip 端点返回 501，未通过 HTTP 入口验证业务逻辑。替代验证：服务层逻辑通过 36 个单元/集成测试覆盖。
-- `frontend-ui`：未启动真实浏览器进行视觉验证（CSS/AppLayout 截图）。替代验证：21 个 React 组件单元测试覆盖渲染逻辑和交互行为。
+- `frontend-ui`：已补做真实浏览器视觉验证。证据：`screenshots/10-discussion-live.png`、`screenshots/11-more-sheet.png`、`screenshots/12-after-summary-click.png`、`screenshots/13-home-with-session.png`、`screenshots/14-discussion-mobile-live.png`。
 
 ## Review Evidence
 
@@ -118,4 +125,4 @@
 
 2. **前端 store action 占位**：DiscussionStore 的 `loadPendingInvitation`、`respondInvitation`、`skipInvitation`、`requestSummary`、`resumeAfterSummary` 方法抛出 `not implemented` 错误。类型契约和状态结构已定义，具体实现依赖 API 端点连接。
 
-3. **前端未做浏览器级视觉验证**：因 API 骨架端点未连接，无法驱动完整前端交互流程进行 Playwright 验证。组件渲染逻辑已通过 jsdom 单元测试覆盖。
+3. **前端浏览器级视觉验证已补做**：已使用真实 Next.js dev server + Playwright Chromium 验证讨论页、MoreSheet 总结入口、总结触发点击、首页会话列表与移动端布局。当前仍受限于 API 骨架端点，无法验证 summary/response/skip 的完整前端→后端业务链路。
