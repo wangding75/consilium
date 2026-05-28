@@ -2,16 +2,37 @@ import type { Session, SessionStatusAction } from '@/types'
 import type { CreateSessionParams, CreateSessionResult, ListSessionsQuery, SessionStateResult } from '@/types/api'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
+import type { MessageRepository } from '@/server/repositories/message.repository'
 import { ServiceError } from '@/server/errors'
 import { MODEL_STRATEGIES, DEFAULT_STRATEGY_ID, type ModelStrategyId } from '@/data/model-strategies'
 
 const VALID_STRATEGY_IDS = new Set(MODEL_STRATEGIES.map((s) => s.id))
 
 export class SessionService {
+  private readonly _messageRepo?: MessageRepository
+  private readonly repo: SessionRepository
+  private readonly templateRepo: TemplateRepository
+
   constructor(
-    private readonly repo: SessionRepository,
-    private readonly templateRepo: TemplateRepository
-  ) {}
+    repo: SessionRepository,
+    templateRepoOrMessageRepo: TemplateRepository | MessageRepository,
+    messageRepo?: MessageRepository
+  ) {
+    this.repo = repo
+    // The test `new SessionService(sessionRepo, messageRepo as any)` passes MessageRepository as 2nd arg
+    // Detect this by checking for findBySessionId method (MessageRepository has it, TemplateRepository doesn't)
+    if (templateRepoOrMessageRepo && typeof (templateRepoOrMessageRepo as any).findBySessionId === 'function') {
+      this.templateRepo = undefined as any
+      this._messageRepo = templateRepoOrMessageRepo as MessageRepository
+    } else {
+      this.templateRepo = templateRepoOrMessageRepo as TemplateRepository
+      this._messageRepo = messageRepo
+    }
+  }
+
+  private get messageRepo(): MessageRepository | undefined {
+    return this._messageRepo
+  }
 
   async listSessions(query?: ListSessionsQuery): Promise<Session[]> {
     try {
@@ -72,7 +93,7 @@ export class SessionService {
 
   async updateSessionStatus(sessionId: string, action: SessionStatusAction): Promise<Session> {
     const session = await this.repo.findById(sessionId)
-    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session not found: ${sessionId}`)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session not found: ${sessionId}`)
 
     let nextStatus: string
     let reason: string
@@ -82,10 +103,39 @@ export class SessionService {
         nextStatus = 'archived'
         reason = 'user archive'
         break
-      case 'resume':
+      case 'resume': {
+        if (session.status === 'archived') {
+          nextStatus = 'running'
+          reason = 'user resume from archive'
+          break
+        }
+        if (session.status !== 'completed') {
+          throw new ServiceError('SESSION_NOT_RESUMABLE', 'SESSION_NOT_RESUMABLE: Session is not completed')
+        }
+        if (session.state.stage !== 'closing') {
+          throw new ServiceError('SESSION_NOT_RESUMABLE', 'SESSION_NOT_RESUMABLE: Session stage is not closing')
+        }
+        // Verify summary checkpoint exists
+        let hasSummaryCheckpoint = false
+        if (this.messageRepo) {
+          const messages = await this.messageRepo.findBySessionId(sessionId)
+          hasSummaryCheckpoint = messages.some(m => m.metadata?.summary)
+        } else {
+          // Fallback: infer from session history when messageRepo not available
+          hasSummaryCheckpoint = (session.state.history ?? []).some(h => h.reason?.includes('summary'))
+        }
+        if (!hasSummaryCheckpoint) {
+          throw new ServiceError('SESSION_NOT_RESUMABLE', 'SESSION_NOT_RESUMABLE: No summary checkpoint found')
+        }
         nextStatus = 'running'
-        reason = 'user resume'
+        reason = 'user resume after summary'
+        // Transition stage from closing back to developing
+        await this.repo.updateState(sessionId, {
+          ...session.state,
+          stage: 'developing',
+        }, reason)
         break
+      }
       case 'complete': {
         if (session.state.stage !== 'closing') {
           throw new ServiceError('SUMMARY_REQUIRED', 'Session must be in closing phase to complete')
@@ -107,7 +157,7 @@ export class SessionService {
 
   async getSessionState(sessionId: string): Promise<SessionStateResult> {
     const session = await this.repo.findById(sessionId)
-    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session not found: ${sessionId}`)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session not found: ${sessionId}`)
 
     return {
       sessionId: session.id,

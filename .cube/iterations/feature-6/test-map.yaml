@@ -1,0 +1,71 @@
+tasks:
+  - task: Task-01：定义 Director、邀请、总结和消息语义契约
+    test_file: director-invitation-contract.test.ts
+    test_cases: 34
+  - task: Task-02：实现 Director 结构化决策骨架
+    test_file: director.test.ts
+    test_cases: 12
+  - task: Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约
+    test_file: mock-invitation.repository.test.ts
+    test_cases: 20
+  - task: Task-04：实现普通消息发送链路中的 Director 推进
+    test_file: discussion-director.test.ts
+    test_cases: 7
+  - task: Task-05：实现邀请回应业务逻辑
+    test_file: discussion-invitation.test.ts
+    test_cases: 12
+  - task: Task-06：实现跳过邀请业务逻辑
+    test_file: discussion-skip-invitation.test.ts
+    test_cases: 7
+  - task: Task-07：实现主动总结和完成会话业务逻辑
+    test_file: discussion-summary.test.ts
+    test_cases: 8
+  - task: Task-08：实现总结后继续追问恢复语义
+    test_file: session-resume-after-summary.test.ts
+    test_cases: 9
+  - task: Task-09：实现邀请和总结 API endpoints
+    test_file: invitations-api.test.ts
+    test_cases: 6
+  - task: Task-10：实现前端邀请状态管理
+    test_file: discussion-invitation-summary.store.test.ts
+    test_cases: 5
+  - task: Task-11：实现讨论页邀请交互 UI
+    test_file: invite-card.test.tsx
+    test_cases: 5
+  - task: Task-12：实现主持人消息、事件候选和总结展示
+    test_file: host-message-summary.test.tsx
+    test_cases: 11
+  - task: Task-13：实现更多操作总结入口
+    test_file: more-sheet-summary-trigger.test.tsx
+    test_cases: 5
+
+type_tests:
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: director-integration.test.ts
+    covers:
+      - Task-02：实现 Director 结构化决策骨架
+      - Task-04：实现普通消息发送链路中的 Director 推进
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: invitations-summary-web-e2e.test.ts
+    covers:
+      - Task-09：实现邀请和总结 API endpoints
+      - Task-05：实现邀请回应业务逻辑
+      - Task-06：实现跳过邀请业务逻辑
+      - Task-07：实现主动总结和完成会话业务逻辑
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: feature-integration.test.ts
+    covers:
+      - Task-04：实现普通消息发送链路中的 Director 推进
+      - Task-05：实现邀请回应业务逻辑
+      - Task-07：实现主动总结和完成会话业务逻辑
+      - Task-08：实现总结后继续追问恢复语义
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: host-message-summary.test.tsx
+    covers:
+      - Task-12：实现主持人消息、事件候选和总结展示
+      - Task-11：实现讨论页邀请交互 UI
+      - Task-13：实现更多操作总结入口

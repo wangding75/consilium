@@ -8,6 +8,9 @@ import type {
   SessionLifecycleStatus,
   SessionStatusAction,
   StateHistoryEntry,
+  DirectorDecisionRecord,
+  DiscussionSummary,
+  Invitation,
 } from '@/types'
 
 export interface ApiError {
@@ -79,6 +82,9 @@ export interface IntentResponse {
   clientMessageId?: string
   intent: IntentResult
   activeSpeakerId: string | null
+  directorDecision?: DirectorDecisionRecord
+  pendingInvitation?: Invitation | null
+  summary?: DiscussionSummary | null
 }
 
 export interface SendMessageResult {
@@ -88,6 +94,9 @@ export interface SendMessageResult {
   userMessage: DiscussionMessage | null
   agentMessages: DiscussionMessage[]
   activeSpeakerId: string | null
+  directorDecision?: DirectorDecisionRecord
+  pendingInvitation?: Invitation | null
+  summary?: DiscussionSummary | null
 }
 
 export interface ListSessionsQuery {
@@ -106,4 +115,52 @@ export interface SessionStateResult {
   phase: DiscussionStage
   state: DiscussionState
   history: StateHistoryEntry[]
+}
+
+
+export interface GetInvitationResult {
+  sessionId: string
+  invitation: Invitation | null
+}
+
+export interface RespondInvitationRequest {
+  content: string
+  clientMessageId?: string
+}
+
+export interface RespondInvitationResult {
+  sessionId: string
+  invitation: Invitation
+  userMessage: DiscussionMessage | null
+  agentMessages: DiscussionMessage[]
+  activeSpeakerId: string | null
+  directorDecision?: DirectorDecisionRecord
+  pendingInvitation?: Invitation | null
+  summary?: DiscussionSummary | null
+}
+
+export interface SkipInvitationRequest {
+  clientMessageId?: string
+}
+
+export interface SkipInvitationResult {
+  sessionId: string
+  invitation: Invitation
+  agentMessages: DiscussionMessage[]
+  activeSpeakerId: string | null
+  directorDecision?: DirectorDecisionRecord
+  pendingInvitation?: Invitation | null
+}
+
+export interface RequestSummaryRequest {
+  clientMessageId?: string
+  source: 'more_sheet' | 'composer' | 'auto'
+}
+
+export interface RequestSummaryResult {
+  sessionId: string
+  summary: DiscussionSummary
+  summaryMessage: DiscussionMessage
+  sessionStatus: SessionLifecycleStatus
+  directorDecision: DirectorDecisionRecord
 }

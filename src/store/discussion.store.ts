@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, createElement, useContext, useReducer, useRef, useCallback, type ReactNode } from 'react'
-import type { DiscussionMessage, IntentResult } from '@/types'
+import type { DiscussionMessage, DiscussionSummary, IntentResult, Invitation } from '@/types'
 import type { ApiError, SessionDetailResult } from '@/types/api'
 
 export type SessionSummary = SessionDetailResult
@@ -18,6 +18,9 @@ export interface DiscussionStoreState {
   recognizingIntentBySessionId?: Record<string, boolean>
   intentErrorBySessionId?: Record<string, ApiError | null>
   pendingCommandBySessionId?: Record<string, string | null>
+  pendingInvitationBySessionId?: Record<string, Invitation | null>
+  summaryBySessionId?: Record<string, DiscussionSummary | null>
+  directorErrorBySessionId?: Record<string, ApiError | null>
 }
 
 export interface DiscussionActions {
@@ -28,6 +31,11 @@ export interface DiscussionActions {
   clearError(sessionId: string): void
   continueAsPlainMessage(sessionId: string): Promise<void>
   fillComposer(sessionId: string, content: string): void
+  loadPendingInvitation(sessionId: string): Promise<void>
+  respondInvitation(sessionId: string, invitationId: string, content: string): Promise<void>
+  skipInvitation(sessionId: string, invitationId: string): Promise<void>
+  requestSummary(sessionId: string): Promise<void>
+  resumeAfterSummary(sessionId: string): Promise<void>
 }
 
 export function generateClientMessageId(): string {
@@ -51,6 +59,9 @@ const initialState: DiscussionStoreState = {
   recognizingIntentBySessionId: {},
   intentErrorBySessionId: {},
   pendingCommandBySessionId: {},
+  pendingInvitationBySessionId: {},
+  summaryBySessionId: {},
+  directorErrorBySessionId: {},
 }
 
 export type DiscussionAction =
@@ -63,6 +74,11 @@ export type DiscussionAction =
   | { type: 'MESSAGE_SENT'; sessionId: string; clientMessageId: string; userMessage: DiscussionMessage | null; agentMessages: DiscussionMessage[]; activeSpeakerId: string | null }
   | { type: 'MESSAGE_FAILED'; sessionId: string; clientMessageId: string; error: ApiError }
   | { type: 'SENDING_STATUS'; clientMessageId: string; status: 'pending' | 'completed' | 'failed' }
+  | { type: 'INVITATION_LOADED'; sessionId: string; invitation: Invitation | null }
+  | { type: 'INVITATION_RESPONDED'; sessionId: string; invitation: Invitation; userMessage: DiscussionMessage | null; agentMessages: DiscussionMessage[]; activeSpeakerId: string | null; pendingInvitation: Invitation | null }
+  | { type: 'INVITATION_SKIPPED'; sessionId: string; invitation: Invitation; agentMessages: DiscussionMessage[]; activeSpeakerId: string | null; pendingInvitation: Invitation | null }
+  | { type: 'SUMMARY_LOADED'; sessionId: string; summary: DiscussionSummary }
+  | { type: 'DIRECTOR_ERROR_SET'; sessionId: string; error: ApiError | null }
 
 function mergeMessages(
   existing: DiscussionMessage[],
@@ -141,6 +157,42 @@ export function discussionReducer(
     }
     case 'SENDING_STATUS':
       return { ...state, sendingByClientMessageId: { ...state.sendingByClientMessageId, [action.clientMessageId]: action.status } }
+    case 'INVITATION_LOADED':
+      return {
+        ...state,
+        pendingInvitationBySessionId: { ...state.pendingInvitationBySessionId, [action.sessionId]: action.invitation },
+      }
+    case 'INVITATION_RESPONDED': {
+      const current = state.messagesBySessionId[action.sessionId] ?? []
+      const incoming = [...(action.userMessage ? [action.userMessage] : []), ...(action.agentMessages ?? [])]
+      const merged = mergeMessages(current, incoming)
+      return {
+        ...state,
+        messagesBySessionId: { ...state.messagesBySessionId, [action.sessionId]: merged },
+        activeSpeakerBySessionId: { ...state.activeSpeakerBySessionId, [action.sessionId]: action.activeSpeakerId },
+        pendingInvitationBySessionId: { ...state.pendingInvitationBySessionId, [action.sessionId]: action.pendingInvitation },
+        directorErrorBySessionId: { ...state.directorErrorBySessionId, [action.sessionId]: null },
+      }
+    }
+    case 'INVITATION_SKIPPED': {
+      const current = state.messagesBySessionId[action.sessionId] ?? []
+      const merged = mergeMessages(current, action.agentMessages ?? [])
+      return {
+        ...state,
+        messagesBySessionId: { ...state.messagesBySessionId, [action.sessionId]: merged },
+        activeSpeakerBySessionId: { ...state.activeSpeakerBySessionId, [action.sessionId]: action.activeSpeakerId },
+        pendingInvitationBySessionId: { ...state.pendingInvitationBySessionId, [action.sessionId]: action.pendingInvitation },
+        directorErrorBySessionId: { ...state.directorErrorBySessionId, [action.sessionId]: null },
+      }
+    }
+    case 'SUMMARY_LOADED':
+      return {
+        ...state,
+        summaryBySessionId: { ...state.summaryBySessionId, [action.sessionId]: action.summary },
+        directorErrorBySessionId: { ...state.directorErrorBySessionId, [action.sessionId]: null },
+      }
+    case 'DIRECTOR_ERROR_SET':
+      return { ...state, directorErrorBySessionId: { ...state.directorErrorBySessionId, [action.sessionId]: action.error } }
     default:
       return state
   }
@@ -347,6 +399,107 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
       // Composer fill is handled by draftContent prop wired to MessageInput
     }, []),
 
+
+
+    loadPendingInvitation: useCallback(async (sessionId: string) => {
+      try {
+        const res = await fetch(`/api/discussions/${sessionId}/invitations`)
+        const json = await res.json()
+        if (json.success) {
+          dispatch({ type: 'INVITATION_LOADED', sessionId, invitation: json.data.invitation })
+        } else {
+          dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, []),
+
+    respondInvitation: useCallback(async (sessionId: string, invitationId: string, content: string) => {
+      try {
+        const res = await fetch(`/api/discussions/${sessionId}/invitations/${invitationId}/response`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content }),
+        })
+        const json = await res.json()
+        if (json.success) {
+          dispatch({
+            type: 'INVITATION_RESPONDED',
+            sessionId,
+            invitation: json.data.invitation,
+            userMessage: json.data.userMessage,
+            agentMessages: json.data.agentMessages,
+            activeSpeakerId: json.data.activeSpeakerId,
+            pendingInvitation: json.data.pendingInvitation ?? null,
+          })
+        } else {
+          dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, []),
+
+    skipInvitation: useCallback(async (sessionId: string, invitationId: string) => {
+      try {
+        const res = await fetch(`/api/discussions/${sessionId}/invitations/${invitationId}/skip`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+        const json = await res.json()
+        if (json.success) {
+          dispatch({
+            type: 'INVITATION_SKIPPED',
+            sessionId,
+            invitation: json.data.invitation,
+            agentMessages: json.data.agentMessages,
+            activeSpeakerId: json.data.activeSpeakerId,
+            pendingInvitation: json.data.pendingInvitation ?? null,
+          })
+        } else {
+          dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, []),
+
+    requestSummary: useCallback(async (sessionId: string) => {
+      try {
+        const res = await fetch(`/api/discussions/${sessionId}/summary`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ source: 'more_sheet' }),
+        })
+        const json = await res.json()
+        if (json.success) {
+          dispatch({ type: 'SUMMARY_LOADED', sessionId, summary: json.data.summary })
+        } else {
+          dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, []),
+
+    resumeAfterSummary: useCallback(async (sessionId: string) => {
+      try {
+        const res = await fetch(`/api/sessions/${sessionId}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'resume' }),
+        })
+        const json = await res.json()
+        if (json.success) {
+          dispatch({ type: 'SUMMARY_LOADED', sessionId, summary: null as unknown as DiscussionSummary })
+        } else {
+          dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, []),
     clearError: useCallback((sessionId: string) => {
       dispatch({ type: 'ERROR_SET', sessionId, error: null })
     }, []),

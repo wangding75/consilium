@@ -1,0 +1,103 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/6
+
+tasks:
+  - task: "Task-01：定义 Director、邀请、总结和消息语义契约"
+    test_file: director-invitation-contract.test.ts
+    phase: done
+    started_at: "2026-05-27 18:12"
+    completed_at: "2026-05-27 18:12"
+    test_passed: 34
+    test_total: 34
+  - task: "Task-02：实现 Director 结构化决策骨架"
+    test_file: director.test.ts
+    phase: done
+    started_at: "2026-05-27 18:13"
+    completed_at: "2026-05-27 18:15"
+    test_passed: 12
+    test_total: 12
+  - task: "Task-03：实现邀请、Director 决策和消息 checkpoint 仓储契约"
+    test_file: mock-invitation.repository.test.ts
+    phase: done
+    started_at: "2026-05-27 18:16"
+    completed_at: "2026-05-27 18:16"
+    test_passed: 33
+    test_total: 33
+  - task: "Task-04：实现普通消息发送链路中的 Director 推进"
+    test_file: discussion-director.test.ts
+    phase: done
+    started_at: "2026-05-27 18:16"
+    completed_at: "2026-05-27 18:19"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-05：实现邀请回应业务逻辑"
+    test_file: discussion-invitation.test.ts
+    phase: done
+    started_at: "2026-05-27 18:19"
+    completed_at: "2026-05-27 18:25"
+    test_passed: 12
+    test_total: 12
+  - task: "Task-06：实现跳过邀请业务逻辑"
+    test_file: discussion-skip-invitation.test.ts
+    phase: done
+    started_at: "2026-05-27 18:25"
+    completed_at: "2026-05-27 18:26"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-07：实现主动总结和完成会话业务逻辑"
+    test_file: discussion-summary.test.ts
+    phase: done
+    started_at: "2026-05-27 18:26"
+    completed_at: "2026-05-27 18:28"
+    test_passed: 8
+    test_total: 8
+  - task: "Task-08：实现总结后继续追问恢复语义"
+    test_file: session-resume-after-summary.test.ts
+    phase: done
+    started_at: "2026-05-27 18:28"
+    completed_at: "2026-05-27 18:42"
+    test_passed: 9
+    test_total: 9
+  - task: "Task-09：实现邀请和总结 API endpoints"
+    test_file: invitations-api.test.ts
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:43"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-10：实现前端邀请状态管理"
+    test_file: discussion-invitation-summary.store.test.ts
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:43"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-11：实现讨论页邀请交互 UI"
+    test_file: invite-card.test.tsx
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:43"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-12：实现主持人消息、事件候选和总结展示"
+    test_file: host-message-summary.test.tsx
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:43"
+    test_passed: 11
+    test_total: 11
+  - task: "Task-13：实现更多操作总结入口"
+    test_file: more-sheet-summary-trigger.test.tsx
+    phase: done
+    started_at: "2026-05-27 18:43"
+    completed_at: "2026-05-27 18:44"
+    test_passed: 5
+    test_total: 5
