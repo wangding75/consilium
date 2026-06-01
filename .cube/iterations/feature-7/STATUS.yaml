@@ -12,7 +12,11 @@ branch: feature/7
 tasks:
   - task: "Task-01：定义事件、投票、检测和 API 契约"
     test_file: src/types/events-contract.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-01 10:00"
+    completed_at: "2026-06-01 10:00"
+    test_passed: 25
+    test_total: 25
   - task: "Task-02：实现四类事件检测规则"
     test_file: src/engine/events.test.ts
     phase: locked
