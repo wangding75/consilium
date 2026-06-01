@@ -1,18 +1,23 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import type { DiscussionMessage } from '@/types'
+import type { DiscussionMessage, EventRecord, VoteRecord } from '@/types'
 import type { ApiError } from '@/types/api'
+import { EventCard } from './event-card'
 import { MessageBubble } from './message-bubble'
 import { TypingIndicator } from './typing-indicator'
 
 interface MessageListProps {
   messages: DiscussionMessage[]
+  events?: EventRecord[]
+  votes?: VoteRecord[]
+  pendingVoteByEventId?: Record<string, boolean>
   isLoading: boolean
   error?: ApiError | null
   intentError?: ApiError | null
   typingSpeakerName?: string | null
   debugIntent?: boolean
+  onVote?: (eventId: string, optionId: string) => void
   onRetry?: () => void
   onMessageRetry?: (clientMessageId: string) => void
   onRewriteCommand?: () => void
@@ -21,11 +26,15 @@ interface MessageListProps {
 
 export function MessageList({
   messages,
+  events = [],
+  votes = [],
+  pendingVoteByEventId = {},
   isLoading,
   error,
   intentError,
   typingSpeakerName,
   debugIntent,
+  onVote,
   onRetry,
   onMessageRetry,
   onRewriteCommand,
@@ -79,9 +88,23 @@ export function MessageList({
       {!isLoading && messages.length === 0 && !error && (
         <div className="text-sm text-text-secondary">暂无消息</div>
       )}
-      {messages.map((message) => (
-        <MessageBubble key={message.messageId} msg={message} onRetry={onMessageRetry} debugIntent={debugIntent} />
-      ))}
+      {messages.map((message) => {
+        const event = message.metadata?.eventId
+          ? events.find((candidate) => candidate.eventId === message.metadata?.eventId)
+          : undefined
+        if (event) {
+          return (
+            <EventCard
+              key={message.messageId}
+              event={event}
+              votes={votes.filter((vote) => vote.eventId === event.eventId)}
+              pending={pendingVoteByEventId[event.eventId] ?? false}
+              onVote={onVote}
+            />
+          )
+        }
+        return <MessageBubble key={message.messageId} msg={message} onRetry={onMessageRetry} debugIntent={debugIntent} />
+      })}
       {typingSpeakerName !== undefined && typingSpeakerName !== null && (
         <TypingIndicator speakerName={typingSpeakerName} />
       )}

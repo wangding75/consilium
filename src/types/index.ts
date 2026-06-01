@@ -37,7 +37,80 @@ export interface Role {
   avatarEmoji?: string
 }
 
-export type EventType = 'face-slap' | 'side-taking' | 'vote' | 'reversal'
+export type EventType = 'slap' | 'camp' | 'vote' | 'reverse'
+export type EventTrigger = 'auto' | 'manual'
+export type EventStatus = 'active' | 'closed'
+
+export interface SlapPayload {
+  refuter: string
+  refuted: string
+  refutedView: string
+  reason: string
+}
+
+export interface CampPayload {
+  camps: Array<{
+    name: string
+    roleIds: string[]
+    stance: string
+  }>
+}
+
+export interface VoteOption {
+  id: string
+  label: string
+  roles: string[]
+}
+
+export interface VotePayload {
+  question: string
+  options: VoteOption[]
+  tally: Record<string, number>
+}
+
+export interface ReversePayload {
+  premise: string
+  newVariable: string
+  impact: string
+}
+
+export type EventPayload = SlapPayload | CampPayload | VotePayload | ReversePayload
+
+export interface EventRecord {
+  eventId: string
+  sessionId: string
+  eventType: EventType
+  trigger: EventTrigger
+  status: EventStatus
+  title: string
+  description: string
+  reason: string
+  payload: EventPayload
+  relatedMessageId: string
+  directorConsumedAt?: string
+  createdAt: string
+}
+
+export interface VoteRecord {
+  voteId: string
+  sessionId: string
+  eventId: string
+  voterType: 'user' | 'role'
+  voterId: string
+  optionId: string
+  createdAt: string
+}
+
+export interface EventDetectionResult {
+  eventTriggered: boolean
+  eventType?: EventType
+  confidence: number
+  reason: string
+  title?: string
+  description?: string
+  payload?: EventPayload
+  relatedMessageId?: string
+}
 
 export interface CommandTarget {
   roleId?: string
@@ -183,6 +256,8 @@ export interface DiscussionMessage {
     intentLabel?: string
     hostMessageKind?: HostMessageKind
     invitationId?: string
+    eventId?: string
+    eventCandidate?: DirectorEventCandidate
     summary?: DiscussionSummary
   }
 }
@@ -263,7 +338,7 @@ export interface ContextBuilderInput {
 
 export type DirectorAction = 'continue' | 'invite_user' | 'trigger_event' | 'conclude'
 export type DirectorTrigger = 'opening' | 'user_message' | 'invitation_response' | 'invitation_skip' | 'summary_request' | 'auto'
-export type HostMessageKind = 'opening' | 'transition' | 'invitation' | 'event_candidate' | 'stage_summary' | 'final_summary'
+export type HostMessageKind = 'opening' | 'transition' | 'invitation' | 'event_candidate' | 'event' | 'stage_summary' | 'final_summary'
 export type InvitationStatus = 'pending' | 'responded' | 'skipped' | 'expired'
 
 export interface DirectorEventCandidate {
@@ -306,8 +381,9 @@ export interface DirectorInput {
   roles: AgentProfile[]
   trigger: DirectorTrigger
   intent?: IntentResult
-  pendingInvitation?: Invitation | null
   lastSchedulerHint?: SchedulerHint
+  pendingInvitation?: Invitation | null
+  recentEvents?: EventRecord[]
 }
 
 export interface DirectorDecisionRecord {

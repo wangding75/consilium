@@ -4,6 +4,8 @@ import { MockMessageRepository } from './mock-message.repository'
 import { MockAgentCallLogRepository } from './mock-agent-call-log.repository'
 import { MockInvitationRepository } from './mock-invitation.repository'
 import { MockDirectorDecisionRepository } from './mock-director-decision.repository'
+import { MockEventRepository } from './mock-event.repository'
+import { MockVoteRepository } from './mock-vote.repository'
 
 declare global {
   // eslint-disable-next-line no-var
@@ -18,6 +20,10 @@ declare global {
   var __mockInvitationRepo: MockInvitationRepository | undefined
   // eslint-disable-next-line no-var
   var __mockDirectorDecisionRepo: MockDirectorDecisionRepository | undefined
+  // eslint-disable-next-line no-var
+  var __mockEventRepo: MockEventRepository | undefined
+  // eslint-disable-next-line no-var
+  var __mockVoteRepo: MockVoteRepository | undefined
 }
 
 globalThis.__mockSessionRepo ??= new MockSessionRepository()
@@ -26,6 +32,8 @@ globalThis.__mockMessageRepo ??= new MockMessageRepository()
 globalThis.__mockAgentCallLogRepo ??= new MockAgentCallLogRepository()
 globalThis.__mockInvitationRepo ??= new MockInvitationRepository()
 globalThis.__mockDirectorDecisionRepo ??= new MockDirectorDecisionRepository()
+globalThis.__mockEventRepo ??= new MockEventRepository()
+globalThis.__mockVoteRepo ??= new MockVoteRepository()
 
 export const sharedSessionRepo = globalThis.__mockSessionRepo
 export const sharedTemplateRepo = globalThis.__mockTemplateRepo
@@ -33,3 +41,5 @@ export const sharedMessageRepo = globalThis.__mockMessageRepo
 export const sharedAgentCallLogRepo = globalThis.__mockAgentCallLogRepo
 export const sharedInvitationRepo = globalThis.__mockInvitationRepo
 export const sharedDirectorDecisionRepo = globalThis.__mockDirectorDecisionRepo
+export const sharedEventRepo = globalThis.__mockEventRepo
+export const sharedVoteRepo = globalThis.__mockVoteRepo

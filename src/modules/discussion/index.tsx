@@ -32,6 +32,8 @@ function DiscussionModuleInner({ sessionId }: DiscussionModuleProps) {
   const isTyping = state.typingBySessionId[sessionId] ?? false
   const typingSpeaker = state.typingSpeakerBySessionId[sessionId] ?? null
   const roles = session?.roles ?? []
+  const events = state.eventsBySessionId[sessionId] ?? []
+  const votes = state.votesBySessionId[sessionId] ?? []
 
   const canIntervene = session?.status === 'running'
   const intentError = state.intentErrorBySessionId?.[sessionId] ?? null
@@ -72,10 +74,14 @@ function DiscussionModuleInner({ sessionId }: DiscussionModuleProps) {
       )}
       <MessageList
         messages={messages}
+        events={events}
+        votes={votes}
+        pendingVoteByEventId={state.pendingVoteByEventId}
         isLoading={isLoading}
         error={error}
         intentError={intentError}
         typingSpeakerName={typingSpeakerName}
+        onVote={(eventId, optionId) => actions.submitVote(sessionId, eventId, optionId)}
         onRetry={() => actions.loadMessages(sessionId)}
         onMessageRetry={(clientMessageId) => actions.retryMessage(sessionId, clientMessageId)}
         onRewriteCommand={() => actions.fillComposer(sessionId, state.pendingCommandBySessionId?.[sessionId] ?? '')}
@@ -83,6 +89,19 @@ function DiscussionModuleInner({ sessionId }: DiscussionModuleProps) {
       />
       <MessageInput
         onSend={(content) => actions.sendMessage(sessionId, content)}
+        onTriggerEvent={(question) => actions.triggerEvent(sessionId, {
+          eventType: 'vote',
+          title: question,
+          description: question,
+          payload: {
+            question,
+            options: [
+              { id: 'yes', label: '支持', roles: [] },
+              { id: 'no', label: '反对', roles: [] },
+            ],
+            tally: { yes: 0, no: 0 },
+          },
+        })}
         disabled={isLoading || !canIntervene}
       />
       <MoreSheet isOpen={isMoreOpen} onClose={() => setIsMoreOpen(false)} canIntervene={canIntervene} />

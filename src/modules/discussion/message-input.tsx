@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 
 interface MessageInputProps {
   onSend: (content: string) => void
+  onTriggerEvent?: (question: string) => void
   disabled?: boolean
   isRecognizingIntent?: boolean
   draftContent?: string | null
@@ -14,6 +15,7 @@ interface MessageInputProps {
 
 export function MessageInput({
   onSend,
+  onTriggerEvent,
   disabled = false,
   isRecognizingIntent = false,
   draftContent,
@@ -35,6 +37,11 @@ export function MessageInput({
   const handleSend = () => {
     const trimmed = content.trim()
     if (!trimmed || disabled) return
+    if (trimmed.startsWith('#')) {
+      onTriggerEvent?.(trimmed.slice(1).trim() || '发起投票')
+      setContent('')
+      return
+    }
     onSend(trimmed)
     setContent('')
   }
@@ -42,7 +49,7 @@ export function MessageInput({
   return (
     <div className="flex gap-2 p-4 border-t border-border">
       <button type="button" className="text-sm text-muted-foreground" disabled={disabled} aria-label="@" onClick={() => { setContent('@'); }}>@</button>
-      <button type="button" className="text-sm text-muted-foreground" disabled={disabled} aria-label="#" onClick={() => { setContent('#'); }}>#</button>
+      <button type="button" className="text-sm text-muted-foreground" disabled={disabled} aria-label="#" onClick={() => onTriggerEvent?.('发起投票')}>#</button>
       <button type="button" className="text-sm text-muted-foreground" disabled={disabled} aria-label="总结" onClick={() => { setContent('总结当前结论'); }}>总结</button>
       <input
         ref={inputRef}

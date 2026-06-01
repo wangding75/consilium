@@ -11,6 +11,10 @@ import type {
   DirectorDecisionRecord,
   DiscussionSummary,
   Invitation,
+  EventRecord,
+  VoteRecord,
+  EventType,
+  EventPayload,
 } from '@/types'
 
 export interface ApiError {
@@ -93,10 +97,39 @@ export interface SendMessageResult {
   clientMessageId?: string
   userMessage: DiscussionMessage | null
   agentMessages: DiscussionMessage[]
+  eventMessages?: DiscussionMessage[]
+  createdEvents?: EventRecord[]
   activeSpeakerId: string | null
   directorDecision?: DirectorDecisionRecord
   pendingInvitation?: Invitation | null
   summary?: DiscussionSummary | null
+}
+
+export interface CreateEventRequest {
+  eventType: EventType
+  title: string
+  description: string
+  payload: EventPayload
+}
+
+export interface VoteRequest {
+  optionId: string
+}
+
+export interface EventListResult {
+  sessionId: string
+  events: EventRecord[]
+  votes: VoteRecord[]
+}
+
+export interface CreateEventResult {
+  event: EventRecord
+  message: DiscussionMessage
+}
+
+export interface VoteResult {
+  vote: VoteRecord
+  event: EventRecord
 }
 
 export interface ListSessionsQuery {

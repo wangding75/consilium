@@ -6,7 +6,7 @@ export interface Director {
 
 export class DefaultDirector implements Director {
   async decide(input: DirectorInput): Promise<DirectorDecisionRecord> {
-    const { session, messages, roles, trigger, pendingInvitation } = input
+    const { session, messages, roles, trigger, pendingInvitation, recentEvents = [] } = input
     const stage = session.state.stage
     const turnCount = session.state.turnCount
     const decisionId = `dec-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
@@ -14,6 +14,18 @@ export class DefaultDirector implements Director {
     // If pending invitation exists, never return invite_user
     if (pendingInvitation && pendingInvitation.status === 'pending') {
       return this.buildDecision(decisionId, session.id, 'continue', 'pending invitation exists, continue discussion', 0.9)
+    }
+
+    const unconsumedEvent = recentEvents.find((event) => !event.directorConsumedAt)
+    if (unconsumedEvent) {
+      return this.buildDecision(
+        decisionId,
+        session.id,
+        'continue',
+        `event result observed: ${unconsumedEvent.eventType}`,
+        0.8,
+        { schedulerHint: { preferredAgentType: 'host', reason: unconsumedEvent.title } }
+      )
     }
 
     // Trigger-based decisions
@@ -52,7 +64,7 @@ export class DefaultDirector implements Director {
 
     if (stage === 'climax' && turnCount >= 6) {
       return this.buildDecision(decisionId, session.id, 'trigger_event', 'dramatic tension detected at climax', 0.75, {
-        eventCandidate: { type: 'face-slap', reason: 'strong disagreement between roles' },
+        eventCandidate: { type: 'slap', reason: 'strong disagreement between roles' },
       })
     }
 

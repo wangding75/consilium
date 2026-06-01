@@ -111,3 +111,15 @@
 - 修改：src/types/director-invitation-contract.test.ts
 
 ---
+
+## 代码审查
+
+- Reviewer Agent: ecc:code-reviewer
+- Security Review: not needed (in-memory mock, no external I/O, no user-facing HTML)
+- Fixes Applied:
+  1. `events.ts` — cooldown anchor：`.find()` 改为 `.findLast()`，锚定最近同类事件
+  2. `discussion.service.ts` — 消除 `undefined as never` 类型绕过，`detectAndCreateEvents` 改为接收并透传真实 `session` 对象
+- Verification Command: npx vitest run src/engine/events.test.ts src/server/services/discussion-events.test.ts src/server/services/discussion-integration.test.ts src/app/api/discussions/events-api.test.ts
+- Verification Result: 49 passed (49)
+
+Known Risk: `submitVote` 中 `voterId = 'current-user'` 硬编码，多用户投票场景超出本 iteration 范围，后续引入认证后修正。

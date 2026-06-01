@@ -54,14 +54,14 @@ export const threeKingdomsTemplate: Template = {
   ],
   events: [
     {
-      id: 'evt-face-slap',
-      type: 'face-slap',
+      id: 'evt-slap',
+      type: 'slap',
       trigger: '当某方观点被事实或逻辑明显驳倒时',
       description: '打脸事件：一个角色的论断被另一角色用有力证据或逻辑推翻',
     },
     {
-      id: 'evt-side-taking',
-      type: 'side-taking',
+      id: 'evt-camp',
+      type: 'camp',
       trigger: '当争论形成明显对立阵营时',
       description: '站队事件：角色们分成两派，旗帜鲜明地支持不同立场',
     },
@@ -72,8 +72,8 @@ export const threeKingdomsTemplate: Template = {
       description: '投票事件：主持人发起投票，各角色表态',
     },
     {
-      id: 'evt-reversal',
-      type: 'reversal',
+      id: 'evt-reverse',
+      type: 'reverse',
       trigger: '当某角色因新信息或论据改变立场时',
       description: '反转事件：某角色承认之前的判断有误，转变立场',
     },
