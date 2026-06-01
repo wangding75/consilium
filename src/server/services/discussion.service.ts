@@ -1,6 +1,9 @@
 import type { DefaultStateMachine } from '@/engine/state-machine'
 import type { Director } from '@/engine/director'
-import type { Discussion, AgentCallLog, AgentProfile, IntentResult } from '@/types'
+import type { Discussion, AgentCallLog, AgentProfile, IntentResult, EventRecord, DiscussionMessage, VotePayload, AgentOutput, EventPayload } from '@/types'
+import type { EventDetector, EventRateLimiter } from '@/engine/events'
+import type { EventRepository } from '@/server/repositories/event.repository'
+import type { VoteRepository } from '@/server/repositories/vote.repository'
 import type { DiscussionRepository } from '@/server/repositories/discussion.repository'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
@@ -9,7 +12,7 @@ import type { AgentCallLogRepository } from '@/server/repositories/agent-call-lo
 import type { InvitationRepository } from '@/server/repositories/invitation.repository'
 import type { DirectorDecisionRepository } from '@/server/repositories/director-decision.repository'
 import type { DiscussionOrchestrator } from '@/engine/orchestrator'
-import type { GetInvitationResult, MessageListResult, RequestSummaryRequest, RequestSummaryResult, RespondInvitationRequest, RespondInvitationResult, SessionDetailResult, SendMessageResult, IntentRequest, IntentResponse, SkipInvitationRequest, SkipInvitationResult } from '@/types/api'
+import type { GetInvitationResult, MessageListResult, RequestSummaryRequest, RequestSummaryResult, RespondInvitationRequest, RespondInvitationResult, SessionDetailResult, SendMessageResult, IntentRequest, IntentResponse, SkipInvitationRequest, SkipInvitationResult, CreateEventRequest, CreateEventResult, EventListResult, VoteRequest, VoteResult } from '@/types/api'
 import { ServiceError } from '@/server/errors'
 import { RuleBasedIntentClassifier } from '@/engine/intent'
 import { DefaultDirector } from '@/engine/director'
@@ -28,7 +31,11 @@ export class DiscussionService {
     private readonly stateMachine?: DefaultStateMachine,
     private readonly director?: Director,
     private readonly invitationRepo?: InvitationRepository,
-    private readonly directorDecisionRepo?: DirectorDecisionRepository
+    private readonly directorDecisionRepo?: DirectorDecisionRepository,
+    private readonly eventRepo?: EventRepository,
+    private readonly voteRepo?: VoteRepository,
+    private readonly eventDetector?: EventDetector,
+    private readonly eventRateLimiter?: EventRateLimiter
   ) {}
 
   async listDiscussions(): Promise<Discussion[]> {
@@ -37,6 +44,135 @@ export class DiscussionService {
     } catch (err) {
       throw new ServiceError('DISCUSSION_LIST_FAILED', 'Failed to list discussions', err)
     }
+  }
+
+  async listEvents(sessionId: string): Promise<EventListResult> {
+    const session = await this.sessionRepo?.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
+
+    const events = await this.eventRepo?.findBySessionId(sessionId) ?? []
+    const votes = (await Promise.all(
+      events.map((event) => this.voteRepo?.findByEventId(sessionId, event.eventId) ?? Promise.resolve([]))
+    )).flat()
+
+    return { sessionId, events, votes }
+  }
+
+  async createEvent(
+    sessionId: string,
+    params: CreateEventRequest,
+    trigger: EventRecord['trigger'] = 'manual'
+  ): Promise<CreateEventResult> {
+    const session = await this.sessionRepo?.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
+    if (!this.eventRepo || !this.messageRepo) {
+      throw new ServiceError('EVENT_REPOSITORY_UNAVAILABLE', 'Event repository is unavailable')
+    }
+
+    const message = await this.messageRepo.save({
+      messageId: `msg-event-${crypto.randomUUID()}`,
+      sessionId,
+      type: 'host',
+      content: params.description,
+      status: 'completed',
+      createdAt: new Date().toISOString(),
+      metadata: { hostMessageKind: 'event' },
+    })
+
+    const event: EventRecord = await this.eventRepo.save({
+      eventId: `evt-${crypto.randomUUID()}`,
+      sessionId,
+      eventType: params.eventType,
+      trigger,
+      status: 'active',
+      title: params.title,
+      description: params.description,
+      reason: trigger === 'manual' ? 'manual event trigger' : 'auto event trigger',
+      payload: params.payload,
+      relatedMessageId: message.messageId,
+      createdAt: new Date().toISOString(),
+    })
+
+    const updatedMessage = await this.messageRepo.updateMetadata(message.messageId, {
+      ...message.metadata,
+      eventId: event.eventId,
+    })
+
+    return { event, message: updatedMessage ?? { ...message, metadata: { ...message.metadata, eventId: event.eventId } } }
+  }
+
+  async submitVote(
+    sessionId: string,
+    eventId: string,
+    params: VoteRequest
+  ): Promise<VoteResult> {
+    const session = await this.sessionRepo?.findById(sessionId)
+    if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
+    if (!this.eventRepo || !this.voteRepo) {
+      throw new ServiceError('EVENT_REPOSITORY_UNAVAILABLE', 'Event repository is unavailable')
+    }
+
+    const event = await this.eventRepo.findById(sessionId, eventId)
+    if (!event) throw new ServiceError('EVENT_NOT_FOUND', `Event ${eventId} not found`)
+    if (event.eventType !== 'vote') throw new ServiceError('EVENT_NOT_VOTABLE', 'Event is not votable')
+    if (event.status !== 'active') throw new ServiceError('EVENT_CLOSED', 'Event is closed')
+
+    const payload = event.payload as VotePayload
+    if (!payload.options.some((option) => option.id === params.optionId)) {
+      throw new ServiceError('VOTE_OPTION_INVALID', 'Vote option is invalid')
+    }
+
+    const voterType = 'user'
+    const voterId = 'current-user'
+    const existingVote = await this.voteRepo.findByKey(sessionId, eventId, voterType, voterId)
+    if (existingVote) return { vote: existingVote, event }
+
+    const vote = await this.voteRepo.save({
+      voteId: `vote-${crypto.randomUUID()}`,
+      sessionId,
+      eventId,
+      voterType,
+      voterId,
+      optionId: params.optionId,
+      createdAt: new Date().toISOString(),
+    })
+    const updatedEvent = await this.eventRepo.updateTally(sessionId, eventId, params.optionId)
+
+    return { vote, event: updatedEvent ?? event }
+  }
+
+  private async detectAndCreateEvents(
+    session: NonNullable<Awaited<ReturnType<SessionRepository['findById']>>>,
+    sessionId: string,
+    messages: DiscussionMessage[],
+    lastOutput: AgentOutput
+  ): Promise<CreateEventResult[]> {
+    if (!this.eventDetector || !this.eventRateLimiter || !this.eventRepo) return []
+
+    const detection = await this.eventDetector.detect(session, messages, lastOutput)
+    if (!detection.eventTriggered || detection.confidence < 0.6) return []
+
+    const recentEvents = await this.eventRepo.findRecentBySessionId(sessionId, 20)
+    const rateLimitResult = this.eventRateLimiter.check({
+      sessionId,
+      eventType: detection.eventType!,
+      recentMessages: messages,
+      recentEvents,
+      currentMessageIndex: messages.length - 1,
+    })
+    if (!rateLimitResult.allowed) return []
+
+    const result = await this.createEvent(
+      sessionId,
+      {
+        eventType: detection.eventType!,
+        title: detection.title ?? detection.reason ?? '',
+        description: detection.description ?? detection.reason ?? '',
+        payload: detection.payload as EventPayload,
+      },
+      'auto'
+    )
+    return [result]
   }
 
   async getSessionDetail(sessionId: string): Promise<SessionDetailResult> {
@@ -149,6 +285,15 @@ export class DiscussionService {
       intent,
       activeSpeakerId: session.state.lastSpeakerId ?? null,
     }
+  }
+
+  async sendMessage(
+    sessionId: string,
+    params: { content: string; clientMessageId?: string }
+  ): Promise<SendMessageResult & { messages: DiscussionMessage[] }> {
+    const result = await this.sendUserMessage(sessionId, params.content, params.clientMessageId)
+    const allMessages = await this.messageRepo?.findBySessionId(sessionId) ?? []
+    return { ...result, messages: allMessages }
   }
 
   async sendUserMessage(
@@ -290,12 +435,26 @@ export class DiscussionService {
       await this.callLogRepo?.save(log)
     }
 
+    const lastAgentMessage = agentMessages[agentMessages.length - 1]
+    const createdEventResults = lastAgentMessage
+      ? await this.detectAndCreateEvents(
+          session,
+          sessionId,
+          [...existingMessages, ...(userMessage ? [userMessage] : []), ...agentMessages],
+          { content: lastAgentMessage.content, roleId: lastAgentMessage.roleId ?? '' }
+        )
+      : []
+    const createdEvents = createdEventResults.map((r) => r.event)
+    const eventMessages = createdEventResults.map((r) => r.message)
+
     return {
       sessionId,
       runId,
       clientMessageId,
       userMessage,
       agentMessages,
+      createdEvents: createdEvents.length > 0 ? createdEvents : undefined,
+      eventMessages: eventMessages.length > 0 ? eventMessages : undefined,
       activeSpeakerId: orchestratorResult?.activeSpeakerId ?? null,
       ...(await this.runDirectorAndProduceSideEffects(session, [...existingMessages, ...(userMessage ? [userMessage] : [])], profiles, 'user_message', intentResponse?.intent)),
     }
@@ -308,11 +467,12 @@ export class DiscussionService {
     trigger: DirectorInputType['trigger'],
     intent?: IntentResult
   ): Promise<{ directorDecision?: DirectorDecisionRecord; pendingInvitation?: Invitation | null; summary?: DiscussionSummary | null }> {
-    if (!this.director || !this.directorDecisionRepo) {
+    if (!this.director) {
       return {}
     }
 
     const pendingInvitation = await this.invitationRepo?.findPendingBySessionId(session.id) ?? null
+    const recentEvents = await this.eventRepo?.findRecentBySessionId(session.id, 10) ?? []
     const input: DirectorInputType = {
       session,
       messages,
@@ -320,6 +480,7 @@ export class DiscussionService {
       trigger,
       intent,
       pendingInvitation,
+      recentEvents,
     }
 
     let decision: DirectorDecisionRecord
@@ -329,7 +490,11 @@ export class DiscussionService {
       throw new ServiceError('DIRECTOR_DECISION_FAILED', 'Director decision failed')
     }
 
-    await this.directorDecisionRepo.save(decision)
+    await this.directorDecisionRepo?.save(decision)
+
+    for (const event of recentEvents.filter((item) => !item.directorConsumedAt)) {
+      await this.eventRepo?.markDirectorConsumed(session.id, event.eventId, decision.createdAt)
+    }
 
     let resultInvitation: Invitation | undefined
     let resultSummary: DiscussionSummary | null | undefined

@@ -1,0 +1,167 @@
+tasks:
+  - task: "Task-01：定义事件、投票、检测和 API 契约"
+    test_file: src/types/events-contract.test.ts
+    test_cases: 25
+    task_type: contract
+    data_operations: 无
+    boundary: "只修改 `src/types/index.ts` 与 `src/types/api.ts` 的类型声明区域"
+    forbidden: "不得删除现有非事件类型；不得改变既有 API response envelope"
+
+  - task: "Task-02：实现四类事件检测规则"
+    test_file: src/engine/events.test.ts
+    test_cases: 15
+    task_type: business-implementation
+    data_operations: 无
+    boundary: "只替换 `src/engine/events.ts` 中 DefaultEventDetector.detect() stub，并新增私有检测方法"
+    forbidden: "不得访问 Repository、API、React 或浏览器对象"
+
+  - task: "Task-03：实现基于消息和事件历史的事件限频"
+    test_file: src/engine/events.test.ts
+    test_cases: 15
+    task_type: business-implementation
+    data_operations: 无
+    boundary: "只在 `src/engine/events.ts` 新增 EventRateLimiter 接口、EventRateLimitInput 和 DefaultEventRateLimiter"
+    forbidden: "不得使用跨请求内存 Map 作为唯一限频来源"
+
+  - task: "Task-04：实现事件与投票 Mock 持久化契约"
+    test_file: src/server/repositories/mock/mock-event.repository.test.ts
+    test_cases: 12
+    task_type: contract
+    data_operations: "读写 event/vote 内存 Map"
+    boundary: "只新增 `src/server/repositories/event.repository.ts`、`src/server/repositories/vote.repository.ts`、`src/server/repositories/mock/mock-event.repository.ts`、`src/server/repositories/mock/mock-vote.repository.ts`"
+    forbidden: "不得修改现有 repository 接口语义；不得跨 session 返回记录"
+
+  - task: "Task-05：接入共享事件与投票 Mock 仓储"
+    test_file: src/server/repositories/mock/shared-instances-events.test.ts
+    test_cases: 5
+    task_type: integration
+    data_operations: "初始化共享内存 repository 实例"
+    boundary: "只修改 `src/server/repositories/mock/instances.ts` 的导出列表"
+    forbidden: "不得重建现有 discussion/session/message/template repository 实例"
+
+  - task: "Task-06：实现事件创建并将事件写入消息流"
+    test_file: src/server/services/discussion-events.test.ts
+    test_cases: 18
+    task_type: business-implementation
+    data_operations: "读 SessionRepository；读 MessageRepository；写 MessageRepository；读写 EventRepository"
+    boundary: "只在 `src/server/services/discussion.service.ts` 新增 createEvent 方法和必要构造参数"
+    forbidden: "不得只保存 EventRecord 而不创建 event message；不得绕过 MessageRepository 直接修改 store"
+
+  - task: "Task-07：在发送消息后接入自动事件检测"
+    test_file: src/server/services/discussion-events.test.ts
+    test_cases: 18
+    task_type: integration
+    data_operations: "读 MessageRepository；读写 EventRepository；写 MessageRepository"
+    boundary: "只修改 `src/server/services/discussion.service.ts` 的 sendMessage/side-effect 事件相关分支"
+    forbidden: "不得修改 Orchestrator 公共接口；不得在 EventDetector 中写存储"
+
+  - task: "Task-08：实现投票提交、幂等和票数更新"
+    test_file: src/server/services/discussion-events.test.ts
+    test_cases: 18
+    task_type: business-implementation
+    data_operations: "读 EventRepository.findById(sessionId,eventId)；读写 VoteRepository；写 EventRepository.updateTally(sessionId,eventId,optionId)"
+    boundary: "只在 `src/server/services/discussion.service.ts` 新增 submitVote 方法和相关错误分支"
+    forbidden: "不得用 eventId 单独查询事件；不得允许跨 session 投票；不得把票数写入 options[].count"
+
+  - task: "Task-09：实现事件列表和事件/投票 API 路由"
+    test_file: src/app/api/discussions/events-api.test.ts
+    test_cases: 13
+    task_type: api
+    data_operations: "无直接数据操作（通过 DiscussionService）"
+    boundary: "只新增两个 events route 文件；只修改 `src/app/api/discussions/[sessionId]/messages/route.ts` 中 DiscussionService 构造参数与响应透传"
+    forbidden: "不得在 route 中直接操作 EventRepository/VoteRepository；不得改变现有 response envelope"
+
+  - task: "Task-10：实现事件与投票前端状态、乐观更新和回滚"
+    test_file: src/store/discussion-events.store.test.ts
+    test_cases: 13
+    task_type: business-implementation
+    data_operations: "调用 GET/POST event/vote API；更新全局 store 状态"
+    boundary: "只修改 `src/store/discussion.store.ts` 的状态字段、action union、reducer case、actions 实现"
+    forbidden: "不得删除现有消息、邀请、总结 action；不得在失败时保留错误乐观票数"
+
+  - task: "Task-11：实现事件卡与投票网格组件"
+    test_file: src/modules/discussion/event-card.test.tsx
+    test_cases: 15
+    task_type: ui
+    data_operations: 无
+    boundary: "只新增 `src/modules/discussion/event-card.tsx` 与 `src/modules/discussion/vote-grid.tsx`"
+    forbidden: "不得修改 MessageBubble/MessageList；不得在组件内调用 API"
+
+  - task: "Task-12：将事件卡接入消息流并保持滚动体验"
+    test_file: src/modules/discussion/message-list-events.test.tsx
+    test_cases: 5
+    task_type: ui
+    data_operations: 无
+    boundary: "只修改 `src/modules/discussion/message-list.tsx` 的 Props、messages.map 渲染分支和滚动依赖"
+    forbidden: "不得删除现有 error/intentError/typing 渲染；不得改变用户上滑不抢滚动规则"
+
+  - task: "Task-13：实现讨论页面事件交互接线和手动触发"
+    test_file: src/modules/discussion/discussion-events.test.tsx
+    test_cases: 6
+    task_type: ui
+    data_operations: 无
+    boundary: "只修改 `src/modules/discussion/index.tsx` 的 props 接线；只修改 `src/modules/discussion/message-input.tsx` 的 # 触发逻辑和 Props"
+    forbidden: "不得删除 @、总结、发送、邀请相关入口；不得把非投票手动触发暴露为额外 UI"
+
+  - task: "Task-14：实现会话恢复时事件和投票状态加载"
+    test_file: src/store/discussion-events.store.test.ts
+    test_cases: 13
+    task_type: business-implementation
+    data_operations: "调用 GET /events；更新 store 状态"
+    boundary: "只修改 `src/store/discussion.store.ts` 中 loadSession/sendMessage/triggerEvent 的事件相关合并逻辑"
+    forbidden: "不得改变消息分页语义；不得重复插入同一 event message"
+
+  - task: "Task-15：实现 Director 消费事件结果并产生调度提示"
+    test_file: src/engine/director-events.test.ts
+    test_cases: 7
+    task_type: business-implementation
+    data_operations: 无
+    boundary: "只修改 `src/engine/director.ts` 的 EventType 引用、DirectorInput 消费逻辑和私有 helper；不得修改 scheduler.ts"
+    forbidden: "不得使用字面量 `preferredSpeakerId: 'host'`；不得访问 Repository"
+
+  - task: "Task-16：在服务层注入 recentEvents 并标记 Director 消费状态"
+    test_file: src/server/services/discussion-events.test.ts
+    test_cases: 18
+    task_type: integration
+    data_operations: "读 MessageRepository（recentMessages）；读 EventRepository.findRecentBySessionId（recentEvents）；写 EventRepository.markDirectorConsumed；调用 Scheduler.selectSpeakers（沿用现有 schedulerHint 逻辑，不修改 Scheduler）"
+    boundary: "只修改 `src/server/services/discussion.service.ts` 中 DirectorInput 构造和 DirectorDecision 后处理"
+    forbidden: "不得让 Director 直接访问 Repository；不得重复消费已标记事件；不得修改 Scheduler.selectSpeakers"
+
+  - task: "Task-17：更新模板事件规则数据与展示"
+    test_file: src/modules/templates/templates-events.test.tsx
+    test_cases: 7
+    task_type: ui
+    data_operations: "读本地模板数据文件"
+    boundary: "只修改 `src/data/templates/three-kingdoms.ts` 的事件 type 字符串；只修改 `src/modules/templates/index.tsx` 的事件规则区域"
+    forbidden: "不得修改模板角色、世界观、节奏配置；不得删除模板页其他区域"
+
+  - task: "Task-18：更新旧 EventType 引用以保持现有测试契约一致"
+    test_file: src/types/director-invitation-contract.test.ts
+    test_cases: 34
+    task_type: contract
+    data_operations: 无
+    boundary: "只修改 `src/engine/director-integration.test.ts`、`src/server/services/discussion-director.test.ts`、`src/types/director-invitation-contract.test.ts` 中旧 EventType 字符串"
+    forbidden: "不得修改测试行为断言；不得新增新测试用例"
+
+type_tests:
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: src/server/services/discussion-integration.test.ts
+    covers:
+      - "Task-07：在发送消息后接入自动事件检测"
+      - "Task-15：实现 Director 消费事件结果并产生调度提示"
+      - "Task-16：在服务层注入 recentEvents 并标记 Director 消费状态"
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: src/app/api/discussions/events-api.test.ts
+    covers:
+      - "Task-09：实现事件列表和事件/投票 API 路由"
+      - "Task-06：实现事件创建并将事件写入消息流"
+      - "Task-08：实现投票提交、幂等和票数更新"
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: src/modules/discussion/event-card.test.tsx
+    covers:
+      - "Task-11：实现事件卡与投票网格组件"
+      - "Task-12：将事件卡接入消息流并保持滚动体验"
+      - "Task-13：实现讨论页面事件交互接线和手动触发"

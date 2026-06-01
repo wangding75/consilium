@@ -1,0 +1,138 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/7
+
+tasks:
+  - task: "Task-01：定义事件、投票、检测和 API 契约"
+    test_file: src/types/events-contract.test.ts
+    phase: done
+    started_at: "2026-06-01 10:00"
+    completed_at: "2026-06-01 10:00"
+    test_passed: 25
+    test_total: 25
+  - task: "Task-02：实现四类事件检测规则"
+    test_file: src/engine/events.test.ts
+    phase: done
+    started_at: "2026-06-01 13:30"
+    completed_at: "2026-06-01 13:35"
+    test_passed: 15
+    test_total: 15
+  - task: "Task-03：实现基于消息和事件历史的事件限频"
+    test_file: src/engine/events.test.ts
+    phase: done
+    started_at: "2026-06-01 13:35"
+    completed_at: "2026-06-01 13:35"
+    test_passed: 15
+    test_total: 15
+  - task: "Task-04：实现事件与投票 Mock 持久化契约"
+    test_file: src/server/repositories/mock/mock-event.repository.test.ts
+    phase: done
+    started_at: "2026-06-01 13:36"
+    completed_at: "2026-06-01 13:36"
+    test_passed: 12
+    test_total: 12
+  - task: "Task-05：接入共享事件与投票 Mock 仓储"
+    test_file: src/server/repositories/mock/shared-instances-events.test.ts
+    phase: done
+    started_at: "2026-06-01 13:36"
+    completed_at: "2026-06-01 13:36"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-06：实现事件创建并将事件写入消息流"
+    test_file: src/server/services/discussion-events.test.ts
+    phase: done
+    started_at: "2026-06-01 13:36"
+    completed_at: "2026-06-01 15:14"
+    test_passed: 18
+    test_total: 18
+  - task: "Task-07：在发送消息后接入自动事件检测"
+    test_file: src/server/services/discussion-events.test.ts
+    phase: done
+    started_at: "2026-06-01 13:36"
+    completed_at: "2026-06-01 15:14"
+    test_passed: 18
+    test_total: 18
+  - task: "Task-08：实现投票提交、幂等和票数更新"
+    test_file: src/server/services/discussion-events.test.ts
+    phase: done
+    started_at: "2026-06-01 13:36"
+    completed_at: "2026-06-01 15:14"
+    test_passed: 18
+    test_total: 18
+  - task: "Task-09：实现事件列表和事件/投票 API 路由"
+    test_file: src/app/api/discussions/events-api.test.ts
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 13
+    test_total: 13
+  - task: "Task-10：实现事件与投票前端状态、乐观更新和回滚"
+    test_file: src/store/discussion-events.store.test.ts
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 13
+    test_total: 13
+  - task: "Task-11：实现事件卡与投票网格组件"
+    test_file: src/modules/discussion/event-card.test.tsx
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 15
+    test_total: 15
+  - task: "Task-12：将事件卡接入消息流并保持滚动体验"
+    test_file: src/modules/discussion/message-list-events.test.tsx
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-13：实现讨论页面事件交互接线和手动触发"
+    test_file: src/modules/discussion/discussion-events.test.tsx
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-14：实现会话恢复时事件和投票状态加载"
+    test_file: src/store/discussion-events.store.test.ts
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 13
+    test_total: 13
+  - task: "Task-15：实现 Director 消费事件结果并产生调度提示"
+    test_file: src/engine/director-events.test.ts
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-16：在服务层注入 recentEvents 并标记 Director 消费状态"
+    test_file: src/server/services/discussion-events.test.ts
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 18
+    test_total: 18
+  - task: "Task-17：更新模板事件规则数据与展示"
+    test_file: src/modules/templates/templates-events.test.tsx
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-18：更新旧 EventType 引用以保持现有测试契约一致"
+    test_file: src/types/director-invitation-contract.test.ts
+    phase: done
+    started_at: "2026-06-01 15:17"
+    completed_at: "2026-06-01 15:17"
+    test_passed: 34
+    test_total: 34

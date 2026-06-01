@@ -1,14 +1,17 @@
 'use client'
 
 import { createContext, createElement, useContext, useReducer, useRef, useCallback, type ReactNode } from 'react'
-import type { DiscussionMessage, DiscussionSummary, IntentResult, Invitation } from '@/types'
-import type { ApiError, SessionDetailResult } from '@/types/api'
+import type { DiscussionMessage, DiscussionSummary, EventRecord, IntentResult, Invitation, VoteRecord } from '@/types'
+import type { ApiError, CreateEventRequest, SessionDetailResult } from '@/types/api'
 
 export type SessionSummary = SessionDetailResult
 
 export interface DiscussionStoreState {
   sessions: Record<string, SessionSummary>
   messagesBySessionId: Record<string, DiscussionMessage[]>
+  eventsBySessionId: Record<string, EventRecord[]>
+  votesBySessionId: Record<string, VoteRecord[]>
+  pendingVoteByEventId: Record<string, boolean>
   activeSpeakerBySessionId: Record<string, string | null>
   loadingBySessionId: Record<string, boolean>
   sendingByClientMessageId: Record<string, 'pending' | 'completed' | 'failed'>
@@ -36,6 +39,9 @@ export interface DiscussionActions {
   skipInvitation(sessionId: string, invitationId: string): Promise<void>
   requestSummary(sessionId: string): Promise<void>
   resumeAfterSummary(sessionId: string): Promise<void>
+  loadEvents(sessionId: string): Promise<void>
+  triggerEvent(sessionId: string, params: CreateEventRequest): Promise<void>
+  submitVote(sessionId: string, eventId: string, optionId: string): Promise<void>
 }
 
 export function generateClientMessageId(): string {
@@ -50,6 +56,9 @@ export function generateClientMessageId(): string {
 const initialState: DiscussionStoreState = {
   sessions: {},
   messagesBySessionId: {},
+  eventsBySessionId: {},
+  votesBySessionId: {},
+  pendingVoteByEventId: {},
   activeSpeakerBySessionId: {},
   loadingBySessionId: {},
   sendingByClientMessageId: {},
@@ -71,13 +80,19 @@ export type DiscussionAction =
   | { type: 'TYPING_SET'; sessionId: string; typing: boolean }
   | { type: 'ERROR_SET'; sessionId: string; error: ApiError | null }
   | { type: 'MESSAGE_OPTIMISTIC'; sessionId: string; message: DiscussionMessage }
-  | { type: 'MESSAGE_SENT'; sessionId: string; clientMessageId: string; userMessage: DiscussionMessage | null; agentMessages: DiscussionMessage[]; activeSpeakerId: string | null }
+  | { type: 'MESSAGE_SENT'; sessionId: string; clientMessageId: string; userMessage: DiscussionMessage | null; agentMessages: DiscussionMessage[]; eventMessages?: DiscussionMessage[]; createdEvents?: EventRecord[]; activeSpeakerId: string | null }
   | { type: 'MESSAGE_FAILED'; sessionId: string; clientMessageId: string; error: ApiError }
   | { type: 'SENDING_STATUS'; clientMessageId: string; status: 'pending' | 'completed' | 'failed' }
   | { type: 'INVITATION_LOADED'; sessionId: string; invitation: Invitation | null }
   | { type: 'INVITATION_RESPONDED'; sessionId: string; invitation: Invitation; userMessage: DiscussionMessage | null; agentMessages: DiscussionMessage[]; activeSpeakerId: string | null; pendingInvitation: Invitation | null }
   | { type: 'INVITATION_SKIPPED'; sessionId: string; invitation: Invitation; agentMessages: DiscussionMessage[]; activeSpeakerId: string | null; pendingInvitation: Invitation | null }
   | { type: 'SUMMARY_LOADED'; sessionId: string; summary: DiscussionSummary }
+  | { type: 'SUMMARY_CLEARED'; sessionId: string }
+  | { type: 'EVENTS_LOADED'; sessionId: string; events: EventRecord[]; votes: VoteRecord[] }
+  | { type: 'EVENT_CREATED'; sessionId: string; event: EventRecord; message: DiscussionMessage }
+  | { type: 'VOTE_OPTIMISTIC'; eventId: string }
+  | { type: 'VOTE_SUBMITTED'; sessionId: string; event: EventRecord; vote: VoteRecord }
+  | { type: 'VOTE_FAILED'; sessionId: string; eventId: string; error: ApiError }
   | { type: 'DIRECTOR_ERROR_SET'; sessionId: string; error: ApiError | null }
 
 function mergeMessages(
@@ -92,6 +107,26 @@ function mergeMessages(
       : m.messageId
     map.set(key ?? m.messageId, m)
   }
+  return Array.from(map.values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+}
+
+function mergeEvents(
+  existing: EventRecord[],
+  incoming: EventRecord[]
+): EventRecord[] {
+  const map = new Map<string, EventRecord>()
+  for (const event of existing) map.set(event.eventId, event)
+  for (const event of incoming) map.set(event.eventId, event)
+  return Array.from(map.values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+}
+
+function mergeVotes(
+  existing: VoteRecord[],
+  incoming: VoteRecord[]
+): VoteRecord[] {
+  const map = new Map<string, VoteRecord>()
+  for (const vote of existing) map.set(vote.voteId, vote)
+  for (const vote of incoming) map.set(vote.voteId, vote)
   return Array.from(map.values()).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
 }
 
@@ -130,11 +165,20 @@ export function discussionReducer(
     }
     case 'MESSAGE_SENT': {
       const current = state.messagesBySessionId[action.sessionId] ?? []
-      const incoming = [...(action.userMessage ? [action.userMessage] : []), ...(action.agentMessages ?? [])]
+      const incoming = [
+        ...(action.userMessage ? [action.userMessage] : []),
+        ...(action.agentMessages ?? []),
+        ...(action.eventMessages ?? []),
+      ]
       const merged = mergeMessages(current, incoming)
+      const currentEvents = (state.eventsBySessionId ?? {})[action.sessionId] ?? []
       return {
         ...state,
         messagesBySessionId: { ...state.messagesBySessionId, [action.sessionId]: merged },
+        eventsBySessionId: {
+          ...(state.eventsBySessionId ?? {}),
+          [action.sessionId]: mergeEvents(currentEvents, action.createdEvents ?? []),
+        },
         typingBySessionId: { ...state.typingBySessionId, [action.sessionId]: false },
         typingSpeakerBySessionId: { ...state.typingSpeakerBySessionId, [action.sessionId]: null },
         activeSpeakerBySessionId: { ...state.activeSpeakerBySessionId, [action.sessionId]: action.activeSpeakerId },
@@ -190,6 +234,56 @@ export function discussionReducer(
         ...state,
         summaryBySessionId: { ...state.summaryBySessionId, [action.sessionId]: action.summary },
         directorErrorBySessionId: { ...state.directorErrorBySessionId, [action.sessionId]: null },
+      }
+    case 'SUMMARY_CLEARED':
+      return {
+        ...state,
+        summaryBySessionId: { ...state.summaryBySessionId, [action.sessionId]: null },
+        directorErrorBySessionId: { ...state.directorErrorBySessionId, [action.sessionId]: null },
+      }
+    case 'EVENTS_LOADED':
+      return {
+        ...state,
+        eventsBySessionId: { ...state.eventsBySessionId, [action.sessionId]: action.events },
+        votesBySessionId: { ...state.votesBySessionId, [action.sessionId]: action.votes },
+      }
+    case 'EVENT_CREATED': {
+      const currentEvents = state.eventsBySessionId[action.sessionId] ?? []
+      const currentMessages = state.messagesBySessionId[action.sessionId] ?? []
+      return {
+        ...state,
+        eventsBySessionId: { ...state.eventsBySessionId, [action.sessionId]: [...currentEvents, action.event] },
+        messagesBySessionId: { ...state.messagesBySessionId, [action.sessionId]: mergeMessages(currentMessages, [action.message]) },
+      }
+    }
+    case 'VOTE_OPTIMISTIC':
+      return {
+        ...state,
+        pendingVoteByEventId: { ...state.pendingVoteByEventId, [action.eventId]: true },
+      }
+    case 'VOTE_SUBMITTED': {
+      const currentEvents = state.eventsBySessionId[action.sessionId] ?? []
+      const currentVotes = state.votesBySessionId[action.sessionId] ?? []
+      return {
+        ...state,
+        eventsBySessionId: {
+          ...state.eventsBySessionId,
+          [action.sessionId]: currentEvents.map((event) =>
+            event.eventId === action.event.eventId ? action.event : event
+          ),
+        },
+        votesBySessionId: {
+          ...state.votesBySessionId,
+          [action.sessionId]: mergeVotes(currentVotes, [action.vote]),
+        },
+        pendingVoteByEventId: { ...state.pendingVoteByEventId, [action.event.eventId]: false },
+      }
+    }
+    case 'VOTE_FAILED':
+      return {
+        ...state,
+        pendingVoteByEventId: { ...state.pendingVoteByEventId, [action.eventId]: false },
+        errorBySessionId: { ...state.errorBySessionId, [action.sessionId]: action.error },
       }
     case 'DIRECTOR_ERROR_SET':
       return { ...state, directorErrorBySessionId: { ...state.directorErrorBySessionId, [action.sessionId]: action.error } }
@@ -306,7 +400,16 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
         timeoutHandles.current.delete(clientMessageId)
 
         if (json.success) {
-          dispatch({ type: 'MESSAGE_SENT', sessionId, clientMessageId, userMessage: json.data.userMessage, agentMessages: json.data.agentMessages, activeSpeakerId: json.data.activeSpeakerId })
+          dispatch({
+            type: 'MESSAGE_SENT',
+            sessionId,
+            clientMessageId,
+            userMessage: json.data.userMessage,
+            agentMessages: json.data.agentMessages,
+            eventMessages: json.data.eventMessages,
+            createdEvents: json.data.createdEvents,
+            activeSpeakerId: json.data.activeSpeakerId,
+          })
         } else {
           dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: json.error })
         }
@@ -355,7 +458,16 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
         timeoutHandles.current.delete(clientMessageId)
 
         if (json.success) {
-          dispatch({ type: 'MESSAGE_SENT', sessionId, clientMessageId, userMessage: json.data.userMessage, agentMessages: json.data.agentMessages, activeSpeakerId: json.data.activeSpeakerId })
+          dispatch({
+            type: 'MESSAGE_SENT',
+            sessionId,
+            clientMessageId,
+            userMessage: json.data.userMessage,
+            agentMessages: json.data.agentMessages,
+            eventMessages: json.data.eventMessages,
+            createdEvents: json.data.createdEvents,
+            activeSpeakerId: json.data.activeSpeakerId,
+          })
         } else {
           dispatch({ type: 'MESSAGE_FAILED', sessionId, clientMessageId, error: json.error })
         }
@@ -377,17 +489,21 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
             body: JSON.stringify({
               content: pending,
               clientMessageId,
-              intentResponse: {
-                sessionId,
-                clientMessageId,
-                activeSpeakerId: null,
-                intent: { type: 'passive' as const, confidence: 1.0, rawText: pending, execution: { status: 'immediate' as const } },
-              },
+              forceAsPlainMessage: true,
             }),
           })
           const json = await res.json()
           if (json.success) {
-            dispatch({ type: 'MESSAGE_SENT', sessionId, clientMessageId, userMessage: json.data.userMessage, agentMessages: json.data.agentMessages, activeSpeakerId: json.data.activeSpeakerId })
+            dispatch({
+            type: 'MESSAGE_SENT',
+            sessionId,
+            clientMessageId,
+            userMessage: json.data.userMessage,
+            agentMessages: json.data.agentMessages,
+            eventMessages: json.data.eventMessages,
+            createdEvents: json.data.createdEvents,
+            activeSpeakerId: json.data.activeSpeakerId,
+          })
           }
         } catch {
           // silently ignore
@@ -492,7 +608,7 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
         })
         const json = await res.json()
         if (json.success) {
-          dispatch({ type: 'SUMMARY_LOADED', sessionId, summary: null as unknown as DiscussionSummary })
+          dispatch({ type: 'SUMMARY_CLEARED', sessionId })
         } else {
           dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: json.error })
         }
@@ -500,6 +616,57 @@ export function DiscussionProvider({ children }: DiscussionProviderProps) {
         dispatch({ type: 'DIRECTOR_ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
       }
     }, []),
+    loadEvents: useCallback(async (sessionId: string) => {
+      try {
+        const res = await fetch(`/api/discussions/${sessionId}/events`)
+        const json = await res.json()
+        if (json.success) {
+          dispatch({ type: 'EVENTS_LOADED', sessionId, events: json.data.events, votes: json.data.votes })
+        } else {
+          dispatch({ type: 'ERROR_SET', sessionId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, []),
+
+    triggerEvent: useCallback(async (sessionId: string, params: CreateEventRequest) => {
+      try {
+        const res = await fetch(`/api/discussions/${sessionId}/events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(params),
+        })
+        const json = await res.json()
+        if (json.success) {
+          dispatch({ type: 'EVENT_CREATED', sessionId, event: json.data.event, message: json.data.message })
+        } else {
+          dispatch({ type: 'ERROR_SET', sessionId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'ERROR_SET', sessionId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, []),
+
+    submitVote: useCallback(async (sessionId: string, eventId: string, optionId: string) => {
+      dispatch({ type: 'VOTE_OPTIMISTIC', eventId })
+      try {
+        const res = await fetch(`/api/discussions/${sessionId}/events/${eventId}/vote`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ optionId }),
+        })
+        const json = await res.json()
+        if (json.success) {
+          dispatch({ type: 'VOTE_SUBMITTED', sessionId, event: json.data.event, vote: json.data.vote })
+        } else {
+          dispatch({ type: 'VOTE_FAILED', sessionId, eventId, error: json.error })
+        }
+      } catch {
+        dispatch({ type: 'VOTE_FAILED', sessionId, eventId, error: { code: 'NETWORK_ERROR', message: '网络错误' } })
+      }
+    }, []),
+
     clearError: useCallback((sessionId: string) => {
       dispatch({ type: 'ERROR_SET', sessionId, error: null })
     }, []),

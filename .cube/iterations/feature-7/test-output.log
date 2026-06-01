@@ -1,0 +1,11 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /home/wangding/git/consilium
+
+ ✓ src/types/events-contract.test.ts (25 tests) 17ms
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  13:31:05
+   Duration  1.88s (transform 76ms, setup 0ms, collect 47ms, tests 17ms, environment 917ms, prepare 158ms)
+

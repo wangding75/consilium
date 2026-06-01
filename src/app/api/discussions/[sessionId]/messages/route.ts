@@ -7,7 +7,10 @@ import {
   sharedTemplateRepo,
   sharedMessageRepo,
   sharedAgentCallLogRepo,
+  sharedEventRepo,
+  sharedVoteRepo,
 } from '@/server/repositories/mock/instances'
+import { DefaultEventDetector, DefaultEventRateLimiter } from '@/engine/events'
 import { DiscussionOrchestrator } from '@/engine/orchestrator'
 import { RoundRobinScheduler } from '@/engine/scheduler'
 import { ContextBuilder } from '@/engine/context-builder'
@@ -27,7 +30,36 @@ function createService(): DiscussionService {
     sharedTemplateRepo,
     sharedMessageRepo,
     sharedAgentCallLogRepo,
-    orchestrator
+    orchestrator,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    sharedEventRepo,
+    sharedVoteRepo,
+    new DefaultEventDetector(),
+    new DefaultEventRateLimiter()
+  )
+}
+
+type SendMessageRouteRequest = Pick<SendMessageParams, 'content' | 'clientMessageId'> & {
+  forceAsPlainMessage?: boolean
+}
+
+function isSendMessageRequest(value: unknown): value is SendMessageRouteRequest {
+  if (!value || typeof value !== 'object') return false
+  const body = value as Partial<Record<keyof SendMessageRouteRequest, unknown>>
+  return (
+    typeof body.content === 'string' &&
+    (body.clientMessageId === undefined || typeof body.clientMessageId === 'string') &&
+    (body.forceAsPlainMessage === undefined || typeof body.forceAsPlainMessage === 'boolean')
+  )
+}
+
+function validationError(requestId: string): NextResponse<ApiResponse<never>> {
+  return NextResponse.json(
+    { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'Invalid message request' }, requestId },
+    { status: 400 }
   )
 }
 
@@ -95,10 +127,10 @@ export async function POST(
   const requestId = crypto.randomUUID()
   try {
     const { sessionId } = await params
-    const body = (await req.json()) as Partial<SendMessageParams>
-    const content = body.content ?? ''
+    const body = await req.json()
+    if (!isSendMessageRequest(body)) return validationError(requestId)
     const service = createService()
-    const data = await service.sendUserMessage(sessionId, content, body.clientMessageId, body.intentResponse as SendMessageParams['intentResponse'])
+    const data = await service.sendUserMessage(sessionId, body.content, body.clientMessageId, undefined)
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
     const errorCode = err instanceof ServiceError ? err.code : (err as { code?: string })?.code
