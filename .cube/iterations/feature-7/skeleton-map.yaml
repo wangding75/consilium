@@ -1,0 +1,122 @@
+files:
+  - path: src/types/index.ts
+    type: interface
+    tasks:
+      - "Task-01：定义事件、投票、检测和 API 契约"
+      - "Task-15：实现 Director 消费事件结果并产生调度提示"
+      - "Task-16：在服务层注入 recentEvents 并标记 Director 消费状态"
+  - path: src/types/api.ts
+    type: interface
+    tasks:
+      - "Task-01：定义事件、投票、检测和 API 契约"
+      - "Task-06：实现事件创建并将事件写入消息流"
+      - "Task-08：实现投票提交、幂等和票数更新"
+  - path: src/engine/events.ts
+    type: class
+    tasks:
+      - "Task-01：定义事件、投票、检测和 API 契约"
+      - "Task-02：实现四类事件检测规则"
+      - "Task-03：实现基于消息和事件历史的事件限频"
+      - "Task-07：在发送消息后接入自动事件检测"
+  - path: src/engine/director.ts
+    type: class
+    tasks:
+      - "Task-15：实现 Director 消费事件结果并产生调度提示"
+      - "Task-18：更新旧 EventType 引用以保持现有测试契约一致"
+  - path: src/server/repositories/event.repository.ts
+    type: interface
+    tasks:
+      - "Task-01：定义事件、投票、检测和 API 契约"
+      - "Task-04：实现事件与投票 Mock 持久化契约"
+      - "Task-08：实现投票提交、幂等和票数更新"
+      - "Task-16：在服务层注入 recentEvents 并标记 Director 消费状态"
+  - path: src/server/repositories/vote.repository.ts
+    type: interface
+    tasks:
+      - "Task-01：定义事件、投票、检测和 API 契约"
+      - "Task-04：实现事件与投票 Mock 持久化契约"
+      - "Task-08：实现投票提交、幂等和票数更新"
+  - path: src/server/repositories/mock/mock-event.repository.ts
+    type: class
+    tasks:
+      - "Task-04：实现事件与投票 Mock 持久化契约"
+  - path: src/server/repositories/mock/mock-vote.repository.ts
+    type: class
+    tasks:
+      - "Task-04：实现事件与投票 Mock 持久化契约"
+  - path: src/server/repositories/mock/instances.ts
+    type: constant
+    tasks:
+      - "Task-05：接入共享事件与投票 Mock 仓储"
+  - path: src/server/services/discussion.service.ts
+    type: class
+    tasks:
+      - "Task-06：实现事件创建并将事件写入消息流"
+      - "Task-07：在发送消息后接入自动事件检测"
+      - "Task-08：实现投票提交、幂等和票数更新"
+      - "Task-09：实现事件列表和事件/投票 API 路由"
+      - "Task-16：在服务层注入 recentEvents 并标记 Director 消费状态"
+  - path: src/app/api/discussions/[sessionId]/messages/route.ts
+    type: class
+    tasks:
+      - "Task-05：接入共享事件与投票 Mock 仓储"
+      - "Task-07：在发送消息后接入自动事件检测"
+  - path: src/app/api/discussions/[sessionId]/events/route.ts
+    type: class
+    tasks:
+      - "Task-05：接入共享事件与投票 Mock 仓储"
+      - "Task-09：实现事件列表和事件/投票 API 路由"
+      - "Task-14：实现会话恢复时事件和投票状态加载"
+  - path: src/app/api/discussions/[sessionId]/events/[eventId]/vote/route.ts
+    type: class
+    tasks:
+      - "Task-05：接入共享事件与投票 Mock 仓储"
+      - "Task-09：实现事件列表和事件/投票 API 路由"
+  - path: src/store/discussion.store.ts
+    type: class
+    tasks:
+      - "Task-10：实现事件与投票前端状态、乐观更新和回滚"
+      - "Task-14：实现会话恢复时事件和投票状态加载"
+  - path: src/modules/discussion/event-card.tsx
+    type: class
+    tasks:
+      - "Task-11：实现事件卡与投票网格组件"
+      - "Task-12：将事件卡接入消息流并保持滚动体验"
+  - path: src/modules/discussion/vote-grid.tsx
+    type: class
+    tasks:
+      - "Task-11：实现事件卡与投票网格组件"
+  - path: src/modules/discussion/message-list.tsx
+    type: class
+    tasks:
+      - "Task-12：将事件卡接入消息流并保持滚动体验"
+  - path: src/modules/discussion/index.tsx
+    type: class
+    tasks:
+      - "Task-13：实现讨论页面事件交互接线和手动触发"
+      - "Task-14：实现会话恢复时事件和投票状态加载"
+  - path: src/modules/discussion/message-input.tsx
+    type: class
+    tasks:
+      - "Task-13：实现讨论页面事件交互接线和手动触发"
+  - path: src/data/templates/three-kingdoms.ts
+    type: constant
+    tasks:
+      - "Task-17：更新模板事件规则数据与展示"
+      - "Task-18：更新旧 EventType 引用以保持现有测试契约一致"
+  - path: src/modules/templates/index.tsx
+    type: class
+    tasks:
+      - "Task-17：更新模板事件规则数据与展示"
+  - path: src/engine/director-integration.test.ts
+    type: class
+    tasks:
+      - "Task-18：更新旧 EventType 引用以保持现有测试契约一致"
+  - path: src/server/services/discussion-director.test.ts
+    type: class
+    tasks:
+      - "Task-18：更新旧 EventType 引用以保持现有测试契约一致"
+  - path: src/types/director-invitation-contract.test.ts
+    type: class
+    tasks:
+      - "Task-18：更新旧 EventType 引用以保持现有测试契约一致"
