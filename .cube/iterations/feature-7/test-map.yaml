@@ -1,0 +1,84 @@
+tasks:
+  - task: Task-01：定义事件、投票、检测和 API 契约
+    test_file: src/types/events-contract.test.ts
+    test_cases: 25
+  - task: Task-02：实现四类事件检测规则
+    test_file: src/engine/events.test.ts
+    test_cases: 15
+  - task: Task-03：实现基于消息和事件历史的事件限频
+    test_file: src/engine/events.test.ts
+    test_cases: 15
+  - task: Task-04：实现事件与投票 Mock 持久化契约
+    test_file: src/server/repositories/mock/mock-event.repository.test.ts
+    test_cases: 12
+  - task: Task-04：实现投票 Mock 持久化契约
+    test_file: src/server/repositories/mock/mock-vote.repository.test.ts
+    test_cases: 8
+  - task: Task-05：接入共享事件与投票 Mock 仓储
+    test_file: src/server/repositories/mock/shared-instances-events.test.ts
+    test_cases: 5
+  - task: Task-06：实现事件创建并将事件写入消息流
+    test_file: src/server/services/discussion-events.test.ts
+    test_cases: 5
+  - task: Task-07：在发送消息后接入自动事件检测
+    test_file: src/server/services/discussion-events.test.ts
+    test_cases: 3
+  - task: Task-08：实现投票提交、幂等和票数更新
+    test_file: src/server/services/discussion-events.test.ts
+    test_cases: 7
+  - task: Task-09：实现事件列表和事件/投票 API 路由
+    test_file: src/app/api/discussions/events-api.test.ts
+    test_cases: 13
+  - task: Task-10：实现事件与投票前端状态、乐观更新和回滚
+    test_file: src/store/discussion-events.store.test.ts
+    test_cases: 13
+  - task: Task-11：实现事件卡与投票网格组件
+    test_file: src/modules/discussion/event-card.test.tsx
+    test_cases: 15
+  - task: Task-11：实现投票网格组件
+    test_file: src/modules/discussion/vote-grid.test.tsx
+    test_cases: 11
+  - task: Task-12：将事件卡接入消息流并保持滚动体验
+    test_file: src/modules/discussion/message-list-events.test.tsx
+    test_cases: 5
+  - task: Task-13：实现讨论页面事件交互接线和手动触发
+    test_file: src/modules/discussion/discussion-events.test.tsx
+    test_cases: 6
+  - task: Task-14：实现会话恢复时事件和投票状态加载
+    test_file: src/store/discussion-events.store.test.ts
+    test_cases: 13
+  - task: Task-15：实现 Director 消费事件结果并产生调度提示
+    test_file: src/engine/director-events.test.ts
+    test_cases: 7
+  - task: Task-16：在服务层注入 recentEvents 并标记 Director 消费状态
+    test_file: src/server/services/discussion-events.test.ts
+    test_cases: 2
+  - task: Task-17：更新模板事件规则数据与展示
+    test_file: src/modules/templates/templates-events.test.tsx
+    test_cases: 7
+  - task: Task-18：更新旧 EventType 引用以保持现有测试契约一致
+    test_file: src/types/director-invitation-contract.test.ts
+    test_cases: 34
+
+type_tests:
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: src/server/services/discussion-integration.test.ts
+    covers:
+      - Task-07：在发送消息后接入自动事件检测
+      - Task-15：实现 Director 消费事件结果并产生调度提示
+      - Task-16：在服务层注入 recentEvents 并标记 Director 消费状态
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: src/app/api/discussions/events-api.test.ts
+    covers:
+      - Task-09：实现事件列表和事件/投票 API 路由
+      - Task-06：实现事件创建并将事件写入消息流
+      - Task-08：实现投票提交、幂等和票数更新
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: src/modules/discussion/event-card.test.tsx
+    covers:
+      - Task-11：实现事件卡与投票网格组件
+      - Task-12：将事件卡接入消息流并保持滚动体验
+      - Task-13：实现讨论页面事件交互接线和手动触发

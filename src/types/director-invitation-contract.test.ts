@@ -109,10 +109,10 @@ it('InvitationStatus allows expired', () => {
 // --- DirectorEventCandidate ---
 it('DirectorEventCandidate has type and reason', () => {
   const candidate: DirectorEventCandidate = {
-    type: 'face-slap',
+    type: 'slap',
     reason: 'disagreement escalated',
   }
-  expect(candidate.type).toBe('face-slap')
+  expect(candidate.type).toBe('slap')
   expect(candidate.reason).toBe('disagreement escalated')
 })
 
@@ -250,10 +250,10 @@ it('DirectorDecisionRecord can include eventCandidate', () => {
     action: 'trigger_event',
     reason: 'disagreement detected',
     confidence: 0.75,
-    eventCandidate: { type: 'face-slap', reason: 'strong disagreement' },
+    eventCandidate: { type: 'slap', reason: 'strong disagreement' },
     createdAt: '2026-01-01T00:00:00.000Z',
   }
-  expect(record.eventCandidate?.type).toBe('face-slap')
+  expect(record.eventCandidate?.type).toBe('slap')
 })
 
 it('DirectorDecisionRecord can include summaryHint', () => {

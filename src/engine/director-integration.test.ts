@@ -235,7 +235,7 @@ describe('Director deterministic rules: Director -> DiscussionService -> Reposit
           action,
           reason: `test ${action}`,
           confidence: 0.8,
-          ...(action === 'trigger_event' ? { eventCandidate: { type: 'face-slap' as const, reason: 'test' } } : {}),
+          ...(action === 'trigger_event' ? { eventCandidate: { type: 'slap' as const, reason: 'test' } } : {}),
           ...(action === 'conclude' ? { summaryHint: { topics: ['test'], consensusLevel: 'partial' as const } } : {}),
           createdAt: new Date().toISOString(),
         }),
