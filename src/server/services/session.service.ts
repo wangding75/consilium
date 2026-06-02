@@ -73,7 +73,8 @@ export class SessionService {
       return {
         sessionId: session.id,
         topic: session.topic,
-        template: { id: template.id, name: template.name },
+        template: { templateId: template.id, name: template.name, version: '' },
+        modelStrategy: { modelStrategyId: strategyId, name: strategyId, selectedByDefault: !params.modelStrategyId },
         status: 'running',
         createdAt: session.createdAt,
       }

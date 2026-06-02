@@ -15,6 +15,9 @@ import type {
   VoteRecord,
   EventType,
   EventPayload,
+  DiscussionTemplate,
+  TemplateRole,
+  ModelStrategy,
 } from '@/types'
 
 export interface ApiError {
@@ -36,16 +39,107 @@ export interface CreateSessionParams {
 export interface CreateSessionResult {
   sessionId: string
   topic: string
-  template: { id: string; name: string }
+  template: { templateId: string; name: string; version: string }
+  modelStrategy: { modelStrategyId: string; name: string; selectedByDefault: boolean }
   status: SessionLifecycleStatus
   createdAt: number
+}
+
+// ─── Template API DTOs (iteration 8) ───────────────────────────────────────
+
+export interface TemplateSummary {
+  templateId: string
+  version: string
+  name: string
+  description: string
+  category: string
+  tags: string[]
+  roleCount: number
+  eventCount: number
+  usageCount: number
+  sessionCount: number
+  favoriteCount: number
+  isBuiltin: boolean
+  availableForSessionCreation: boolean
+}
+
+export interface TemplateListResult {
+  templates: TemplateSummary[]
+}
+
+export interface TemplateDetailResult {
+  template: DiscussionTemplate
+}
+
+export interface TemplateRolesResult {
+  templateId: string
+  templateVersion: string
+  roles: TemplateRole[]
+}
+
+export interface RoleConfigPatchRequest {
+  model?: string
+  temperature?: number
+  maxCharsPerTurn?: number
+}
+
+export interface RoleRuntimeConfig {
+  model?: string
+  temperature?: number
+  maxCharsPerTurn?: number
+}
+
+export interface RoleConfigPatchResult {
+  templateId: string
+  templateVersion: string
+  roleId: string
+  config: RoleRuntimeConfig
+  effectScope: 'future_sessions_only'
+}
+
+// ─── Model strategy API DTOs (iteration 8) ─────────────────────────────────
+
+export interface ModelStrategiesResult {
+  strategies: ModelStrategy[]
+  defaultModelStrategyId: string
+}
+
+// ─── Session list DTOs (iteration 8) ───────────────────────────────────────
+
+export interface SessionListItem {
+  sessionId: string
+  topic: string
+  status: SessionLifecycleStatus
+  template: {
+    templateId: string
+    name: string
+    version?: string
+    fromSnapshot: boolean
+    fallbackReason?: string
+  }
+  modelStrategy?: {
+    modelStrategyId: string
+    name: string
+    selectedByDefault?: boolean
+    fromSnapshot: boolean
+  }
+  roleCount: number
+  eventCount: number
+  messageCount: number
+  createdAt: number
+  updatedAt: number
+}
+
+export interface SessionListResult {
+  sessions: SessionListItem[]
 }
 
 // Iteration 2: discussion API types
 export interface SessionDetailResult {
   sessionId: string
   topic: string
-  template: { templateId: string; name: string }
+  template: { templateId: string; name: string; version?: string; fromSnapshot: boolean; fallbackReason?: string }
+  modelStrategy?: { modelStrategyId: string; name: string; selectedByDefault?: boolean; fromSnapshot: boolean; fallbackReason?: string }
   status: LegacySessionLifecycleStatus
   phase?: DiscussionStage
   state?: DiscussionState

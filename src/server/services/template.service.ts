@@ -1,5 +1,6 @@
-import type { Template } from '@/types'
+import type { Template, DiscussionTemplate, TemplateSummary, TemplateSnapshot, TemplateRolesResult } from '@/types'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
+import type { RoleConfigPatchRequest, RoleConfigPatchResult, TemplateListResult, TemplateDetailResult } from '@/types/api'
 import { ServiceError } from '@/server/errors'
 
 export class TemplateService {
@@ -19,5 +20,29 @@ export class TemplateService {
     } catch (err) {
       throw new ServiceError('TEMPLATE_GET_FAILED', 'Failed to get template', err)
     }
+  }
+
+  async listTemplateSummaries(): Promise<TemplateListResult> {
+    throw new Error('not implemented')
+  }
+
+  async getTemplateDetail(templateId: string): Promise<TemplateDetailResult> {
+    throw new Error('not implemented')
+  }
+
+  async listTemplateRoles(templateId: string): Promise<TemplateRolesResult> {
+    throw new Error('not implemented')
+  }
+
+  async updateRoleConfig(
+    templateId: string,
+    roleId: string,
+    patch: RoleConfigPatchRequest
+  ): Promise<RoleConfigPatchResult> {
+    throw new Error('not implemented')
+  }
+
+  createTemplateSnapshot(template: DiscussionTemplate): TemplateSnapshot {
+    throw new Error('not implemented')
   }
 }

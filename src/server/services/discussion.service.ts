@@ -195,6 +195,7 @@ export class DiscussionService {
       template: {
         templateId: template?.id ?? session.templateId,
         name: template?.name ?? '',
+        fromSnapshot: false,
       },
       status: session.status,
       phase: session.state.stage,
@@ -441,7 +442,7 @@ export class DiscussionService {
           session,
           sessionId,
           [...existingMessages, ...(userMessage ? [userMessage] : []), ...agentMessages],
-          { content: lastAgentMessage.content, roleId: lastAgentMessage.roleId ?? '' }
+          { agentId: lastAgentMessage.roleId ?? '', roleId: lastAgentMessage.roleId ?? '', messageType: lastAgentMessage.type === 'host' ? 'host' : 'character', content: lastAgentMessage.content }
         )
       : []
     const createdEvents = createdEventResults.map((r) => r.event)
