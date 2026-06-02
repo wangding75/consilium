@@ -1,0 +1,113 @@
+tasks:
+  - task: "Task-01：定义模板、策略与会话快照契约"
+    test_file: src/types/template-strategy-contract.test.ts
+    test_cases: 26
+    task_type: contract
+    data_operations: 无
+    boundary: "只修改 `src/types/index.ts` 与 `src/types/api.ts` 的类型声明和导出；不得删除既有类型字段"
+    forbidden: "不得写业务逻辑；不得删除现有 API DTO；不得把类型定义放入组件文件"
+
+  - task: "Task-02：实现服务端模板版本数据源与模板查询能力"
+    test_file: src/data/templates/template-data.test.ts
+    test_cases: 15
+    task_type: business-implementation
+    data_operations: "读 `template_versions` 逻辑集合"
+    boundary: "只新增/修改 Change Log 中模板数据、TemplateRepository、MockTemplateRepository、TemplateService 和模板 GET route 的相关方法；模板 GET/PATCH route 必须使用 `instances.ts` 中的 `sharedTemplateRepo` 共享实例，不得每次 new；同步更新所有现有 `/api/templates` 消费者和测试；不得改写 SessionService"
+    forbidden: "不得硬编码在 UI 组件中返回模板数据；不得只返回三国模板；不得省略模板版本字段；不得分两次读取造成角色版本漂移"
+
+  - task: "Task-03：实现模板角色配置版本更新能力"
+    test_file: src/server/repositories/mock/mock-template.repository.test.ts
+    test_cases: 12
+    task_type: business-implementation
+    data_operations: "读写 `template_versions` 逻辑集合；不读写 `sessions` 逻辑集合"
+    boundary: "只新增/修改角色配置 route、TemplateService 配置校验、MockTemplateRepository 配置更新方法；不得修改 SessionRepository 快照"
+    forbidden: "不得修改任何已创建 session 的 templateSnapshot；不得接受空 patch；不得接受非法 temperature/maxCharsPerTurn；不得可变修改旧版本对象"
+
+  - task: "Task-04：实现模型策略查询 API"
+    test_file: src/data/model-strategies.test.ts
+    test_cases: 10
+    task_type: business-implementation
+    data_operations: "读 `model_strategies` 逻辑集合"
+    boundary: "只新增/修改 model strategy 数据、repository、service、GET /api/model-strategies route；不得实现 Provider/API Key 管理"
+    forbidden: "不得把策略只作为 UI 文案；不得省略 fallbackChain、temperature、maxTokens、defaultModelStrategyId"
+
+  - task: "Task-05：实现模型策略快照与运行时解析能力"
+    test_file: src/server/services/model-strategy.service.test.ts
+    test_cases: 15
+    task_type: integration
+    data_operations: "读 `model_strategies` 逻辑集合"
+    boundary: "只修改 ModelStrategyService 解析逻辑和必要类型；不得修改 UI 组件"
+    forbidden: "不得忽略配置优先级；不得把 maxCharsPerTurn 换算成 maxTokens；不得用硬编码 DEFAULT_MODEL 覆盖策略"
+
+  - task: "Task-06：实现创建会话保存模板与策略快照"
+    test_file: src/server/services/session-service.test.ts
+    test_cases: 18
+    task_type: integration
+    data_operations: "通过 TemplateService/Repository 读取模板详情（`template_versions` 逻辑集合）；通过 ModelStrategyService/Repository 读取策略详情（`model_strategies` 逻辑集合）；写 `sessions` 逻辑集合"
+    boundary: "只替换 SessionService.createSession() 中模板/策略校验与 session 构造逻辑；只扩展 MockSessionRepository 保存字段；不得修改会话状态流转方法"
+    forbidden: "不得保存对实时模板对象的可变引用；不得在策略无效时创建 session；不得省略 snapshotCreatedAt；不得在无默认策略时静默创建"
+
+  - task: "Task-07：实现会话列表快照摘要 API"
+    test_file: src/app/api/sessions/sessions-api.test.ts
+    test_cases: 9
+    task_type: integration
+    data_operations: "读 `sessions` 逻辑集合；旧会话兜底时可读 `template_versions` 与 `model_strategies` 逻辑集合"
+    boundary: "只修改 SessionService.listSessions() 映射和 sessions GET route 响应；不得修改归档/恢复/完成状态流转逻辑"
+    forbidden: "不得让 UI 直接依赖内部 Session 快照对象；不得因旧会话缺少快照阻断列表返回"
+
+  - task: "Task-08：实现讨论恢复与 Agent 运行时使用会话快照"
+    test_file: src/server/services/discussion-integration.test.ts
+    test_cases: 3
+    task_type: integration
+    data_operations: "读 `sessions` 逻辑集合；读写 `messages` 逻辑集合；写 `agent_call_logs` 逻辑集合"
+    boundary: "只替换 DiscussionService 中构造 roles/profiles/templateName/model 的局部逻辑；只扩展 AgentRuntime config 和 call log runtime 字段；不得重写 orchestrator、scheduler 或 director"
+    forbidden: "不得在历史 session 恢复时读取并覆盖实时模板配置；不得继续用硬编码 DEFAULT_MODEL 覆盖策略；不得改变消息幂等逻辑"
+
+  - task: "Task-09：实现首页模板与模型策略真实数据联动"
+    test_file: src/modules/home/home.test.tsx
+    test_cases: 4
+    task_type: ui
+    data_operations: "调用 `/api/templates`、`/api/model-strategies`、`/api/sessions`"
+    boundary: "只修改 HomeModule 的数据加载、Sheet 渲染、query 预选、提交错误处理和会话跳转逻辑；不得修改讨论页路由结构"
+    forbidden: "不得继续使用组件内硬编码模板列表作为主数据源；不得在创建失败时跳转；不得绕过 POST /api/sessions 自行构造 sessionId"
+
+  - task: "Task-10：实现模板中心真实数据、使用模板、角色详情与角色配置交互"
+    test_file: src/modules/templates/templates-module.test.tsx
+    test_cases: 4
+    task_type: ui
+    data_operations: "调用模板列表、详情、角色列表、角色配置 API；点击使用模板时导航 `/?templateId=...`"
+    boundary: "只修改 TemplatesModule 的数据加载、Tab 渲染、使用模板按钮、Sheet 状态和 PATCH 保存逻辑；不得实现复杂模板编辑器、模板导入导出或模板市场"
+    forbidden: "不得从 `threeKingdomsTemplate` 直接渲染主数据；不得在模板页触发真实讨论事件；不得让角色配置影响历史 session；不得无 sessionId 直接进入讨论页"
+
+  - task: "Task-11：实现会话列表展示模板快照摘要"
+    test_file: src/modules/sessions/sessions-module.test.tsx
+    test_cases: 4
+    task_type: ui
+    data_operations: "调用 `/api/sessions`"
+    boundary: "只修改 SessionsModule 的数据加载类型和展示字段；不得改变归档、恢复、完成等状态流转逻辑"
+    forbidden: "不得用最新模板覆盖历史会话摘要；不得因旧会话缺失快照阻断恢复"
+
+type_tests:
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: src/server/services/discussion-integration.test.ts
+    covers:
+      - "Task-05：实现模型策略快照与运行时解析能力"
+      - "Task-06：实现创建会话保存模板与策略快照"
+      - "Task-07：实现会话列表快照摘要 API"
+      - "Task-08：实现讨论恢复与 Agent 运行时使用会话快照"
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: src/app/api/templates/templates-api.test.ts
+    covers:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+      - "Task-03：实现模板角色配置版本更新能力"
+      - "Task-04：实现模型策略查询 API"
+      - "Task-07：实现会话列表快照摘要 API"
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: src/modules/home/home.test.tsx
+    covers:
+      - "Task-09：实现首页模板与模型策略真实数据联动"
+      - "Task-10：实现模板中心真实数据、使用模板、角色详情与角色配置交互"
+      - "Task-11：实现会话列表展示模板快照摘要"

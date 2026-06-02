@@ -96,6 +96,48 @@ it('createSession with nonexistent templateId throws TEMPLATE_NOT_FOUND', async 
   ).rejects.toMatchObject({ code: 'TEMPLATE_NOT_FOUND' })
 })
 
+
+it('createSession saves templateSnapshot and strategySnapshot', async () => {
+  const repo = new MockSessionRepository()
+  const service = new SessionService(repo, new MockTemplateRepository())
+  const result = await service.createSession({
+    topic: '测试议题',
+    templateId: 'three-kingdoms-advisors',
+    modelStrategyId: 'smart',
+  })
+  const saved = await repo.findById(result.sessionId)
+  expect(saved!.templateSnapshot).toBeDefined()
+  expect(saved!.strategySnapshot).toBeDefined()
+})
+
+it('createSession sets snapshotCreatedAt', async () => {
+  const repo = new MockSessionRepository()
+  const service = new SessionService(repo, new MockTemplateRepository())
+  const result = await service.createSession({
+    topic: '测试议题',
+    templateId: 'three-kingdoms-advisors',
+  })
+  const saved = await repo.findById(result.sessionId)
+  expect(saved!.snapshotCreatedAt).toBeDefined()
+  expect(typeof saved!.snapshotCreatedAt).toBe('string')
+})
+
+it('createSession records selectedByDefault=true when strategy not provided', async () => {
+  const repo = new MockSessionRepository()
+  const service = new SessionService(repo, new MockTemplateRepository())
+  const result = await service.createSession({
+    topic: '测试议题',
+    templateId: 'three-kingdoms-advisors',
+  })
+  expect(result.modelStrategy!.selectedByDefault).toBe(true)
+})
+
+it('createSession with nonexistent modelStrategyId throws MODEL_STRATEGY_NOT_FOUND', async () => {
+  const service = makeService()
+  await expect(
+    service.createSession({ topic: '有效议题', templateId: 'three-kingdoms-advisors', modelStrategyId: 'nonexistent' })
+  ).rejects.toMatchObject({ code: 'MODEL_STRATEGY_NOT_FOUND' })
+})
 // ── Task-07: getRecentSessions ────────────────────────────────────────────
 
 it('getRecentSessions returns array', async () => {

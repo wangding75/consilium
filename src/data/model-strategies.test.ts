@@ -42,3 +42,23 @@ it('DEFAULT_STRATEGY_ID is a valid ModelStrategyId', () => {
   const validIds: ModelStrategyId[] = ['smart', 'quality', 'cost']
   expect(validIds).toContain(DEFAULT_STRATEGY_ID)
 })
+
+it('each strategy has fallbackChain, temperature, and maxTokens', () => {
+  for (const strategy of MODEL_STRATEGIES) {
+    expect(Array.isArray(strategy.fallbackChain)).toBe(true)
+    expect(typeof strategy.temperature).toBe('number')
+    expect(typeof strategy.maxTokens).toBe('number')
+  }
+})
+
+it('each strategy has active and isDefault boolean fields', () => {
+  for (const strategy of MODEL_STRATEGIES) {
+    expect(typeof strategy.active).toBe('boolean')
+    expect(typeof strategy.isDefault).toBe('boolean')
+  }
+})
+
+it('exactly one strategy has isDefault=true and active=true', () => {
+  const defaults = MODEL_STRATEGIES.filter(s => s.isDefault && s.active)
+  expect(defaults).toHaveLength(1)
+})
