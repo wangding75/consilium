@@ -1,0 +1,45 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/8
+
+tasks:
+  - task: "Task-01：定义模板、策略与会话快照契约"
+    test_file: src/types/template-strategy-contract.test.ts
+    phase: locked
+  - task: "Task-02：实现服务端模板版本数据源与模板查询能力"
+    test_file: src/data/templates/template-data.test.ts
+    phase: locked
+  - task: "Task-03：实现模板角色配置版本更新能力"
+    test_file: src/server/repositories/mock/mock-template.repository.test.ts
+    phase: locked
+  - task: "Task-04：实现模型策略查询 API"
+    test_file: src/data/model-strategies.test.ts
+    phase: locked
+  - task: "Task-05：实现模型策略快照与运行时解析能力"
+    test_file: src/server/services/model-strategy.service.test.ts
+    phase: locked
+  - task: "Task-06：实现创建会话保存模板与策略快照"
+    test_file: src/server/services/session-service.test.ts
+    phase: locked
+  - task: "Task-07：实现会话列表快照摘要 API"
+    test_file: src/app/api/sessions/sessions-api.test.ts
+    phase: locked
+  - task: "Task-08：实现讨论恢复与 Agent 运行时使用会话快照"
+    test_file: src/server/services/discussion-integration.test.ts
+    phase: locked
+  - task: "Task-09：实现首页模板与模型策略真实数据联动"
+    test_file: src/modules/home/home.test.tsx
+    phase: locked
+  - task: "Task-10：实现模板中心真实数据、使用模板、角色详情与角色配置交互"
+    test_file: src/modules/templates/templates-module.test.tsx
+    phase: locked
+  - task: "Task-11：实现会话列表展示模板快照摘要"
+    test_file: src/modules/sessions/sessions-module.test.tsx
+    phase: locked
