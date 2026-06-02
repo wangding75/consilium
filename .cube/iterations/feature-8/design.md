@@ -750,7 +750,7 @@ interface ModelStrategyRepository {
   - 输入：CreateSessionParams
   - 输出：CreateSessionResult 或 ServiceError
   - 依赖任务：Task-01（快照类型）、Task-02（模板查询）、Task-05（策略快照）
-  - 数据操作：读 `template_versions` 逻辑集合；读 `model_strategies` 逻辑集合；写 `sessions` 逻辑集合
+  - 数据操作：通过 TemplateService/Repository 读取模板详情（`template_versions` 逻辑集合）；通过 ModelStrategyService/Repository 读取策略详情（`model_strategies` 逻辑集合）；写 `sessions` 逻辑集合
   - 修改边界：只替换 SessionService.createSession() 中模板/策略校验与 session 构造逻辑；只扩展 MockSessionRepository 保存字段；不得修改会话状态流转方法
   - 禁止行为：不得保存对实时模板对象的可变引用；不得在策略无效时创建 session；不得省略 snapshotCreatedAt；不得在无默认策略时静默创建
   - 产出类型：integration
