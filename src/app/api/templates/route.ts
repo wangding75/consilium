@@ -1,18 +1,17 @@
 import { NextResponse } from 'next/server'
-import type { ApiResponse } from '@/types/api'
-import type { Template } from '@/types'
+import type { ApiResponse, TemplateListResult } from '@/types/api'
 import { TemplateService } from '@/server/services/template.service'
-import { MockTemplateRepository } from '@/server/repositories/mock/mock-template.repository'
+import { sharedTemplateRepo } from '@/server/repositories/mock/instances'
 import { ServiceError } from '@/server/errors'
 
-export async function GET(): Promise<NextResponse<ApiResponse<Template[]>>> {
+export async function GET(): Promise<NextResponse<ApiResponse<TemplateListResult>>> {
   const requestId = crypto.randomUUID()
   try {
-    const service = new TemplateService(new MockTemplateRepository())
-    const data = await service.listTemplates()
+    const service = new TemplateService(sharedTemplateRepo)
+    const data = await service.listTemplateSummaries()
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
-    const code = 'INTERNAL_ERROR'
+    const code = err instanceof ServiceError ? err.code : 'INTERNAL_ERROR'
     const message = err instanceof ServiceError ? err.message : 'An unexpected error occurred'
     return NextResponse.json(
       { success: false, data: null, error: { code, message }, requestId },

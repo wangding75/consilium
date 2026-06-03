@@ -107,7 +107,7 @@ describe('Task-02: 实现服务端模板版本数据源与模板查询能力', (
     const repo = new MockTemplateRepository()
     const template = await repo.findById('three-kingdoms-advisors')
     expect(template).not.toBeNull()
-    expect(template).toHaveProperty('id', 'three-kingdoms-advisors')
+    expect(template).toHaveProperty('templateId', 'three-kingdoms-advisors')
     expect(Array.isArray(template!.roles)).toBe(true)
   })
 

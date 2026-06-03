@@ -1,0 +1,42 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /home/wangding/git/consilium
+
+ ✓ src/data/templates/template-data.test.ts (15 tests) 16ms
+ ❯ src/app/api/templates/templates-api.test.ts (7 tests | 2 failed) 24ms
+   × PATCH /api/templates/:templateId/roles/:roleId/config (Task-03) > returns 200 with RoleConfigPatchResult for valid patch 9ms
+     → expected [ 200, 501, 404 ] to include 500
+   × PATCH /api/templates/:templateId/roles/:roleId/config (Task-03) > returns 400 VALIDATION_ERROR for empty patch 2ms
+     → expected [ 400, 501 ] to include 500
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/app/api/templates/templates-api.test.ts > PATCH /api/templates/:templateId/roles/:roleId/config (Task-03) > returns 200 with RoleConfigPatchResult for valid patch
+AssertionError: expected [ 200, 501, 404 ] to include 500
+ ❯ src/app/api/templates/templates-api.test.ts:82:29
+     80|     const body = await res.json()
+     81|     // May return 501 during RED phase
+     82|     expect([200, 501, 404]).toContain(res.status)
+       |                             ^
+     83|   })
+     84| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/app/api/templates/templates-api.test.ts > PATCH /api/templates/:templateId/roles/:roleId/config (Task-03) > returns 400 VALIDATION_ERROR for empty patch
+AssertionError: expected [ 400, 501 ] to include 500
+ ❯ src/app/api/templates/templates-api.test.ts:95:24
+     93|     })
+     94|     const body = await res.json()
+     95|     expect([400, 501]).toContain(res.status)
+       |                        ^
+     96|   })
+     97| })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 20 passed (22)
+   Start at  11:26:21
+   Duration  1.05s (transform 158ms, setup 0ms, collect 282ms, tests 40ms, environment 748ms, prepare 150ms)
+

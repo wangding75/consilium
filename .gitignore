@@ -1,3 +1,4 @@
+.gitignore
 # Dependencies
 node_modules/
 .pnp
@@ -31,3 +32,11 @@ next-env.d.ts
 
 # Coverage
 coverage/
+
+# Windows/WSL stream files
+*:Zone.Identifier
+
+# Claude workspace
+.claude/
+
+

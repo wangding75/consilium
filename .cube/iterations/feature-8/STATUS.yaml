@@ -12,10 +12,18 @@ branch: feature/8
 tasks:
   - task: "Task-01：定义模板、策略与会话快照契约"
     test_file: src/types/template-strategy-contract.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 10:54"
+    completed_at: "2026-06-03 11:03"
+    test_passed: 26
+    test_total: 26
   - task: "Task-02：实现服务端模板版本数据源与模板查询能力"
     test_file: src/data/templates/template-data.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 11:03"
+    completed_at: "2026-06-03 11:26"
+    test_passed: 15
+    test_total: 15
   - task: "Task-03：实现模板角色配置版本更新能力"
     test_file: src/server/repositories/mock/mock-template.repository.test.ts
     phase: locked

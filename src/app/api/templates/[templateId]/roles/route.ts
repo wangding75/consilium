@@ -7,12 +7,13 @@ import { ServiceError } from '@/server/errors'
 
 export async function GET(
   _request: Request,
-  { params }: { params: { templateId: string } }
+  { params }: { params: Promise<{ templateId: string }> }
 ): Promise<NextResponse<ApiResponse<TemplateRolesResult>>> {
   const requestId = crypto.randomUUID()
   try {
+    const { templateId } = await params
     const service = new TemplateService(sharedTemplateRepo)
-    const data = await service.listTemplateRoles(params.templateId)
+    const data = await service.listTemplateRoles(templateId)
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
     if (err instanceof ServiceError) {
