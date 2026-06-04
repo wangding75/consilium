@@ -57,4 +57,8 @@ export class MockEventRepository implements EventRepository {
     this.store.set(eventId, updated)
     return updated
   }
+
+  async clearAll(): Promise<void> {
+    this.store.clear()
+  }
 }

@@ -35,4 +35,14 @@ export class MockVoteRepository implements VoteRepository {
       (vote) => vote.sessionId === sessionId && vote.eventId === eventId && vote.optionId === optionId
     ).length
   }
+
+  async findBySessionId(sessionId: string): Promise<VoteRecord[]> {
+    return Array.from(this.store.values())
+      .filter((vote) => vote.sessionId === sessionId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+  }
+
+  async clearAll(): Promise<void> {
+    this.store.clear()
+  }
 }

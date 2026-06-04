@@ -77,4 +77,9 @@ export class MockMessageRepository implements MessageRepository {
     this.store.set(messageId, updated)
     return updated
   }
+
+  async clearAll(): Promise<void> {
+    this.store.clear()
+    this.clientIdIndex.clear()
+  }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import type { ApiResponse, ProviderStatusDTO, UpsertProviderConfigRequest } from '@/types/api'
+import type { ApiResponse, RoleModelOverrideDTO, SaveRoleModelOverridesRequest } from '@/types/api'
 import { SettingsService } from '@/server/services/settings.service'
 import { sharedSettingsRepo, sharedSessionRepo, sharedMessageRepo, sharedEventRepo, sharedVoteRepo } from '@/server/repositories/mock/instances'
 import { ServiceError } from '@/server/errors'
@@ -15,37 +15,34 @@ function getService(): SettingsService {
   )
 }
 
-export async function GET(): Promise<NextResponse<ApiResponse<ProviderStatusDTO[]>>> {
+export async function GET(): Promise<NextResponse<ApiResponse<RoleModelOverrideDTO[]>>> {
   const requestId = crypto.randomUUID()
   try {
-    const service = getService()
-    const data = await service.listProviders()
+    const data = await getService().getRoleModelOverrides()
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
-    const code = 'INTERNAL_ERROR'
     const message = err instanceof ServiceError ? err.message : 'An unexpected error occurred'
     return NextResponse.json(
-      { success: false, data: null, error: { code, message }, requestId },
+      { success: false, data: null, error: { code: 'INTERNAL_ERROR', message }, requestId },
       { status: 500 }
     )
   }
 }
 
-export async function PUT(req: NextRequest): Promise<NextResponse<ApiResponse<Partial<ProviderStatusDTO>>>> {
+export async function PUT(req: NextRequest): Promise<NextResponse<ApiResponse<RoleModelOverrideDTO[]>>> {
   const requestId = crypto.randomUUID()
   try {
-    const body = (await req.json()) as UpsertProviderConfigRequest
-    if (!body.providerId) {
+    const body = (await req.json()) as SaveRoleModelOverridesRequest
+    if (!Array.isArray(body.overrides)) {
       return NextResponse.json(
-        { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'providerId is required' }, requestId },
+        { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'overrides must be an array' }, requestId },
         { status: 400 }
       )
     }
-    const service = getService()
-    const data = await service.upsertProviderConfig(body)
+    const data = await getService().saveRoleModelOverrides(body.overrides)
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
-    const code = err instanceof ServiceError ? err.code ?? 'INTERNAL_ERROR' : 'INTERNAL_ERROR'
+    const code = err instanceof ServiceError ? err.code : 'INTERNAL_ERROR'
     const message = err instanceof ServiceError ? err.message : 'An unexpected error occurred'
     return NextResponse.json(
       { success: false, data: null, error: { code, message }, requestId },

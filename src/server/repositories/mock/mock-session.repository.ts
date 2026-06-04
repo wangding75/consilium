@@ -96,4 +96,8 @@ export class MockSessionRepository implements SessionRepository {
   async delete(id: string): Promise<void> {
     this.store.delete(id)
   }
+
+  async clearAll(): Promise<void> {
+    this.store.clear()
+  }
 }

@@ -12,4 +12,5 @@ export interface MessageRepository {
   findRepliesByClientMessageId(sessionId: string, clientMessageId: string): Promise<DiscussionMessage[]>
   updateStatus(messageId: string, status: DiscussionMessage['status']): Promise<void>
   updateMetadata(messageId: string, metadata: DiscussionMessage['metadata']): Promise<DiscussionMessage | null>
+  clearAll(): Promise<void>
 }

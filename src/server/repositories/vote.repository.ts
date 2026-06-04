@@ -10,4 +10,6 @@ export interface VoteRepository {
   ): Promise<VoteRecord | null>
   save(vote: VoteRecord): Promise<VoteRecord>
   countByOption(sessionId: string, eventId: string, optionId: string): Promise<number>
+  findBySessionId(sessionId: string): Promise<VoteRecord[]>
+  clearAll(): Promise<void>
 }

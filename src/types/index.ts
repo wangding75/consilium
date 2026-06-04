@@ -191,6 +191,7 @@ export interface Session {
   templateSnapshot?: TemplateSnapshot
   strategySnapshot?: ModelStrategySnapshot
   snapshotCreatedAt?: string
+  runtimeConfigSnapshot?: SessionRuntimeConfigSnapshot
 }
 
 // Discussion represents a runtime discussion run (to be expanded in iteration 2+)
@@ -553,3 +554,67 @@ export interface AgentCallLogRuntimeFields {
 
 // ─── LLMConfig maxTokens extension (iteration 8) ───────────────────────────
 // (extends existing LLMConfig — see LLMConfig interface above)
+
+// ─── Settings domain types (iteration 9) ────────────────────────────────────
+
+export type ProviderConnectionStatus = 'unconfigured' | 'untested' | 'success' | 'failed' | 'disabled'
+
+export interface ProviderConfig {
+  providerId: 'openai' | 'anthropic' | 'gemini' | 'deepseek' | 'custom'
+  enabled: boolean
+  baseUrl?: string
+  apiKeyRef?: string
+  modelList: string[]
+  customHeaders?: Record<string, string>
+  lastTestStatus: 'untested' | 'success' | 'failed'
+  lastTestedAt?: string
+  lastErrorCode?: string
+  lastErrorMessage?: string
+}
+
+export interface GlobalModelDefaults {
+  providerId: string
+  model: string
+  temperature: number
+  maxTokens: number
+}
+
+export interface RoleModelOverride {
+  roleId: string
+  providerId?: string
+  model?: string
+  temperature?: number
+  maxTokens?: number
+}
+
+export interface PromptConfig {
+  promptId: string
+  scope: 'global' | 'role'
+  targetId?: string
+  version: string
+  content: string
+  updatedAt: string
+  isDefault: boolean
+}
+
+export interface SessionRuntimeConfigSnapshot {
+  globalDefaults: GlobalModelDefaults
+  roleOverrides: RoleModelOverride[]
+  snapshotAt: string
+}
+
+export type ResolvedModelConfigSource =
+  | 'roleOverride'
+  | 'sessionSnapshot'
+  | 'templateDefaults'
+  | 'strategyDefaults'
+  | 'globalDefaults'
+  | 'providerDefault'
+
+export interface ResolvedModelConfig {
+  providerId: string
+  model: string
+  temperature: number
+  maxTokens: number
+  source: ResolvedModelConfigSource
+}

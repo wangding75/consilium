@@ -18,6 +18,9 @@ import type {
   DiscussionTemplate,
   TemplateRole,
   ModelStrategy,
+  GlobalModelDefaults,
+  RoleModelOverride,
+  PromptConfig,
 } from '@/types'
 
 export interface ApiError {
@@ -290,4 +293,72 @@ export interface RequestSummaryResult {
   summaryMessage: DiscussionMessage
   sessionStatus: SessionLifecycleStatus
   directorDecision: DirectorDecisionRecord
+}
+
+// ─── Settings API DTOs (iteration 9) ────────────────────────────────────────
+
+export interface ProviderStatusDTO {
+  providerId: string
+  enabled: boolean
+  baseUrl?: string
+  maskedKey?: string
+  modelList: string[]
+  maskedHeaders: Record<string, string>
+  lastTestStatus: 'untested' | 'success' | 'failed'
+  lastTestedAt?: string
+  lastErrorCode?: string
+  lastErrorMessage?: string
+}
+
+export interface UpsertProviderConfigRequest {
+  providerId: 'openai' | 'anthropic' | 'gemini' | 'deepseek' | 'custom'
+  enabled: boolean
+  baseUrl?: string
+  apiKey?: string
+  modelList?: string[]
+  headers?: Record<string, string>
+}
+
+export interface ProviderTestRequest {
+  providerId: string
+  baseUrl?: string
+  apiKey?: string
+  model?: string
+  headers?: Record<string, string>
+}
+
+export interface ProviderTestResult {
+  providerId: string
+  status: 'success' | 'failed'
+  latencyMs: number
+  checkedAt: string
+  availableModels: string[]
+  maskedKey?: string
+  errorCode?: string
+  errorMessage?: string
+}
+
+export type ModelDefaultsDTO = GlobalModelDefaults
+
+export type RoleModelOverrideDTO = RoleModelOverride
+
+export interface SaveRoleModelOverridesRequest {
+  overrides: RoleModelOverride[]
+}
+
+export type PromptConfigDTO = PromptConfig
+
+export interface UpdatePromptRequest {
+  promptId: string
+  content?: string
+  reset?: boolean
+}
+
+export interface SessionExportResult {
+  sessionId: string
+  format: 'md'
+  filename: string
+  content: string
+  generatedAt: string
+  sanitized: true
 }

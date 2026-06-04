@@ -10,4 +10,5 @@ export interface SessionRepository {
   updateStatus(id: string, status: SessionLifecycleStatus, reason: string): Promise<Session | null>
   updateState(id: string, state: DiscussionState, reason: string): Promise<Session | null>
   delete(id: string): Promise<void>
+  clearAll(): Promise<void>
 }

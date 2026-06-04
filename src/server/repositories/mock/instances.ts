@@ -7,6 +7,7 @@ import { MockDirectorDecisionRepository } from './mock-director-decision.reposit
 import { MockEventRepository } from './mock-event.repository'
 import { MockVoteRepository } from './mock-vote.repository'
 import { MockModelStrategyRepository } from './mock-model-strategy.repository'
+import { MockSettingsRepository } from './mock-settings.repository'
 
 declare global {
   // eslint-disable-next-line no-var
@@ -27,6 +28,8 @@ declare global {
   var __mockVoteRepo: MockVoteRepository | undefined
   // eslint-disable-next-line no-var
   var __mockModelStrategyRepo: MockModelStrategyRepository | undefined
+  // eslint-disable-next-line no-var
+  var __mockSettingsRepo: MockSettingsRepository | undefined
 }
 
 globalThis.__mockSessionRepo ??= new MockSessionRepository()
@@ -38,6 +41,7 @@ globalThis.__mockDirectorDecisionRepo ??= new MockDirectorDecisionRepository()
 globalThis.__mockEventRepo ??= new MockEventRepository()
 globalThis.__mockVoteRepo ??= new MockVoteRepository()
 globalThis.__mockModelStrategyRepo ??= new MockModelStrategyRepository()
+globalThis.__mockSettingsRepo ??= new MockSettingsRepository()
 
 export const sharedSessionRepo = globalThis.__mockSessionRepo
 export const sharedTemplateRepo = globalThis.__mockTemplateRepo
@@ -48,4 +52,5 @@ export const sharedDirectorDecisionRepo = globalThis.__mockDirectorDecisionRepo
 export const sharedEventRepo = globalThis.__mockEventRepo
 export const sharedVoteRepo = globalThis.__mockVoteRepo
 export const sharedModelStrategyRepo = globalThis.__mockModelStrategyRepo
+export const sharedSettingsRepo = globalThis.__mockSettingsRepo
 
