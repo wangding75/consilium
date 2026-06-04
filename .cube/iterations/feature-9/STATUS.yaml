@@ -1,0 +1,48 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/9
+
+tasks:
+  - task: "Task-01：定义 Settings 核心类型和 API DTOs"
+    test_file: settings-types.test.ts
+    phase: locked
+  - task: "Task-02：扩展 Repository 接口并实现 MockSettingsRepository"
+    test_file: mock-settings-repository.test.ts
+    phase: locked
+  - task: "Task-03：实现 SettingsService（Provider 状态查询和配置）"
+    test_file: settings-service-provider.test.ts
+    phase: locked
+  - task: "Task-04：实现 SettingsService（模型配置、Prompt、数据清理）"
+    test_file: settings-service-model-prompt.test.ts
+    phase: locked
+  - task: "Task-05：实现 ModelConfigResolver"
+    test_file: model-config-resolver.test.ts
+    phase: locked
+  - task: "Task-06：实现 SessionExportService"
+    test_file: session-export-service.test.ts
+    phase: locked
+  - task: "Task-07：实现 Settings API 路由（Provider + Model + Prompt）"
+    test_file: settings-api.test.ts
+    phase: locked
+  - task: "Task-08：实现会话导出 API 路由"
+    test_file: session-export-api.test.ts
+    phase: locked
+  - task: "Task-09：SessionService 写入 runtimeConfigSnapshot"
+    test_file: session-service-runtime-config.test.ts
+    phase: locked
+  - task: "Task-10：LLMProvider.testConnection 接口"
+    test_file: llm-provider-test-connection.test.ts
+    phase: locked
+  - task: "Task-11：实现设置页 UI（SettingsModule）"
+    test_file: settings-module.test.tsx
+    phase: locked
+  - task: "Task-12：会话页和讨论详情页导出 UI"
+    test_file: sessions-export-ui.test.tsx
+    phase: locked
