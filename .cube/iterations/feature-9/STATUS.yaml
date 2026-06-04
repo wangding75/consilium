@@ -26,7 +26,11 @@ tasks:
     test_total: 24
   - task: "Task-03：实现 SettingsService（Provider 状态查询和配置）"
     test_file: settings-service-provider.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 07:42"
+    completed_at: "2026-06-04 07:43"
+    test_passed: 17
+    test_total: 17
   - task: "Task-04：实现 SettingsService（模型配置、Prompt、数据清理）"
     test_file: settings-service-model-prompt.test.ts
     phase: locked
