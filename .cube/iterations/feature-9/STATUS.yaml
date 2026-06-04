@@ -82,7 +82,15 @@ tasks:
     test_total: 5
   - task: "Task-11：实现设置页 UI（SettingsModule）"
     test_file: settings-module.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 08:16"
+    completed_at: "2026-06-04 08:17"
+    test_passed: 6
+    test_total: 6
   - task: "Task-12：会话页和讨论详情页导出 UI"
     test_file: sessions-export-ui.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 08:17"
+    completed_at: "2026-06-04 08:18"
+    test_passed: 2
+    test_total: 2

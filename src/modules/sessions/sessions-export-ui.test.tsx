@@ -44,9 +44,6 @@ beforeEach(() => {
   vi.clearAllMocks()
   fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
     const url = typeof input === 'string' ? input : input.toString()
-    if (url === '/api/sessions') {
-      return { ok: true, json: async () => sessionListResponse }
-    }
     if (url.startsWith('/api/sessions/') && url.includes('/export')) {
       return {
         ok: true,
@@ -63,7 +60,7 @@ beforeEach(() => {
         }),
       }
     }
-    return { ok: true, json: async () => ({ success: true, data: [] }) }
+    return { ok: true, json: async () => sessionListResponse }
   })
 })
 

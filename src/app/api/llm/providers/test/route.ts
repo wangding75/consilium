@@ -18,8 +18,17 @@ function getService(): SettingsService {
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<ProviderTestResult>>> {
   const requestId = crypto.randomUUID()
   try {
-    const body = (await req.json()) as ProviderTestRequest
-    if (!body.providerId) {
+    let raw: unknown
+    try {
+      raw = await req.json()
+    } catch {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'Invalid JSON body' }, requestId },
+        { status: 400 }
+      )
+    }
+    const body = raw as ProviderTestRequest
+    if (!body || !body.providerId) {
       return NextResponse.json(
         { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'providerId is required' }, requestId },
         { status: 400 }

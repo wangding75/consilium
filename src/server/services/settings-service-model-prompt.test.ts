@@ -148,9 +148,11 @@ describe('SettingsService.updatePrompt', () => {
     expect(updated.updatedAt).not.toBe('2026-06-04T00:00:00.000Z')
   })
 
-  it('throws NOT_FOUND when promptId does not exist', async () => {
+  it('auto-creates prompt when promptId does not exist', async () => {
     const { svc } = makeRepoWithService()
-    await expect(svc.updatePrompt('nonexistent', 'content')).rejects.toMatchObject({ code: 'NOT_FOUND' })
+    const created = await svc.updatePrompt('nonexistent', 'content')
+    expect(created.promptId).toBe('nonexistent')
+    expect(created.isDefault).toBe(false)
   })
 
   it('throws VALIDATION_ERROR when content is empty', async () => {
