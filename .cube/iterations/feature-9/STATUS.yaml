@@ -75,7 +75,11 @@ tasks:
     test_total: 6
   - task: "Task-10：LLMProvider.testConnection 接口"
     test_file: llm-provider-test-connection.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 08:15"
+    completed_at: "2026-06-04 08:15"
+    test_passed: 5
+    test_total: 5
   - task: "Task-11：实现设置页 UI（SettingsModule）"
     test_file: settings-module.test.tsx
     phase: locked
