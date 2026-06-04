@@ -12,10 +12,18 @@ branch: feature/9
 tasks:
   - task: "Task-01：定义 Settings 核心类型和 API DTOs"
     test_file: settings-types.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 07:35"
+    completed_at: "2026-06-04 07:35"
+    test_passed: 36
+    test_total: 36
   - task: "Task-02：扩展 Repository 接口并实现 MockSettingsRepository"
     test_file: mock-settings-repository.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 07:36"
+    completed_at: "2026-06-04 07:38"
+    test_passed: 24
+    test_total: 24
   - task: "Task-03：实现 SettingsService（Provider 状态查询和配置）"
     test_file: settings-service-provider.test.ts
     phase: locked

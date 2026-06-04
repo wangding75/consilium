@@ -8,12 +8,13 @@ export class MockSettingsRepository implements SettingsRepository {
   private promptConfigs = new Map<string, PromptConfig>()
 
   async getProviderConfigs(): Promise<ProviderConfig[]> {
-    return Array.from(this.providerConfigs.values())
+    return Array.from(this.providerConfigs.values()).map((c) => ({ ...c, modelList: [...c.modelList] }))
   }
 
   async upsertProviderConfig(config: ProviderConfig): Promise<ProviderConfig> {
-    this.providerConfigs.set(config.providerId, { ...config })
-    return { ...config }
+    const copy = { ...config, modelList: [...config.modelList] }
+    this.providerConfigs.set(config.providerId, copy)
+    return { ...copy, modelList: [...copy.modelList] }
   }
 
   async getModelDefaults(): Promise<GlobalModelDefaults | null> {
