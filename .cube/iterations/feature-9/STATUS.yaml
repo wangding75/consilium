@@ -54,7 +54,11 @@ tasks:
     test_total: 12
   - task: "Task-07：实现 Settings API 路由（Provider + Model + Prompt）"
     test_file: settings-api.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 07:44"
+    completed_at: "2026-06-04 08:08"
+    test_passed: 25
+    test_total: 25
   - task: "Task-08：实现会话导出 API 路由"
     test_file: session-export-api.test.ts
     phase: locked

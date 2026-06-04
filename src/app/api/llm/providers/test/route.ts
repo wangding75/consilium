@@ -27,6 +27,12 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<P
     }
     const service = getService()
     const data = await service.testProvider(body)
+    if (data.status === 'failed') {
+      return NextResponse.json(
+        { success: false, data: null, error: { code: data.errorCode ?? 'PROVIDER_TEST_FAILED', message: data.errorMessage ?? 'Provider connection test failed' }, requestId },
+        { status: 500 }
+      )
+    }
     return NextResponse.json({ success: true, data, requestId })
   } catch (err) {
     if (err instanceof ServiceError) {

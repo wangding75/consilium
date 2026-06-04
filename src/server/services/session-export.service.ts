@@ -3,6 +3,7 @@ import type { SessionRepository } from '@/server/repositories/session.repository
 import type { MessageRepository } from '@/server/repositories/message.repository'
 import type { EventRepository } from '@/server/repositories/event.repository'
 import type { VoteRepository } from '@/server/repositories/vote.repository'
+import { ServiceError } from '@/server/errors'
 
 export class SessionExportService {
   constructor(
@@ -14,7 +15,7 @@ export class SessionExportService {
 
   async exportToMarkdown(sessionId: string): Promise<SessionExportResult> {
     const session = await this.sessionRepo.findById(sessionId)
-    if (!session) throw Object.assign(new Error('Session not found'), { code: 'NOT_FOUND' })
+    if (!session) throw new ServiceError('NOT_FOUND', 'Session not found')
 
     const [messages, events, votes] = await Promise.all([
       this.messageRepo.findBySessionId(sessionId),

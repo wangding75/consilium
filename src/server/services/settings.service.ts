@@ -9,6 +9,7 @@ import type {
   ProviderTestRequest,
   ProviderTestResult,
 } from '@/types/api'
+import { ServiceError } from '@/server/errors'
 import type { SettingsRepository } from '@/server/repositories/settings.repository'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { MessageRepository } from '@/server/repositories/message.repository'
@@ -149,8 +150,19 @@ export class SettingsService {
   async updatePrompt(promptId: string, content: string): Promise<PromptConfig> {
     const prompts = await this.settingsRepo.getPromptConfigs()
     const existing = prompts.find((p) => p.promptId === promptId)
-    if (!existing) throw Object.assign(new Error('Prompt not found'), { code: 'NOT_FOUND' })
-    if (!content.trim()) throw Object.assign(new Error('Content cannot be empty'), { code: 'VALIDATION_ERROR' })
+    if (!existing) {
+      if (!content.trim()) throw new ServiceError('VALIDATION_ERROR', 'Content cannot be empty')
+      const created: PromptConfig = {
+        promptId,
+        scope: 'global',
+        version: '1.0.0',
+        content,
+        updatedAt: new Date().toISOString(),
+        isDefault: false,
+      }
+      return this.settingsRepo.savePromptConfig(created)
+    }
+    if (!content.trim()) throw new ServiceError('VALIDATION_ERROR', 'Content cannot be empty')
     const [major, minor, patch] = existing.version.split('.').map(Number)
     const updated: PromptConfig = {
       ...existing,
@@ -165,7 +177,7 @@ export class SettingsService {
   async resetPromptToDefault(promptId: string): Promise<PromptConfig> {
     const prompts = await this.settingsRepo.getPromptConfigs()
     const existing = prompts.find((p) => p.promptId === promptId)
-    if (!existing) throw Object.assign(new Error('Prompt not found'), { code: 'NOT_FOUND' })
+    if (!existing) throw new ServiceError('NOT_FOUND', 'Prompt not found')
     const [major, minor, patch] = existing.version.split('.').map(Number)
     const reset: PromptConfig = {
       ...existing,

@@ -32,7 +32,13 @@ export async function GET(): Promise<NextResponse<ApiResponse<ModelDefaultsDTO |
 export async function PUT(req: NextRequest): Promise<NextResponse<ApiResponse<ModelDefaultsDTO>>> {
   const requestId = crypto.randomUUID()
   try {
-    const body = (await req.json()) as ModelDefaultsDTO
+    const raw = await req.json()
+    const body: ModelDefaultsDTO = {
+      providerId: raw.providerId,
+      model: raw.model,
+      temperature: raw.temperature ?? 0.7,
+      maxTokens: raw.maxTokens ?? 512,
+    }
     if (!body.providerId || !body.model) {
       return NextResponse.json(
         { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'providerId and model are required' }, requestId },

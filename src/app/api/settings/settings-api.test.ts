@@ -257,11 +257,12 @@ describe('PUT /api/settings/prompts', () => {
     expect(body.error.code).toBe('VALIDATION_ERROR')
   })
 
-  it('returns NOT_FOUND for nonexistent prompt update', async () => {
-    const res = await promptsPUT(jsonReq({ promptId: 'nonexistent', content: 'test' }))
+  it('auto-creates prompt when it does not exist yet', async () => {
+    const res = await promptsPUT(jsonReq({ promptId: 'new-prompt', content: 'test' }))
     const body = await res.json()
-    expect(body.success).toBe(false)
-    expect(body.error.code).toBe('NOT_FOUND')
+    expect(body.success).toBe(true)
+    expect(body.data.promptId).toBe('new-prompt')
+    expect(body.data.isDefault).toBe(false)
   })
 })
 
