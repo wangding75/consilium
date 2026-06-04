@@ -27,16 +27,16 @@ async function run() {
     console.log(`${pass ? '✅' : '❌'} ${name}${detail ? ' — ' + detail : ''}`)
   }
 
-  // AC-001 / AC-002: 首页渲染 — 等待 main 内的 h1 出现（排除 Next.js 内嵌的 404 fallback）
+  // AC-001 / AC-002: 首页渲染 — 等待首页核心输入区出现（排除 Next.js 内嵌的 404 fallback）
   await page.goto(BASE)
   await page.waitForLoadState('networkidle')
-  // Next.js 客户端水合后真实内容出现在 main 内
-  await page.waitForSelector('main h1', { timeout: 5000 }).catch(() => {})
+  // Next.js 客户端水合后真实首页内容出现在 main 内
+  await page.waitForSelector('main textarea[placeholder="输入讨论议题..."]', { timeout: 5000 }).catch(() => {})
 
-  const mainH1 = page.locator('main h1').first()
+  const topicTextarea = page.locator('main textarea[placeholder="输入讨论议题..."]').first()
   check('AC-002 首页渲染',
-    await mainH1.isVisible().catch(() => false),
-    (await mainH1.textContent().catch(() => '(not found)')) ?? '')
+    await topicTextarea.isVisible().catch(() => false),
+    (await topicTextarea.getAttribute('placeholder').catch(() => '(not found)')) ?? '')
 
   // App Shell 结构
   check('App Shell header 可见',

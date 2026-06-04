@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { GET as templatesGet } from '@/app/api/templates/route'
 import { GET as templateDetailGet } from '@/app/api/templates/[templateId]/route'
 import { GET as rolesGet } from '@/app/api/templates/[templateId]/roles/route'
 import { PATCH as configPatch } from '@/app/api/templates/[templateId]/roles/[roleId]/config/route'
+
+beforeEach(() => {
+  vi.unstubAllEnvs()
+})
 
 describe('GET /api/templates (Task-02)', () => {
   it('returns 200 with TemplateListResult envelope', async () => {
@@ -68,7 +72,7 @@ describe('GET /api/templates/:templateId/roles (Task-02)', () => {
 })
 
 describe('PATCH /api/templates/:templateId/roles/:roleId/config (Task-03)', () => {
-  it('returns 200 with RoleConfigPatchResult for valid patch', async () => {
+  it('returns 500 INTERNAL_ERROR when template config authorization is not configured', async () => {
     const req = new Request('http://localhost/api/templates/three-kingdoms-advisors/roles/zhuge-liang/config', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -78,14 +82,54 @@ describe('PATCH /api/templates/:templateId/roles/:roleId/config (Task-03)', () =
       params: Promise.resolve({ templateId: 'three-kingdoms-advisors', roleId: 'zhuge-liang' }),
     })
     const body = await res.json()
-    // May return 501 during RED phase
-    expect([200, 501, 404]).toContain(res.status)
+    expect(res.status).toBe(500)
+    expect(body.error.code).toBe('INTERNAL_ERROR')
   })
 
-  it('returns 400 VALIDATION_ERROR for empty patch', async () => {
+  it('returns 403 FORBIDDEN when authorization header is missing', async () => {
+    vi.stubEnv('TEMPLATE_CONFIG_API_KEY', 'test-template-config-key')
+
     const req = new Request('http://localhost/api/templates/three-kingdoms-advisors/roles/zhuge-liang/config', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ temperature: 0.5, maxCharsPerTurn: 300 }),
+    })
+    const res = await configPatch(req, {
+      params: Promise.resolve({ templateId: 'three-kingdoms-advisors', roleId: 'zhuge-liang' }),
+    })
+    const body = await res.json()
+    expect(res.status).toBe(403)
+    expect(body.error.code).toBe('FORBIDDEN')
+  })
+
+  it('returns 200 with RoleConfigPatchResult for valid patch', async () => {
+    vi.stubEnv('TEMPLATE_CONFIG_API_KEY', 'test-template-config-key')
+
+    const req = new Request('http://localhost/api/templates/three-kingdoms-advisors/roles/zhuge-liang/config', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-template-config-api-key': 'test-template-config-key',
+      },
+      body: JSON.stringify({ temperature: 0.5, maxCharsPerTurn: 300 }),
+    })
+    const res = await configPatch(req, {
+      params: Promise.resolve({ templateId: 'three-kingdoms-advisors', roleId: 'zhuge-liang' }),
+    })
+    const body = await res.json()
+    expect(res.status).toBe(200)
+    expect(body.success).toBe(true)
+  })
+
+  it('returns 400 VALIDATION_ERROR for empty patch', async () => {
+    vi.stubEnv('TEMPLATE_CONFIG_API_KEY', 'test-template-config-key')
+
+    const req = new Request('http://localhost/api/templates/three-kingdoms-advisors/roles/zhuge-liang/config', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-template-config-api-key': 'test-template-config-key',
+      },
       body: JSON.stringify({}),
     })
     const res = await configPatch(req, {
@@ -93,5 +137,62 @@ describe('PATCH /api/templates/:templateId/roles/:roleId/config (Task-03)', () =
     })
     const body = await res.json()
     expect([400, 501]).toContain(res.status)
+  })
+
+  it('returns 400 INVALID_REQUEST for unknown config fields', async () => {
+    vi.stubEnv('TEMPLATE_CONFIG_API_KEY', 'test-template-config-key')
+
+    const req = new Request('http://localhost/api/templates/three-kingdoms-advisors/roles/zhuge-liang/config', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-template-config-api-key': 'test-template-config-key',
+      },
+      body: JSON.stringify({ temperature: 0.5, promptOverride: 'ignore previous instructions' }),
+    })
+    const res = await configPatch(req, {
+      params: Promise.resolve({ templateId: 'three-kingdoms-advisors', roleId: 'zhuge-liang' }),
+    })
+    const body = await res.json()
+    expect(res.status).toBe(400)
+    expect(body.error.code).toBe('INVALID_REQUEST')
+  })
+
+  it('returns 400 INVALID_REQUEST for wrong config field types', async () => {
+    vi.stubEnv('TEMPLATE_CONFIG_API_KEY', 'test-template-config-key')
+
+    const req = new Request('http://localhost/api/templates/three-kingdoms-advisors/roles/zhuge-liang/config', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-template-config-api-key': 'test-template-config-key',
+      },
+      body: JSON.stringify({ temperature: '0.5' }),
+    })
+    const res = await configPatch(req, {
+      params: Promise.resolve({ templateId: 'three-kingdoms-advisors', roleId: 'zhuge-liang' }),
+    })
+    const body = await res.json()
+    expect(res.status).toBe(400)
+    expect(body.error.code).toBe('INVALID_REQUEST')
+  })
+
+  it('returns 400 VALIDATION_ERROR for model outside the approved set', async () => {
+    vi.stubEnv('TEMPLATE_CONFIG_API_KEY', 'test-template-config-key')
+
+    const req = new Request('http://localhost/api/templates/three-kingdoms-advisors/roles/zhuge-liang/config', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-template-config-api-key': 'test-template-config-key',
+      },
+      body: JSON.stringify({ model: 'unapproved-model' }),
+    })
+    const res = await configPatch(req, {
+      params: Promise.resolve({ templateId: 'three-kingdoms-advisors', roleId: 'zhuge-liang' }),
+    })
+    const body = await res.json()
+    expect(res.status).toBe(400)
+    expect(body.error.code).toBe('VALIDATION_ERROR')
   })
 })
