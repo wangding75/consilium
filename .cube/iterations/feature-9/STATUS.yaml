@@ -40,7 +40,11 @@ tasks:
     test_total: 21
   - task: "Task-05：实现 ModelConfigResolver"
     test_file: model-config-resolver.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 07:44"
+    completed_at: "2026-06-04 07:44"
+    test_passed: 15
+    test_total: 15
   - task: "Task-06：实现 SessionExportService"
     test_file: session-export-service.test.ts
     phase: locked
