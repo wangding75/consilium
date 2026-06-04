@@ -33,7 +33,11 @@ tasks:
     test_total: 17
   - task: "Task-04：实现 SettingsService（模型配置、Prompt、数据清理）"
     test_file: settings-service-model-prompt.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 07:43"
+    completed_at: "2026-06-04 07:44"
+    test_passed: 21
+    test_total: 21
   - task: "Task-05：实现 ModelConfigResolver"
     test_file: model-config-resolver.test.ts
     phase: locked
