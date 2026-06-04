@@ -47,7 +47,11 @@ tasks:
     test_total: 15
   - task: "Task-06：实现 SessionExportService"
     test_file: session-export-service.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-04 07:45"
+    completed_at: "2026-06-04 07:45"
+    test_passed: 12
+    test_total: 12
   - task: "Task-07：实现 Settings API 路由（Provider + Model + Prompt）"
     test_file: settings-api.test.ts
     phase: locked
