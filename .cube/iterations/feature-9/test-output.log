@@ -1,0 +1,709 @@
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /home/wangding/git/consilium
+
+ ❯ src/modules/settings/settings-module.test.tsx (6 tests | 1 failed) 1098ms
+   × SettingsModule > renders five setting sections 1015ms
+     → Found multiple elements with the text: /模板|Template/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<h2[39m
+  [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+[36m>[39m
+  [0m模板管理 Template[0m
+[36m</h2>[39m
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+[36m>[39m
+  [0m模板配置占位 — 后续迭代实现[0m
+[36m</div>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"p-4"[39m
+    [36m>[39m
+      [36m<h1[39m
+        [33mclass[39m=[32m"text-xl font-bold text-text-primary mb-2"[39m
+      [36m>[39m
+        [0m设置[0m
+      [36m</h1>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-text-secondary text-sm mb-6"[39m
+      [36m>[39m
+        [0m配置 LLM 厂商与运行参数[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-4 mb-6"[39m
+      [36m>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0mProvider 厂商与连接[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"space-y-2"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border border-border p-3 flex items-center justify-between"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-medium text-text-primary"[39m
+                [36m>[39m
+                  [0mopenai[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs text-text-muted"[39m
+                [36m>[39m
+                  [0mKey: sk-***1234[0m
+                  [0m · [0m
+                  [0m2[0m
+                  [0m 个[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"[39m
+                [36m>[39m
+                  [0m已连接[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs text-green-600"[39m
+                [36m>[39m
+                  [0m已启用[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border border-border p-3 flex items-center justify-between"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-medium text-text-primary"[39m
+                [36m>[39m
+                  [0manthropic[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs text-text-muted"[39m
+                [36m>[39m
+                  [0mKey: sk-***abcd[0m
+                  [0m · [0m
+                  [0m1[0m
+                  [0m 个[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"[39m
+                [36m>[39m
+                  [0m未测试[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs text-green-600"[39m
+                [36m>[39m
+                  [0m已启用[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m模型配置[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border p-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-text-primary"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [0mgpt-4o-mini[0m
+              [36m</div>[39m
+              [36m<div>[39m
+                [0m温度: [0m
+                [0m0.7[0m
+                [0m · 最大 Tokens: [0m
+                [0m512[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m模板管理 Template[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0m模板配置占位 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0mPrompt 提示词配置[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0mPrompt 配置占位 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m数据与安全 Data & Security[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0m本地数据清理 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"p-4"[39m
+    [36m>[39m
+      [36m<h1[39m
+        [33mclass[39m=[32m"text-xl font-bold text-text-primary mb-2"[39m
+      [36m>[39m
+        [0m设置[0m
+      [36m</h1>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-text-secondary text-sm mb-6"[39m
+      [36m>[39m
+        [0m配置 LLM 厂商与运行参数[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-4 mb-6"[39m
+      [36m>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0mProvider 厂商与连接[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"space-y-2"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border border-border p-3 flex items-center justify-between"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-medium text-text-primary"[39m
+                [36m>[39m
+                  [0mopenai[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs text-text-muted"[39m
+                [36m>[39m
+                  [0mKey: sk-***1234[0m
+                  [0m · [0m
+                  [0m2[0m
+                  [0m 个[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"[39m
+                [36m>[39m
+                  [0m已连接[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs text-green-600"[39m
+                [36m>[39m
+                  [0m已启用[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border border-border p-3 flex items-center justify-between"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-medium text-text-primary"[39m
+                [36m>[39m
+                  [0manthropic[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs text-text-muted"[39m
+                [36m>[39m
+                  [0mKey: sk-***abcd[0m
+                  [0m · [0m
+                  [0m1[0m
+                  [0m 个[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"[39m
+                [36m>[39m
+                  [0m未测试[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs text-green-600"[39m
+                [36m>[39m
+                  [0m已启用[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m模型配置[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border p-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-text-primary"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [0mgpt-4o-mini[0m
+              [36m</div>[39m
+              [36m<div>[39m
+                [0m温度: [0m
+                [0m0.7[0m
+                [0m · 最大 Tokens: [0m
+                [0m512[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m模板管理 Template[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0m模板配置占位 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0mPrompt 提示词配置[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0mPrompt 配置占位 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m数据与安全 Data & Security[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0m本地数据清理 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/modules/settings/settings-module.test.tsx > SettingsModule > renders five setting sections
+TestingLibraryElementError: Found multiple elements with the text: /模板|Template/i
+
+Here are the matching elements:
+
+Ignored nodes: comments, script, style
+[36m<h2[39m
+  [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+[36m>[39m
+  [0m模板管理 Template[0m
+[36m</h2>[39m
+
+Ignored nodes: comments, script, style
+[36m<div[39m
+  [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+[36m>[39m
+  [0m模板配置占位 — 后续迭代实现[0m
+[36m</div>[39m
+
+(If this is intentional, then use the `*AllBy*` variant of the query (like `queryAllByText`, `getAllByText`, or `findAllByText`)).
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"p-4"[39m
+    [36m>[39m
+      [36m<h1[39m
+        [33mclass[39m=[32m"text-xl font-bold text-text-primary mb-2"[39m
+      [36m>[39m
+        [0m设置[0m
+      [36m</h1>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-text-secondary text-sm mb-6"[39m
+      [36m>[39m
+        [0m配置 LLM 厂商与运行参数[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-4 mb-6"[39m
+      [36m>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0mProvider 厂商与连接[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"space-y-2"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border border-border p-3 flex items-center justify-between"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-medium text-text-primary"[39m
+                [36m>[39m
+                  [0mopenai[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs text-text-muted"[39m
+                [36m>[39m
+                  [0mKey: sk-***1234[0m
+                  [0m · [0m
+                  [0m2[0m
+                  [0m 个[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"[39m
+                [36m>[39m
+                  [0m已连接[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs text-green-600"[39m
+                [36m>[39m
+                  [0m已启用[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border border-border p-3 flex items-center justify-between"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-medium text-text-primary"[39m
+                [36m>[39m
+                  [0manthropic[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs text-text-muted"[39m
+                [36m>[39m
+                  [0mKey: sk-***abcd[0m
+                  [0m · [0m
+                  [0m1[0m
+                  [0m 个[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"[39m
+                [36m>[39m
+                  [0m未测试[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs text-green-600"[39m
+                [36m>[39m
+                  [0m已启用[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m模型配置[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border p-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-text-primary"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [0mgpt-4o-mini[0m
+              [36m</div>[39m
+              [36m<div>[39m
+                [0m温度: [0m
+                [0m0.7[0m
+                [0m · 最大 Tokens: [0m
+                [0m512[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m模板管理 Template[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0m模板配置占位 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0mPrompt 提示词配置[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0mPrompt 配置占位 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m数据与安全 Data & Security[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0m本地数据清理 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"p-4"[39m
+    [36m>[39m
+      [36m<h1[39m
+        [33mclass[39m=[32m"text-xl font-bold text-text-primary mb-2"[39m
+      [36m>[39m
+        [0m设置[0m
+      [36m</h1>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"text-text-secondary text-sm mb-6"[39m
+      [36m>[39m
+        [0m配置 LLM 厂商与运行参数[0m
+      [36m</p>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"space-y-4 mb-6"[39m
+      [36m>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0mProvider 厂商与连接[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"space-y-2"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border border-border p-3 flex items-center justify-between"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-medium text-text-primary"[39m
+                [36m>[39m
+                  [0mopenai[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs text-text-muted"[39m
+                [36m>[39m
+                  [0mKey: sk-***1234[0m
+                  [0m · [0m
+                  [0m2[0m
+                  [0m 个[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"[39m
+                [36m>[39m
+                  [0m已连接[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs text-green-600"[39m
+                [36m>[39m
+                  [0m已启用[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"rounded-xl border border-border p-3 flex items-center justify-between"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"font-medium text-text-primary"[39m
+                [36m>[39m
+                  [0manthropic[0m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"text-xs text-text-muted"[39m
+                [36m>[39m
+                  [0mKey: sk-***abcd[0m
+                  [0m · [0m
+                  [0m1[0m
+                  [0m 个[0m
+                [36m</div>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-2"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"[39m
+                [36m>[39m
+                  [0m未测试[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"text-xs text-green-600"[39m
+                [36m>[39m
+                  [0m已启用[0m
+                [36m</span>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m模型配置[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border p-3"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"text-sm text-text-primary"[39m
+            [36m>[39m
+              [36m<div>[39m
+                [0mgpt-4o-mini[0m
+              [36m</div>[39m
+              [36m<div>[39m
+                [0m温度: [0m
+                [0m0.7[0m
+                [0m · 最大 Tokens: [0m
+                [0m512[0m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m模板管理 Template[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0m模板配置占位 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0mPrompt 提示词配置[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0mPrompt 配置占位 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+        [36m<section>[39m
+          [36m<h2[39m
+            [33mclass[39m=[32m"text-lg font-semibold text-text-primary mb-2"[39m
+          [36m>[39m
+            [0m数据与安全 Data & Security[0m
+          [36m</h2>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"rounded-xl border border-border border-dashed p-4 text-center text-text-muted text-sm"[39m
+          [36m>[39m
+            [0m本地数据清理 — 后续迭代实现[0m
+          [36m</div>[39m
+        [36m</section>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ waitForWrapper node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ src/modules/settings/settings-module.test.tsx:103:25
+    101|     expect(await screen.findByText(/模型|Model/i)).toBeInTheDocument()
+    102|     // Template section (placeholder)
+    103|     expect(await screen.findByText(/模板|Template/i)).toBeInTheDocumen…
+       |                         ^
+    104|     // Prompt section
+    105|     expect(await screen.findByText(/Prompt|提示词/i)).toBeInTheDocumen…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  16:43:36
+   Duration  2.15s (transform 64ms, setup 0ms, collect 168ms, tests 1.10s, environment 379ms, prepare 81ms)
+
