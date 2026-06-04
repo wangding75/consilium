@@ -1,43 +1,111 @@
-import type { Session, SessionStatusAction } from '@/types'
-import type { CreateSessionParams, CreateSessionResult, ListSessionsQuery, SessionStateResult } from '@/types/api'
+import type { Session, SessionLifecycleStatus, SessionStatusAction } from '@/types'
+import type { CreateSessionParams, CreateSessionResult, ListSessionsQuery, SessionListItem, SessionListResult, SessionStateResult } from '@/types/api'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
 import type { MessageRepository } from '@/server/repositories/message.repository'
+import type { ModelStrategyRepository } from '@/server/repositories/model-strategy.repository'
+import { sharedModelStrategyRepo } from '@/server/repositories/mock/instances'
+import { ModelStrategyService } from '@/server/services/model-strategy.service'
 import { ServiceError } from '@/server/errors'
-import { MODEL_STRATEGIES, DEFAULT_STRATEGY_ID, type ModelStrategyId } from '@/data/model-strategies'
 
-const VALID_STRATEGY_IDS = new Set(MODEL_STRATEGIES.map((s) => s.id))
+function isMessageRepository(
+  value: MessageRepository | ModelStrategyRepository | undefined
+): value is MessageRepository {
+  return !!value && 'findBySessionId' in value && 'countBySessionId' in value
+}
 
 export class SessionService {
   private readonly _messageRepo?: MessageRepository
   private readonly repo: SessionRepository
   private readonly templateRepo: TemplateRepository
+  private readonly modelStrategyService: ModelStrategyService
 
+  constructor(repo: SessionRepository, templateRepo: TemplateRepository, modelStrategyRepo?: ModelStrategyRepository)
   constructor(
     repo: SessionRepository,
-    templateRepoOrMessageRepo: TemplateRepository | MessageRepository,
-    messageRepo?: MessageRepository
+    templateRepo: TemplateRepository,
+    messageRepo: MessageRepository,
+    modelStrategyRepo?: ModelStrategyRepository
+  )
+  constructor(
+    repo: SessionRepository,
+    templateRepo: TemplateRepository,
+    messageRepoOrModelStrategyRepo?: MessageRepository | ModelStrategyRepository,
+    modelStrategyRepo?: ModelStrategyRepository
   ) {
     this.repo = repo
-    // The test `new SessionService(sessionRepo, messageRepo as any)` passes MessageRepository as 2nd arg
-    // Detect this by checking for findBySessionId method (MessageRepository has it, TemplateRepository doesn't)
-    if (templateRepoOrMessageRepo && typeof (templateRepoOrMessageRepo as any).findBySessionId === 'function') {
-      this.templateRepo = undefined as any
-      this._messageRepo = templateRepoOrMessageRepo as MessageRepository
-    } else {
-      this.templateRepo = templateRepoOrMessageRepo as TemplateRepository
-      this._messageRepo = messageRepo
+    this.templateRepo = templateRepo
+
+    if (isMessageRepository(messageRepoOrModelStrategyRepo)) {
+      this._messageRepo = messageRepoOrModelStrategyRepo
+      this.modelStrategyService = new ModelStrategyService(modelStrategyRepo ?? sharedModelStrategyRepo)
+      return
     }
+
+    this._messageRepo = undefined
+    this.modelStrategyService = new ModelStrategyService(messageRepoOrModelStrategyRepo ?? sharedModelStrategyRepo)
   }
 
   private get messageRepo(): MessageRepository | undefined {
     return this._messageRepo
   }
 
-  async listSessions(query?: ListSessionsQuery): Promise<Session[]> {
+  private async buildSessionListItem(session: Session): Promise<SessionListItem> {
+    const liveTemplate = session.templateSnapshot ? null : await this.templateRepo.findDetailById(session.templateId)
+    const liveStrategy = session.strategySnapshot || !session.modelStrategyId
+      ? null
+      : await this.modelStrategyService.getStrategy(session.modelStrategyId).catch(() => null)
+    const messageCount = this.messageRepo
+      ? await this.messageRepo.countBySessionId(session.id)
+      : session.messages.length
+
+    return {
+      sessionId: session.id,
+      topic: session.topic,
+      status: session.status,
+      template: session.templateSnapshot
+        ? {
+            templateId: session.templateSnapshot.templateId,
+            name: session.templateSnapshot.name,
+            version: session.templateSnapshot.version,
+            fromSnapshot: true,
+          }
+        : {
+            templateId: session.templateId,
+            name: liveTemplate?.name ?? session.templateId,
+            version: liveTemplate?.version,
+            fromSnapshot: false,
+            fallbackReason: liveTemplate ? 'templateSnapshot missing' : 'template unavailable',
+          },
+      modelStrategy: session.strategySnapshot
+        ? {
+            modelStrategyId: session.strategySnapshot.modelStrategyId,
+            name: session.strategySnapshot.name,
+            selectedByDefault: session.strategySnapshot.selectedByDefault,
+            fromSnapshot: true,
+          }
+        : session.modelStrategyId
+          ? {
+              modelStrategyId: session.modelStrategyId,
+              name: liveStrategy?.name ?? session.modelStrategyId,
+              fromSnapshot: false,
+              ...(liveStrategy ? { selectedByDefault: liveStrategy.isDefault } : {}),
+            }
+          : undefined,
+      roleCount: session.templateSnapshot?.roles.length ?? liveTemplate?.roles.length ?? 0,
+      eventCount: session.templateSnapshot?.events.length ?? liveTemplate?.events.length ?? 0,
+      messageCount,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+    }
+  }
+
+  async listSessions(query?: ListSessionsQuery): Promise<SessionListResult> {
     try {
-      if (query) return await this.repo.findMany(query)
-      return await this.repo.findAll()
+      const sessions = query ? await this.repo.findMany(query) : await this.repo.findAll()
+      return {
+        sessions: await Promise.all(sessions.map((session) => this.buildSessionListItem(session))),
+      }
     } catch (err) {
       throw new ServiceError('SESSION_LIST_FAILED', 'Failed to list sessions', err)
     }
@@ -49,31 +117,51 @@ export class SessionService {
     if (topic.length > 100) throw new ServiceError('TOPIC_TOO_LONG', 'Topic must be 100 chars or less')
 
     try {
-      const template = await this.templateRepo.findById(params.templateId)
+      const template = await this.templateRepo.findDetailById(params.templateId)
       if (!template) throw new ServiceError('TEMPLATE_NOT_FOUND', `Template not found: ${params.templateId}`)
-
-      const strategyId = (params.modelStrategyId ?? DEFAULT_STRATEGY_ID) as ModelStrategyId
-      if (!VALID_STRATEGY_IDS.has(strategyId)) {
-        throw new ServiceError('INVALID_STRATEGY', `Invalid model strategy: ${strategyId}`)
+      if (!template.availableForSessionCreation) {
+        throw new ServiceError('TEMPLATE_UNAVAILABLE', `Template is not available: ${params.templateId}`)
       }
 
+      const selectedByDefault = !params.modelStrategyId
+      const strategy = params.modelStrategyId
+        ? await this.modelStrategyService.getStrategy(params.modelStrategyId)
+        : await this.modelStrategyService.getDefaultStrategy()
       const now = Date.now()
+      const snapshotCreatedAt = new Date(now).toISOString()
+      const templateSnapshot = {
+        templateId: template.templateId,
+        version: template.version,
+        name: template.name,
+        overview: structuredClone(template.overview),
+        roles: structuredClone(template.roles),
+        events: structuredClone(template.events),
+        rhythm: structuredClone(template.rhythm),
+        modelDefaults: structuredClone(template.modelDefaults),
+        snapshotAt: snapshotCreatedAt,
+      }
+      const strategySnapshot = this.modelStrategyService.createStrategySnapshot(strategy, selectedByDefault)
+
       const session = await this.repo.save({
         id: '',
         templateId: params.templateId,
         topic,
         status: 'running',
-        modelStrategyId: strategyId,
+        modelStrategyId: strategy.modelStrategyId,
         state: { stage: 'idle', turnCount: 0, lastSpeakerId: null },
         messages: [],
         createdAt: now,
         updatedAt: now,
+        templateSnapshot,
+        strategySnapshot,
+        snapshotCreatedAt,
       })
 
       return {
         sessionId: session.id,
         topic: session.topic,
-        template: { id: template.id, name: template.name },
+        template: { id: template.templateId, templateId: template.templateId, name: template.name, version: template.version },
+        modelStrategy: { modelStrategyId: strategy.modelStrategyId, name: strategy.name, selectedByDefault },
         status: 'running',
         createdAt: session.createdAt,
       }
@@ -95,7 +183,7 @@ export class SessionService {
     const session = await this.repo.findById(sessionId)
     if (!session) throw new ServiceError('SESSION_NOT_FOUND', `SESSION_NOT_FOUND: Session not found: ${sessionId}`)
 
-    let nextStatus: string
+    let nextStatus: SessionLifecycleStatus
     let reason: string
 
     switch (action) {
@@ -115,13 +203,11 @@ export class SessionService {
         if (session.state.stage !== 'closing') {
           throw new ServiceError('SESSION_NOT_RESUMABLE', 'SESSION_NOT_RESUMABLE: Session stage is not closing')
         }
-        // Verify summary checkpoint exists
         let hasSummaryCheckpoint = false
         if (this.messageRepo) {
           const messages = await this.messageRepo.findBySessionId(sessionId)
           hasSummaryCheckpoint = messages.some(m => m.metadata?.summary)
         } else {
-          // Fallback: infer from session history when messageRepo not available
           hasSummaryCheckpoint = (session.state.history ?? []).some(h => h.reason?.includes('summary'))
         }
         if (!hasSummaryCheckpoint) {
@@ -129,11 +215,13 @@ export class SessionService {
         }
         nextStatus = 'running'
         reason = 'user resume after summary'
-        // Transition stage from closing back to developing
-        await this.repo.updateState(sessionId, {
+        const updatedState = await this.repo.updateState(sessionId, {
           ...session.state,
           stage: 'developing',
         }, reason)
+        if (!updatedState) {
+          throw new ServiceError('INTERNAL_ERROR', 'Failed to update session state')
+        }
         break
       }
       case 'complete': {
@@ -150,7 +238,7 @@ export class SessionService {
 
     if (session.status === nextStatus) return session
 
-    const updated = await this.repo.updateStatus(sessionId, nextStatus as any, reason)
+    const updated = await this.repo.updateStatus(sessionId, nextStatus, reason)
     if (!updated) throw new ServiceError('INTERNAL_ERROR', 'Failed to update session status')
     return updated
   }

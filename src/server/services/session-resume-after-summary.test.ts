@@ -6,12 +6,6 @@ import { MockMessageRepository } from '@/server/repositories/mock/mock-message.r
 import type { Session, DiscussionMessage } from '@/types'
 import { threeKingdomsTemplate } from '@/data/templates/three-kingdoms'
 
-class MockTemplateRepoWithSave {
-  private templates = [{ ...threeKingdomsTemplate, id: 'tpl-3k' }]
-  async findAll() { return this.templates }
-  async findById(id: string) { return this.templates.find(t => t.id === id) ?? null }
-}
-
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     id: 'sess-1',
@@ -68,7 +62,8 @@ describe('SessionService.updateSessionStatus resume after summary', () => {
     messageRepo = new MockMessageRepository()
     service = new SessionService(
       sessionRepo,
-      new MockTemplateRepoWithSave() as any,
+      new MockTemplateRepository([threeKingdomsTemplate]),
+      messageRepo,
     )
   })
 

@@ -1,0 +1,121 @@
+files:
+  - path: src/types/index.ts
+    type: interface
+    tasks:
+      - "Task-01：定义模板、策略与会话快照契约"
+  - path: src/types/api.ts
+    type: interface
+    tasks:
+      - "Task-01：定义模板、策略与会话快照契约"
+  - path: src/data/templates/three-kingdoms.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+  - path: src/data/templates/startup-board.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+  - path: src/data/templates/product-debate.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+  - path: src/data/templates/index.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+  - path: src/data/model-strategies.ts
+    type: class
+    tasks:
+      - "Task-04：实现模型策略查询 API"
+  - path: src/server/repositories/template.repository.ts
+    type: interface
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+      - "Task-03：实现模板角色配置版本更新能力"
+  - path: src/server/repositories/model-strategy.repository.ts
+    type: interface
+    tasks:
+      - "Task-04：实现模型策略查询 API"
+      - "Task-05：实现模型策略快照与运行时解析能力"
+  - path: src/server/repositories/mock/mock-template.repository.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+      - "Task-03：实现模板角色配置版本更新能力"
+  - path: src/server/repositories/mock/mock-model-strategy.repository.ts
+    type: class
+    tasks:
+      - "Task-04：实现模型策略查询 API"
+  - path: src/server/repositories/mock/mock-session.repository.ts
+    type: class
+    tasks:
+      - "Task-06：实现创建会话保存模板与策略快照"
+      - "Task-07：实现会话列表快照摘要 API"
+  - path: src/server/repositories/mock/instances.ts
+    type: class
+    tasks:
+      - "Task-04：实现模型策略查询 API"
+  - path: src/server/services/template.service.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+      - "Task-03：实现模板角色配置版本更新能力"
+  - path: src/server/services/model-strategy.service.ts
+    type: class
+    tasks:
+      - "Task-04：实现模型策略查询 API"
+      - "Task-05：实现模型策略快照与运行时解析能力"
+  - path: src/server/services/session.service.ts
+    type: class
+    tasks:
+      - "Task-06：实现创建会话保存模板与策略快照"
+      - "Task-07：实现会话列表快照摘要 API"
+  - path: src/server/services/discussion.service.ts
+    type: class
+    tasks:
+      - "Task-08：实现讨论恢复与 Agent 运行时使用会话快照"
+  - path: src/engine/agent-runtime.ts
+    type: class
+    tasks:
+      - "Task-08：实现讨论恢复与 Agent 运行时使用会话快照"
+  - path: src/app/api/templates/route.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+  - path: src/app/api/templates/[templateId]/route.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+  - path: src/app/api/templates/[templateId]/roles/route.ts
+    type: class
+    tasks:
+      - "Task-02：实现服务端模板版本数据源与模板查询能力"
+  - path: src/app/api/templates/[templateId]/roles/[roleId]/config/route.ts
+    type: class
+    tasks:
+      - "Task-03：实现模板角色配置版本更新能力"
+  - path: src/app/api/model-strategies/route.ts
+    type: class
+    tasks:
+      - "Task-04：实现模型策略查询 API"
+  - path: src/app/api/sessions/route.ts
+    type: class
+    tasks:
+      - "Task-06：实现创建会话保存模板与策略快照"
+      - "Task-07：实现会话列表快照摘要 API"
+  - path: src/app/api/sessions/[sessionId]/route.ts
+    type: class
+    tasks:
+      - "Task-08：实现讨论恢复与 Agent 运行时使用会话快照"
+  - path: src/modules/home/index.tsx
+    type: class
+    tasks:
+      - "Task-09：实现首页模板与模型策略真实数据联动"
+  - path: src/modules/templates/index.tsx
+    type: class
+    tasks:
+      - "Task-10：实现模板中心真实数据、使用模板、角色详情与角色配置交互"
+  - path: src/modules/sessions/index.tsx
+    type: class
+    tasks:
+      - "Task-11：实现会话列表展示模板快照摘要"

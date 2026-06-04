@@ -1,7 +1,7 @@
 import { threeKingdomsTemplate } from '@/data/templates/three-kingdoms'
 
-it('threeKingdomsTemplate has required id, name, and roles fields', () => {
-  expect(typeof threeKingdomsTemplate.id).toBe('string')
+it('threeKingdomsTemplate has required templateId, name, and roles fields', () => {
+  expect(typeof threeKingdomsTemplate.templateId).toBe('string')
   expect(typeof threeKingdomsTemplate.name).toBe('string')
   expect(Array.isArray(threeKingdomsTemplate.roles)).toBe(true)
 })

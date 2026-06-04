@@ -59,6 +59,7 @@ describe('Task-09: GET /api/discussions/[sessionId]/events', () => {
     const json = await res.json() as ApiResponse<EventListResult>
     expect(res.status).toBe(200)
     expect(json.success).toBe(true)
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.events).toHaveLength(1)
     expect(json.data.votes).toHaveLength(1)
     expect(json.requestId).toBeDefined()
@@ -73,6 +74,7 @@ describe('Task-09: GET /api/discussions/[sessionId]/events', () => {
     const json = await res.json() as ApiResponse<never>
     expect(res.status).toBe(404)
     expect(json.success).toBe(false)
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('SESSION_NOT_FOUND')
   })
 
@@ -86,6 +88,7 @@ describe('Task-09: GET /api/discussions/[sessionId]/events', () => {
     const res = await GET(req, { params: makeParams('s1') })
     const json = await res.json() as ApiResponse<EventListResult>
     expect(res.status).toBe(200)
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.events).toHaveLength(0)
   })
 })
@@ -123,6 +126,7 @@ describe('Task-09: POST /api/discussions/[sessionId]/events', () => {
     const json = await res.json() as ApiResponse<CreateEventResult>
     expect(res.status).toBe(200)
     expect(json.success).toBe(true)
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.event.eventId).toBe('evt-001')
     expect(json.data.message.metadata?.hostMessageKind).toBe('event')
   })
@@ -136,6 +140,7 @@ describe('Task-09: POST /api/discussions/[sessionId]/events', () => {
     const res = await POST(req, { params: makeParams('s1') })
     const json = await res.json() as ApiResponse<never>
     expect(res.status).toBe(400)
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('VALIDATION_ERROR')
   })
 
@@ -194,6 +199,7 @@ describe('Task-09: POST /api/discussions/[sessionId]/events/[eventId]/vote', () 
     const json = await res.json() as ApiResponse<VoteResult>
     expect(res.status).toBe(200)
     expect(json.success).toBe(true)
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.vote.optionId).toBe('opt1')
     expect(json.data.event.eventId).toBe('evt-001')
   })
@@ -207,6 +213,7 @@ describe('Task-09: POST /api/discussions/[sessionId]/events/[eventId]/vote', () 
     const res = await VOTE_POST(req, { params: makeVoteParams('s1', 'evt-001') })
     const json = await res.json() as ApiResponse<never>
     expect(res.status).toBe(400)
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('VALIDATION_ERROR')
   })
 
@@ -222,6 +229,7 @@ describe('Task-09: POST /api/discussions/[sessionId]/events/[eventId]/vote', () 
     const res = await VOTE_POST(req, { params: makeVoteParams('s1', 'unknown') })
     expect(res.status).toBe(404)
     const json = await res.json() as ApiResponse<never>
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('EVENT_NOT_FOUND')
   })
 
@@ -237,6 +245,7 @@ describe('Task-09: POST /api/discussions/[sessionId]/events/[eventId]/vote', () 
     const res = await VOTE_POST(req, { params: makeVoteParams('s1', 'evt-001') })
     const json = await res.json() as ApiResponse<never>
     expect(res.status).toBe(400)
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('EVENT_NOT_VOTABLE')
   })
 
@@ -252,6 +261,7 @@ describe('Task-09: POST /api/discussions/[sessionId]/events/[eventId]/vote', () 
     const res = await VOTE_POST(req, { params: makeVoteParams('s1', 'evt-001') })
     const json = await res.json() as ApiResponse<never>
     expect(res.status).toBe(400)
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('VOTE_OPTION_INVALID')
   })
 
@@ -267,6 +277,7 @@ describe('Task-09: POST /api/discussions/[sessionId]/events/[eventId]/vote', () 
     const res = await VOTE_POST(req, { params: makeVoteParams('s1', 'evt-001') })
     const json = await res.json() as ApiResponse<never>
     expect(res.status).toBe(400)
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('EVENT_CLOSED')
   })
 })

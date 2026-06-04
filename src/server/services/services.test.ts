@@ -14,10 +14,10 @@ it('TemplateService.listTemplates returns array of templates', async () => {
   expect(templates.length).toBeGreaterThan(0)
 })
 
-it('SessionService.listSessions returns array', async () => {
+it('SessionService.listSessions returns session list envelope', async () => {
   const service = new SessionService(new MockSessionRepository(), new MockTemplateRepository())
   const sessions = await service.listSessions()
-  expect(Array.isArray(sessions)).toBe(true)
+  expect(Array.isArray(sessions.sessions)).toBe(true)
 })
 
 it('DiscussionService.listDiscussions returns array', async () => {

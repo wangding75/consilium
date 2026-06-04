@@ -32,6 +32,7 @@ describe('GET /api/discussions/[sessionId]/messages', () => {
     const res = await GET(req as unknown as Request, { params: makeParams('sess-1') })
     const json = await res.json() as ApiResponse<MessageListResult>
     expect(json.success).toBe(true)
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.sessionId).toBe('sess-1')
   })
 
@@ -44,6 +45,7 @@ describe('GET /api/discussions/[sessionId]/messages', () => {
     expect(res.status).toBe(404)
     const json = await res.json() as ApiResponse<MessageListResult>
     expect(json.success).toBe(false)
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('SESSION_NOT_FOUND')
   })
 })
@@ -76,6 +78,7 @@ describe('POST /api/discussions/[sessionId]/messages', () => {
     const res = await POST(req as unknown as Request, { params: makeParams('sess-1') })
     const json = await res.json() as ApiResponse<SendMessageResult>
     expect(json.success).toBe(true)
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.userMessage?.content).toBe('hello')
   })
 

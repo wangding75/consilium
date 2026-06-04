@@ -1,193 +1,289 @@
-/**
- * integration: EventDetector → EventRateLimiter → DiscussionService.sendMessage → Director event consumption
- *
- * This test file verifies the full chain:
- *   sendMessage → orchestrator → eventDetector → rateLimiter → eventRepo → director.recentEvents
- *
- * Annotated: web-e2e
- * Label: integration test：EventDetector/RateLimiter/DiscussionService/Director chain
- */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+import { DefaultAgentRuntime } from '@/engine/agent-runtime'
 import { DiscussionService } from '@/server/services/discussion.service'
-import { MockSessionRepository } from '@/server/repositories/mock/mock-session.repository'
-import { MockMessageRepository } from '@/server/repositories/mock/mock-message.repository'
-import { MockTemplateRepository } from '@/server/repositories/mock/mock-template.repository'
 import { MockDiscussionRepository } from '@/server/repositories/mock/mock-discussion.repository'
-import { MockEventRepository } from '@/server/repositories/mock/mock-event.repository'
-import { MockVoteRepository } from '@/server/repositories/mock/mock-vote.repository'
-import { DefaultDirector } from '@/engine/director'
-import type { EventDetector, EventRateLimiter } from '@/engine/events'
-import type { EventDetectionResult, Session, DiscussionMessage, OrchestratorResult } from '@/types'
-import type { DiscussionOrchestrator } from '@/engine/orchestrator'
+import { MockMessageRepository } from '@/server/repositories/mock/mock-message.repository'
+import { MockSessionRepository } from '@/server/repositories/mock/mock-session.repository'
+import type {
+  DiscussionMessage,
+  ModelStrategySnapshot,
+  Session,
+  TemplateSnapshot,
+} from '@/types'
 
-function makeSession(): Omit<Session, 'id'> {
+function makeTemplateSnapshot(): TemplateSnapshot {
   return {
-    templateId: 'three-kingdoms',
-    topic: '三国战略',
-    status: 'active',
-    state: { stage: 'developing', turnCount: 5, lastSpeakerId: null },
+    templateId: 'startup-board',
+    version: '1.0.0',
+    name: '创业公司董事会',
+    overview: {
+      worldview: '创业公司经营决策场景',
+      userIdentity: 'CEO',
+      applicableScenarios: ['融资', '定价'],
+    },
+    roles: [
+      {
+        roleId: 'ceo',
+        name: 'CEO',
+        persona: '负责综合决策',
+        isHost: true,
+        agentType: 'host',
+        systemPrompt: '主持讨论',
+        visible: true,
+        configStatus: 'default',
+      },
+    ],
+    events: [],
+    rhythm: { maxTurnsPerStage: {}, minTurnsBeforeClimax: 3 },
+    modelDefaults: { defaultModel: 'gpt-4o', temperature: 0.7, maxTokens: 512 },
+    snapshotAt: '2026-06-02T00:00:00.000Z',
+  }
+}
+
+function makeStrategySnapshot(): ModelStrategySnapshot {
+  return {
+    modelStrategyId: 'smart',
+    name: '智能平衡',
+    selectedByDefault: true,
+    defaultModel: 'claude-3-5-sonnet',
+    roleOverrides: {
+      ceo: {
+        model: 'claude-3-5-sonnet',
+        temperature: 0.4,
+        maxTokens: 256,
+      },
+    },
+    fallbackChain: ['claude-3-5-haiku'],
+    temperature: 0.6,
+    maxTokens: 384,
+    snapshotAt: '2026-06-02T00:00:00.000Z',
+  }
+}
+
+function makeSession(overrides: Partial<Session> = {}): Session {
+  return {
+    id: 'sess-snapshot',
+    templateId: 'startup-board',
+    topic: '讨论融资策略',
+    status: 'running',
+    state: { stage: 'developing', turnCount: 4, lastSpeakerId: null },
     messages: [],
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
+    createdAt: 1717200000000,
+    updatedAt: 1717203600000,
+    templateSnapshot: makeTemplateSnapshot(),
+    strategySnapshot: makeStrategySnapshot(),
+    snapshotCreatedAt: '2026-06-02T00:00:00.000Z',
+    ...overrides,
   }
 }
 
-function makeOrchestratorResult(sessionId: string): OrchestratorResult {
-  const msg: DiscussionMessage = {
-    messageId: 'agent-msg-1',
+function makeAgentMessage(sessionId: string): DiscussionMessage {
+  return {
+    messageId: 'msg-agent-1',
     sessionId,
-    type: 'character',
-    roleId: 'zhuge-liang',
-    content: '我反对这个观点',
+    type: 'host',
+    roleId: 'ceo',
+    content: '我们继续推进这轮讨论。',
     status: 'completed',
-    createdAt: new Date().toISOString(),
+    createdAt: '2026-06-02T00:00:00.000Z',
   }
-  return { agentMessages: [msg], callLogs: [], activeSpeakerId: 'zhuge-liang' }
 }
 
-describe('integration: EventDetector + RateLimiter → DiscussionService.sendMessage creates event', () => {
-  it('event is persisted to eventRepo when detector triggers and rateLimiter allows', async () => {
+class NullTemplateRepository {
+  async findById(): Promise<null> {
+    return null
+  }
+}
+
+class LiveTemplateRepository {
+  async findById() {
+    return {
+      ...makeTemplateSnapshot(),
+      name: '被实时模板覆盖的名字',
+      version: '9.9.9',
+      roles: [
+        {
+          ...makeTemplateSnapshot().roles[0],
+          persona: '实时模板 persona',
+          runtimeConfig: {
+            model: 'live-model',
+            temperature: 0.9,
+            maxCharsPerTurn: 999,
+          },
+        },
+      ],
+      modelDefaults: {
+        defaultModel: 'live-default-model',
+        temperature: 0.9,
+        maxTokens: 999,
+      },
+      category: 'live',
+      tags: [],
+      metrics: { usageCount: 0, sessionCount: 0, favoriteCount: 0 },
+      isBuiltin: true,
+      visible: true,
+      availableForSessionCreation: true,
+      editable: false,
+      createdAt: '2026-06-02T00:00:00.000Z',
+      overview: makeTemplateSnapshot().overview,
+      events: [],
+      rhythm: makeTemplateSnapshot().rhythm,
+    }
+  }
+}
+
+describe('integration: snapshot recovery and runtime chain (Task-08)', () => {
+  it('sendUserMessage uses session snapshots to build templateName and profiles when live template is unavailable', async () => {
     const sessionRepo = new MockSessionRepository()
     const messageRepo = new MockMessageRepository()
-    const eventRepo = new MockEventRepository()
-    const voteRepo = new MockVoteRepository()
     const discussionRepo = new MockDiscussionRepository()
-    const templateRepo = new MockTemplateRepository()
-
-    const session = await sessionRepo.save({ id: '', ...makeSession() })
-
-    const orchestrator: DiscussionOrchestrator = {
-      run: vi.fn().mockResolvedValue(makeOrchestratorResult(session.id)),
-    } as unknown as DiscussionOrchestrator
-
-    const detector: EventDetector = {
-      detect: vi.fn().mockResolvedValue({
-        eventTriggered: true,
-        eventType: 'slap',
-        confidence: 0.85,
-        reason: '检测到反驳',
-        title: '诸葛亮反驳司马懿',
-        description: '观点被明显推翻',
-        payload: { refuter: 'zgl', refuted: 'smy', refutedView: '持久战', reason: '兵力不足' },
-        relatedMessageId: 'agent-msg-1',
-      } as EventDetectionResult),
+    const orchestrator = {
+      run: vi.fn().mockResolvedValue({
+        agentMessages: [makeAgentMessage('sess-snapshot')],
+        callLogs: [],
+        activeSpeakerId: 'ceo',
+      }),
     }
 
-    const rateLimiter: EventRateLimiter = {
-      check: vi.fn().mockReturnValue({ allowed: true }),
-    }
+    await sessionRepo.save(makeSession())
 
     const service = new DiscussionService(
-      discussionRepo, sessionRepo, templateRepo, messageRepo,
-      undefined, orchestrator, undefined, undefined, undefined,
-      undefined, eventRepo, voteRepo, detector, rateLimiter
+      discussionRepo,
+      sessionRepo,
+      new NullTemplateRepository() as never,
+      messageRepo,
+      undefined,
+      orchestrator as never,
     )
 
-    const result = await service.sendMessage(session.id, { content: '这不可能成功' })
+    await service.sendUserMessage('sess-snapshot', '请继续分析')
 
-    const events = await eventRepo.findBySessionId(session.id)
-    expect(events).toHaveLength(1)
-    expect(events[0].eventType).toBe('slap')
-    expect(result.createdEvents).toHaveLength(1)
+    expect(orchestrator.run).toHaveBeenCalled()
+    const input = orchestrator.run.mock.calls[0][0]
+    expect(input.templateName).toBe('创业公司董事会')
+    expect(input.profiles).toEqual([
+      expect.objectContaining({
+        roleId: 'ceo',
+        name: 'CEO',
+        model: 'claude-3-5-sonnet',
+        temperature: 0.4,
+        maxTokens: 256,
+        visible: true,
+      }),
+    ])
   })
 
-  it('no event persisted when rateLimiter blocks due to cooldown', async () => {
+  it('getSessionDetail returns snapshot template and strategy summaries when live template is unavailable', async () => {
     const sessionRepo = new MockSessionRepository()
-    const messageRepo = new MockMessageRepository()
-    const eventRepo = new MockEventRepository()
-    const voteRepo = new MockVoteRepository()
     const discussionRepo = new MockDiscussionRepository()
-    const templateRepo = new MockTemplateRepository()
 
-    const session = await sessionRepo.save({ id: '', ...makeSession() })
-
-    const orchestrator: DiscussionOrchestrator = {
-      run: vi.fn().mockResolvedValue(makeOrchestratorResult(session.id)),
-    } as unknown as DiscussionOrchestrator
-
-    const detector: EventDetector = {
-      detect: vi.fn().mockResolvedValue({
-        eventTriggered: true,
-        eventType: 'slap',
-        confidence: 0.9,
-        reason: '强烈反驳',
-        title: '打脸',
-        description: '描述',
-        payload: { refuter: 'a', refuted: 'b', refutedView: 'v', reason: 'r' },
-        relatedMessageId: 'agent-msg-1',
-      } as EventDetectionResult),
-    }
-
-    const rateLimiter: EventRateLimiter = {
-      check: vi.fn().mockReturnValue({ allowed: false, reason: 'COOLDOWN' }),
-    }
+    await sessionRepo.save(makeSession())
 
     const service = new DiscussionService(
-      discussionRepo, sessionRepo, templateRepo, messageRepo,
-      undefined, orchestrator, undefined, undefined, undefined,
-      undefined, eventRepo, voteRepo, detector, rateLimiter
+      discussionRepo,
+      sessionRepo,
+      new NullTemplateRepository() as never,
     )
 
-    await service.sendMessage(session.id, { content: '反对' })
+    const detail = await service.getSessionDetail('sess-snapshot')
 
-    const events = await eventRepo.findBySessionId(session.id)
-    expect(events).toHaveLength(0)
+    expect(detail.template).toEqual({
+      templateId: 'startup-board',
+      name: '创业公司董事会',
+      version: '1.0.0',
+      fromSnapshot: true,
+    })
+    expect(detail.modelStrategy).toEqual({
+      modelStrategyId: 'smart',
+      name: '智能平衡',
+      selectedByDefault: true,
+      fromSnapshot: true,
+    })
+    expect(detail.roles).toEqual([
+      expect.objectContaining({
+        roleId: 'ceo',
+        name: 'CEO',
+        model: 'claude-3-5-sonnet',
+      }),
+    ])
   })
-})
 
-describe('integration: Director consumes recentEvents from eventRepo in service pipeline', () => {
-  it('Director receives unconsumed events injected by service and returns schedulerHint', async () => {
+  it('prefers session snapshots over live templates when both exist', async () => {
     const sessionRepo = new MockSessionRepository()
     const messageRepo = new MockMessageRepository()
-    const eventRepo = new MockEventRepository()
-    const voteRepo = new MockVoteRepository()
     const discussionRepo = new MockDiscussionRepository()
-    const templateRepo = new MockTemplateRepository()
+    const orchestrator = {
+      run: vi.fn().mockResolvedValue({
+        agentMessages: [makeAgentMessage('sess-snapshot')],
+        callLogs: [],
+        activeSpeakerId: 'ceo',
+      }),
+    }
 
-    const session = await sessionRepo.save({ id: '', ...makeSession() })
+    await sessionRepo.save(makeSession())
 
-    // Pre-populate an unconsumed event
-    await eventRepo.save({
-      eventId: 'evt-pre-001',
-      sessionId: session.id,
-      eventType: 'vote',
-      trigger: 'manual',
-      status: 'closed',
-      title: '迁都投票结果',
-      description: '投票已完成',
-      reason: '用户触发',
-      payload: { question: '迁都', options: [], tally: {} },
-      relatedMessageId: 'msg-pre',
-      createdAt: '2026-06-01T00:00:00Z',
+    const service = new DiscussionService(
+      discussionRepo,
+      sessionRepo,
+      new LiveTemplateRepository() as never,
+      messageRepo,
+      undefined,
+      orchestrator as never,
+    )
+
+    const detail = await service.getSessionDetail('sess-snapshot')
+    await service.sendUserMessage('sess-snapshot', '继续推进')
+
+    expect(detail.template).toEqual({
+      templateId: 'startup-board',
+      name: '创业公司董事会',
+      version: '1.0.0',
+      fromSnapshot: true,
     })
 
-    const director = new DefaultDirector()
-    const directorSpy = vi.spyOn(director, 'decide')
+    const input = orchestrator.run.mock.calls[0][0]
+    expect(input.templateName).toBe('创业公司董事会')
+    expect(input.profiles).toEqual([
+      expect.objectContaining({
+        roleId: 'ceo',
+        persona: '负责综合决策',
+        model: 'claude-3-5-sonnet',
+        temperature: 0.4,
+        maxTokens: 256,
+      }),
+    ])
+  })
 
-    const orchestrator: DiscussionOrchestrator = {
-      run: vi.fn().mockResolvedValue(makeOrchestratorResult(session.id)),
-    } as unknown as DiscussionOrchestrator
-
-    const detector: EventDetector = {
-      detect: vi.fn().mockResolvedValue({ eventTriggered: false, confidence: 0.1, reason: '无信号' }),
+  it('DefaultAgentRuntime forwards maxTokens from resolved runtime config to provider chat options', async () => {
+    const provider = {
+      chat: vi.fn().mockResolvedValue('好的'),
     }
-    const rateLimiter: EventRateLimiter = {
-      check: vi.fn().mockReturnValue({ allowed: true }),
-    }
+    const runtime = new DefaultAgentRuntime(provider as never)
 
-    const service = new DiscussionService(
-      discussionRepo, sessionRepo, templateRepo, messageRepo,
-      undefined, orchestrator, undefined, director, undefined,
-      undefined, eventRepo, voteRepo, detector, rateLimiter
+    await runtime.run(
+      {
+        agentId: 'agent-ceo',
+        roleId: 'ceo',
+        agentType: 'host',
+        name: 'CEO',
+        persona: '负责综合决策',
+        systemPrompt: '主持讨论',
+        model: 'claude-3-5-sonnet',
+        temperature: 0.4,
+        maxTokens: 256,
+        visible: true,
+      } as never,
+      []
     )
 
-    await service.sendMessage(session.id, { content: '继续讨论' })
-
-    expect(directorSpy).toHaveBeenCalled()
-    const callArg = directorSpy.mock.calls[0][0]
-    expect(callArg.recentEvents).toBeDefined()
-    expect(callArg.recentEvents!.length).toBeGreaterThanOrEqual(1)
-    const unconsumed = callArg.recentEvents!.find((e) => e.eventId === 'evt-pre-001')
-    expect(unconsumed).toBeDefined()
+    expect(provider.chat).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({
+        provider: 'mock',
+        model: 'claude-3-5-sonnet',
+        temperature: 0.4,
+        maxTokens: 256,
+      })
+    )
   })
 })

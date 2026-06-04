@@ -3,17 +3,18 @@ import { DiscussionService } from './discussion.service'
 import { SessionService } from './session.service'
 import { MockSessionRepository } from '@/server/repositories/mock/mock-session.repository'
 import { MockMessageRepository } from '@/server/repositories/mock/mock-message.repository'
+import { MockTemplateRepository } from '@/server/repositories/mock/mock-template.repository'
 import { MockAgentCallLogRepository } from '@/server/repositories/mock/mock-agent-call-log.repository'
 import { MockInvitationRepository } from '@/server/repositories/mock/mock-invitation.repository'
 import { MockDirectorDecisionRepository } from '@/server/repositories/mock/mock-director-decision.repository'
 import { DefaultDirector } from '@/engine/director'
-import type { Session, DiscussionMessage, Template, Invitation, DirectorDecisionRecord } from '@/types'
+import type { Session, DiscussionMessage, DiscussionTemplate, Invitation, DirectorDecisionRecord } from '@/types'
 import { threeKingdomsTemplate } from '@/data/templates/three-kingdoms'
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     id: 'sess-fi',
-    templateId: 'tpl-3k',
+    templateId: 'three-kingdoms-advisors',
     topic: 'Feature integration test',
     status: 'running',
     state: { stage: 'developing', turnCount: 4, lastSpeakerId: 'role-zhuge' },
@@ -37,10 +38,10 @@ function makeMessage(overrides: Partial<DiscussionMessage> = {}): DiscussionMess
 }
 
 class MockTemplateRepoWithSave {
-  private templates: Template[] = [{ ...threeKingdomsTemplate, id: 'tpl-3k' }]
+  private templates: DiscussionTemplate[] = [threeKingdomsTemplate]
   async findAll() { return this.templates }
-  async findById(id: string) { return this.templates.find(t => t.id === id) ?? null }
-  async save(t: Template) { this.templates.push(t); return t }
+  async findById(id: string) { return this.templates.find(t => t.templateId === id) ?? null }
+  async save(t: DiscussionTemplate) { this.templates.push(t); return t }
 }
 
 function makeDiscussionService(director?: any, invitationRepo?: MockInvitationRepository) {
@@ -152,7 +153,7 @@ describe('Feature integration: UI -> Store -> API -> DiscussionService -> Reposi
         state: { stage: 'closing', turnCount: 12, lastSpeakerId: 'role-zhuge' },
       }))
 
-      const result = await svc.requestSummary('sess-fi', {})
+      const result = await svc.requestSummary('sess-fi', { source: 'more_sheet' })
       expect(result).toBeDefined()
     })
   })
@@ -161,7 +162,11 @@ describe('Feature integration: UI -> Store -> API -> DiscussionService -> Reposi
     it('resume restores session to running with preserved summary checkpoint', async () => {
       const sessionRepo = new MockSessionRepository()
       const messageRepo = new MockMessageRepository()
-      const sessionService = new SessionService(sessionRepo, messageRepo as any)
+      const sessionService = new SessionService(
+        sessionRepo,
+        new MockTemplateRepository([threeKingdomsTemplate]),
+        messageRepo,
+      )
 
       await sessionRepo.save(makeSession({
         status: 'completed',
@@ -178,10 +183,14 @@ describe('Feature integration: UI -> Store -> API -> DiscussionService -> Reposi
         createdAt: new Date().toISOString(),
         metadata: {
           summary: {
-            conclusion: '双方达成共识',
-            keyPoints: ['战略要点1', '战略要点2'],
-            consensusLevel: 'full',
-            generatedAt: new Date().toISOString(),
+            summaryId: 'sum-fi-1',
+            sessionId: 'sess-fi',
+            messageId: 'msg-summary-fi',
+            consensus: ['双方达成共识'],
+            disagreements: [],
+            recommendations: ['继续执行既定战略'],
+            nextSteps: ['跟进后续行动'],
+            checkpointCreatedAt: new Date().toISOString(),
           },
         },
       }

@@ -46,6 +46,7 @@ describe('POST /api/discussions/[sessionId]/messages — Task-08', () => {
     })
     const res = await POST(req as unknown as Request, { params: makeParams('sess-1') })
     const json = await res.json() as ApiResponse<SendMessageResult>
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.clientMessageId).toBe('client_echo_test')
   })
 
@@ -59,6 +60,7 @@ describe('POST /api/discussions/[sessionId]/messages — Task-08', () => {
     const res = await POST(req as unknown as Request, { params: makeParams('sess-1') })
     expect(res.status).toBe(500)
     const json = await res.json() as ApiResponse<SendMessageResult>
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('AGENT_GENERATION_FAILED')
   })
 
@@ -72,6 +74,7 @@ describe('POST /api/discussions/[sessionId]/messages — Task-08', () => {
     const res = await POST(req as unknown as Request, { params: makeParams('sess-1') })
     expect(res.status).toBe(500)
     const json = await res.json() as ApiResponse<SendMessageResult>
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('NO_AVAILABLE_AGENT')
   })
 
@@ -85,6 +88,7 @@ describe('POST /api/discussions/[sessionId]/messages — Task-08', () => {
     const res = await POST(req as unknown as Request, { params: makeParams('sess-1') })
     expect(res.status).toBe(502)
     const json = await res.json() as ApiResponse<SendMessageResult>
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('LLM_PROVIDER_ERROR')
   })
 })

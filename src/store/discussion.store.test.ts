@@ -11,6 +11,9 @@ import type { ApiError } from '@/types/api'
 const initialState: DiscussionStoreState = {
   sessions: {},
   messagesBySessionId: {},
+  eventsBySessionId: {},
+  votesBySessionId: {},
+  pendingVoteByEventId: {},
   activeSpeakerBySessionId: {},
   loadingBySessionId: {},
   sendingByClientMessageId: {},
@@ -39,7 +42,7 @@ describe('discussionReducer', () => {
       session: {
         sessionId: 'sess-1',
         topic: '三国战略',
-        template: { templateId: 'tpl-1', name: '三国谋士' },
+        template: { templateId: 'tpl-1', name: '三国谋士', fromSnapshot: false },
         status: 'active',
         roles: [],
         activeSpeakerId: 'zhuge-liang',

@@ -6,13 +6,13 @@ import { MockMessageRepository } from '@/server/repositories/mock/mock-message.r
 import { MockAgentCallLogRepository } from '@/server/repositories/mock/mock-agent-call-log.repository'
 import { MockInvitationRepository } from '@/server/repositories/mock/mock-invitation.repository'
 import { MockDirectorDecisionRepository } from '@/server/repositories/mock/mock-director-decision.repository'
-import type { Session, DiscussionMessage, Template, AgentProfile, DirectorDecisionRecord } from '@/types'
+import type { Session, DiscussionMessage, DiscussionTemplate, AgentProfile, DirectorDecisionRecord } from '@/types'
 import { threeKingdomsTemplate } from '@/data/templates/three-kingdoms'
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     id: 'sess-int',
-    templateId: 'tpl-3k',
+    templateId: 'three-kingdoms-advisors',
     topic: 'Director 确定性集成测试',
     status: 'running',
     state: { stage: 'developing', turnCount: 4, lastSpeakerId: 'role-zhuge' },
@@ -36,10 +36,10 @@ function makeMessage(overrides: Partial<DiscussionMessage> = {}): DiscussionMess
 }
 
 class MockTemplateRepoWithSave {
-  private templates: Template[] = [{ ...threeKingdomsTemplate, id: 'tpl-3k' }]
+  private templates: DiscussionTemplate[] = [threeKingdomsTemplate]
   async findAll() { return this.templates }
-  async findById(id: string) { return this.templates.find(t => t.id === id) ?? null }
-  async save(t: Template) { this.templates.push(t); return t }
+  async findById(id: string) { return this.templates.find(t => t.templateId === id) ?? null }
+  async save(t: DiscussionTemplate) { this.templates.push(t); return t }
 }
 
 function makeService(director: any, invitationRepo?: MockInvitationRepository) {

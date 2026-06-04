@@ -165,7 +165,7 @@ describe('VotePayload shape', () => {
 
   it('tally does not include count in options', () => {
     const opt: VoteOption = { id: 'opt1', label: '许昌', roles: [] }
-    expect((opt as Record<string, unknown>)['count']).toBeUndefined()
+    expect('count' in opt).toBe(false)
   })
 })
 

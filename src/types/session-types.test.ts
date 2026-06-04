@@ -56,7 +56,17 @@ it('CreateSessionResult has sessionId topic template status createdAt', () => {
   const result: CreateSessionResult = {
     sessionId: 'uuid-123',
     topic: '如何提高团队效率',
-    template: { id: 'three-kingdoms-advisors', name: '三国军师团' },
+    template: {
+      id: 'three-kingdoms-advisors',
+      templateId: 'three-kingdoms-advisors',
+      name: '三国军师团',
+      version: '1.0.0',
+    },
+    modelStrategy: {
+      modelStrategyId: 'default-strategy',
+      name: '默认策略',
+      selectedByDefault: true,
+    },
     status: 'active',
     createdAt: 1234567890000,
   }

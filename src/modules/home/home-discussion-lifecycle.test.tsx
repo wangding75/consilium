@@ -5,6 +5,7 @@ import { DiscussionModule } from '@/modules/discussion'
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }))
 
 const mockSessions = [
@@ -15,8 +16,17 @@ const mockSessions = [
 
 beforeAll(() => {
   vi.stubGlobal('fetch', vi.fn().mockImplementation((url: string) => {
-    if (url.includes('/api/sessions/recent') || url.includes('/api/sessions?')) {
+    if (url.includes('/api/templates')) {
+      return Promise.resolve({ json: () => Promise.resolve({ success: true, data: { templates: [] } }) })
+    }
+    if (url.includes('/api/model-strategies')) {
+      return Promise.resolve({ json: () => Promise.resolve({ success: true, data: { strategies: [], defaultModelStrategyId: '' } }) })
+    }
+    if (url.includes('/api/sessions/recent')) {
       return Promise.resolve({ json: () => Promise.resolve({ success: true, data: mockSessions }) })
+    }
+    if (url.includes('/api/sessions?')) {
+      return Promise.resolve({ json: () => Promise.resolve({ success: true, data: { sessions: mockSessions } }) })
     }
     if (url.includes('/api/sessions/invalid-session-id')) {
       return Promise.resolve({ json: () => Promise.resolve({ success: false, error: { code: 'SESSION_NOT_FOUND', message: 'Session not found' } }) })

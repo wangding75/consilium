@@ -3,7 +3,8 @@ import { PATCH } from '@/app/api/sessions/[sessionId]/status/route'
 import { GET as getState } from '@/app/api/sessions/[sessionId]/state/route'
 import { GET as listSessions } from '@/app/api/sessions/route'
 import { SessionService } from '@/server/services/session.service'
-import type { ApiResponse, Session, SessionStateResult } from '@/types'
+import { ServiceError } from '@/server/errors'
+import type { ApiResponse, Session, SessionStateResult, SessionListResult } from '@/types'
 
 const makeParams = (sessionId: string) => Promise.resolve({ sessionId })
 
@@ -14,12 +15,18 @@ describe('Session lifecycle API routes — Task-05', () => {
   })
 
   it('GET /api/sessions returns sessions list with query params', async () => {
+    const listSessionsSpy = vi
+      .spyOn(SessionService.prototype, 'listSessions')
+      .mockResolvedValueOnce({ sessions: [] } as SessionListResult)
+
     const req = new Request('http://localhost/api/sessions?status=running&limit=5')
     const res = await listSessions(req)
     expect(res.status).toBe(200)
-    const json = await res.json() as ApiResponse<Session[]>
+    const json = await res.json() as ApiResponse<SessionListResult>
     expect(json.success).toBe(true)
-    expect(Array.isArray(json.data)).toBe(true)
+    if (!json.success) throw new Error('expected success response')
+    expect(listSessionsSpy).toHaveBeenCalledWith({ status: 'running', keyword: undefined, limit: 5 })
+    expect(Array.isArray(json.data.sessions)).toBe(true)
   })
 
   it('GET /api/sessions returns 400 for invalid status', async () => {
@@ -43,6 +50,7 @@ describe('Session lifecycle API routes — Task-05', () => {
     expect(res.status).toBe(200)
     const json = await res.json() as ApiResponse<Session>
     expect(json.success).toBe(true)
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.status).toBe('archived')
   })
 
@@ -89,6 +97,30 @@ describe('Session lifecycle API routes — Task-05', () => {
     expect(res.status).toBe(400)
   })
 
+  it('PATCH /api/sessions/:id/status returns 500 for internal service failure', async () => {
+    vi.spyOn(SessionService.prototype, 'updateSessionStatus').mockRejectedValueOnce(
+      new ServiceError('INTERNAL_ERROR', 'forced failure')
+    )
+
+    const req = new Request('http://localhost/api/sessions/sess-1/status', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'archive' }),
+    })
+    const res = await PATCH(req, { params: makeParams('sess-1') })
+    expect(res.status).toBe(500)
+  })
+
+  it('PATCH /api/sessions/:id/status returns 400 for invalid json body', async () => {
+    const req = new Request('http://localhost/api/sessions/sess-1/status', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{invalid-json',
+    })
+    const res = await PATCH(req, { params: makeParams('sess-1') })
+    expect(res.status).toBe(400)
+  })
+
   it('GET /api/sessions/:id/state returns session state', async () => {
     const service = new SessionService(
       await import('@/server/repositories/mock/instances').then(m => m.sharedSessionRepo),
@@ -100,6 +132,7 @@ describe('Session lifecycle API routes — Task-05', () => {
     expect(res.status).toBe(200)
     const json = await res.json() as ApiResponse<SessionStateResult>
     expect(json.success).toBe(true)
+    if (!json.success) throw new Error('expected success response')
     expect(json.data.sessionId).toBe(session.sessionId)
   })
 

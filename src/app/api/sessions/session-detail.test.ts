@@ -10,7 +10,7 @@ describe('GET /api/sessions/:sessionId', () => {
     vi.spyOn(DiscussionService.prototype, 'getSessionDetail').mockResolvedValueOnce({
       sessionId: 'sess-1',
       topic: '战略分析',
-      template: { templateId: 'three-kingdoms-advisors', name: '三国军师团' },
+      template: { templateId: 'three-kingdoms-advisors', name: '三国军师团', fromSnapshot: false },
       status: 'active',
       roles: [],
       activeSpeakerId: null,
@@ -53,7 +53,7 @@ describe('GET /api/sessions/:sessionId', () => {
     vi.spyOn(DiscussionService.prototype, 'getSessionDetail').mockResolvedValueOnce({
       sessionId: 'sess-1',
       topic: '测试',
-      template: { templateId: 'three-kingdoms-advisors', name: '三国军师团' },
+      template: { templateId: 'three-kingdoms-advisors', name: '三国军师团', fromSnapshot: false },
       status: 'active',
       roles: [],
       activeSpeakerId: null,

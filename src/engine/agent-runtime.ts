@@ -14,6 +14,7 @@ export class DefaultAgentRuntime implements AgentRuntime {
       provider: 'mock',
       model: profile.model,
       temperature: profile.temperature,
+      maxTokens: profile.maxTokens,
     })
     return {
       agentId: profile.agentId,

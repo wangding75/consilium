@@ -188,6 +188,9 @@ export interface Session {
   messages: Message[]
   createdAt: number
   updatedAt: number
+  templateSnapshot?: TemplateSnapshot
+  strategySnapshot?: ModelStrategySnapshot
+  snapshotCreatedAt?: string
 }
 
 // Discussion represents a runtime discussion run (to be expanded in iteration 2+)
@@ -204,6 +207,7 @@ export interface LLMConfig {
   apiKey?: string
   baseUrl?: string
   temperature?: number
+  maxTokens?: number
 }
 
 // Iteration 2: replaced AgentProfile definition
@@ -216,6 +220,7 @@ export interface AgentProfile {
   systemPrompt: string
   model: string
   temperature?: number
+  maxTokens?: number
   visible: boolean
 }
 
@@ -284,6 +289,11 @@ export interface AgentCallLog {
   errorCode?: string
   errorMessage?: string
   createdAt: string
+  modelStrategyId?: string
+  temperature?: number
+  maxTokens?: number
+  resolvedModelSource?: 'templateDefaults' | 'strategyDefaults' | 'roleOverride' | 'roleConfig' | 'fallback'
+  fallbackFrom?: string
 }
 
 // Pre-save log data constructed by Orchestrator (without id/createdAt)
@@ -403,3 +413,143 @@ export interface InvitationStatusPatch {
   respondedByMessageId?: string
   clientMessageId?: string
 }
+
+// ─── Template domain types (iteration 8) ───────────────────────────────────
+
+export interface TemplateOverview {
+  worldview: string
+  userIdentity: string
+  applicableScenarios: string[]
+}
+
+export interface ModelDefaults {
+  defaultModel: string
+  temperature?: number
+  maxTokens?: number
+  maxCharsPerTurn?: number
+}
+
+export interface RoleRuntimeConfig {
+  model?: string
+  temperature?: number
+  maxCharsPerTurn?: number
+}
+
+export interface TemplateMetrics {
+  usageCount: number
+  sessionCount: number
+  favoriteCount: number
+}
+
+export interface TemplateRole {
+  roleId: string
+  name: string
+  persona: string
+  isHost: boolean
+  agentType: AgentType
+  systemPrompt: string
+  avatarEmoji?: string
+  visible: boolean
+  runtimeConfig?: RoleRuntimeConfig
+  configStatus: 'default' | 'customized'
+}
+
+export interface DiscussionTemplate {
+  templateId: string
+  version: string
+  name: string
+  description: string
+  category: string
+  tags: string[]
+  overview: TemplateOverview
+  roles: TemplateRole[]
+  events: DiscussionEvent[]
+  rhythm: RhythmConfig
+  modelDefaults: ModelDefaults
+  metrics: TemplateMetrics
+  isBuiltin: boolean
+  visible: boolean
+  availableForSessionCreation: boolean
+  editable: boolean
+  createdAt: string
+}
+
+export interface TemplateSnapshot {
+  templateId: string
+  version: string
+  name: string
+  overview: TemplateOverview
+  roles: TemplateRole[]
+  events: DiscussionEvent[]
+  rhythm: RhythmConfig
+  modelDefaults: ModelDefaults
+  snapshotAt: string
+}
+
+// ─── Model strategy domain types (iteration 8) ─────────────────────────────
+
+export interface ModelOverride {
+  model?: string
+  temperature?: number
+  maxTokens?: number
+}
+
+export interface ModelStrategy {
+  modelStrategyId: string
+  name: string
+  description: string
+  priority: Array<'quality' | 'speed' | 'cost'>
+  defaultModel: string
+  roleOverrides: Record<string, ModelOverride>
+  fallbackChain: string[]
+  temperature: number
+  maxTokens: number
+  costPolicy: string
+  speedPolicy: string
+  active: boolean
+  isDefault: boolean
+}
+
+export interface ModelStrategySnapshot {
+  modelStrategyId: string
+  name: string
+  selectedByDefault: boolean
+  defaultModel: string
+  roleOverrides: Record<string, ModelOverride>
+  fallbackChain: string[]
+  temperature: number
+  maxTokens: number
+  snapshotAt: string
+}
+
+export interface ResolvedRoleRuntimeConfig {
+  roleId: string
+  model: string
+  temperature: number
+  maxTokens: number
+  maxCharsPerTurn?: number
+  fallbackChain: string[]
+  resolvedModelSource: 'default' | 'templateDefaults' | 'strategyDefaults' | 'roleOverride' | 'roleConfig' | 'fallback'
+  fallbackFrom?: string
+}
+
+// ─── Session snapshot extension (iteration 8) ──────────────────────────────
+
+export interface TemplateRolesResult {
+  templateId: string
+  templateVersion: string
+  roles: TemplateRole[]
+}
+
+// ─── AgentCallLog runtime extension (iteration 8) ──────────────────────────
+
+export interface AgentCallLogRuntimeFields {
+  modelStrategyId?: string
+  temperature?: number
+  maxTokens?: number
+  resolvedModelSource?: 'templateDefaults' | 'strategyDefaults' | 'roleOverride' | 'roleConfig' | 'fallback'
+  fallbackFrom?: string
+}
+
+// ─── LLMConfig maxTokens extension (iteration 8) ───────────────────────────
+// (extends existing LLMConfig — see LLMConfig interface above)

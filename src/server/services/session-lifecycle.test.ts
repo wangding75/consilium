@@ -14,7 +14,7 @@ describe('SessionService lifecycle — Task-04', () => {
 
   it('listSessions passes query to repository and returns filtered results', async () => {
     const results = await service.listSessions({ status: 'running' })
-    expect(Array.isArray(results)).toBe(true)
+    expect(Array.isArray(results.sessions)).toBe(true)
   })
 
   it('updateSessionStatus archives a running session', async () => {

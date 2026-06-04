@@ -72,7 +72,7 @@ describe('DefaultDirector.decide', () => {
   it('returns invite_user when discussion has disagreement signals', async () => {
     const messages: DiscussionMessage[] = [
       makeMessage({ roleId: 'role-1', content: '我认为应该进攻' }),
-      makeMessage({ roleId: 'role-2', content: '我反对，应该防守', roleId: 'role-2', messageId: 'msg-2' }),
+      makeMessage({ roleId: 'role-2', content: '我反对，应该防守', messageId: 'msg-2' }),
     ]
     const input = makeInput({
       session: makeSession({ state: { stage: 'developing', turnCount: 6, lastSpeakerId: 'role-2' } }),
