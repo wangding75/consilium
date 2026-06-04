@@ -1,9 +1,9 @@
-import type { Template, DiscussionTemplate, TemplateSummary, TemplateRolesResult } from '@/types'
+import type { DiscussionTemplate, TemplateSummary, TemplateRolesResult } from '@/types'
 import type { RoleConfigPatchRequest, RoleConfigPatchResult } from '@/types/api'
 
 export interface TemplateRepository {
-  findAll(): Promise<Template[]>
-  findById(id: string): Promise<Template | null>
+  findAll(): Promise<DiscussionTemplate[]>
+  findById(id: string): Promise<DiscussionTemplate | null>
   findSummaries(): Promise<TemplateSummary[]>
   findDetailById(templateId: string): Promise<DiscussionTemplate | null>
   findRoles(templateId: string): Promise<TemplateRolesResult | null>

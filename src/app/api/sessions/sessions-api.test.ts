@@ -67,6 +67,25 @@ describe('POST /api/sessions (Task-06)', () => {
     expect(body.error.code).toBe('INVALID_REQUEST')
   })
 
+  it('returns 400 with TEMPLATE_UNAVAILABLE when template is disabled for session creation', async () => {
+    vi.spyOn(SessionService.prototype, 'createSession').mockRejectedValueOnce(
+      new ServiceError('TEMPLATE_UNAVAILABLE', 'Template is not available: three-kingdoms-advisors')
+    )
+
+    const req = new Request('http://localhost/api/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: '测试禁用模板', templateId: 'three-kingdoms-advisors' }),
+    })
+
+    const res = await sessionsPost(req)
+    const body = await res.json()
+
+    expect(res.status).toBe(400)
+    expect(body.success).toBe(false)
+    expect(body.error.code).toBe('TEMPLATE_UNAVAILABLE')
+  })
+
   it('returns 500 INTERNAL_ERROR when service throws unexpectedly', async () => {
     vi.spyOn(SessionService.prototype, 'createSession').mockRejectedValueOnce(
       new Error('unexpected')
@@ -144,6 +163,15 @@ describe('GET /api/sessions (Task-07)', () => {
 
   it('returns 400 VALIDATION_ERROR when status is invalid', async () => {
     const res = await sessionsGet(new Request('http://localhost/api/sessions?status=paused'))
+    const body = await res.json()
+
+    expect(res.status).toBe(400)
+    expect(body.success).toBe(false)
+    expect(body.error.code).toBe('VALIDATION_ERROR')
+  })
+
+  it('returns 400 VALIDATION_ERROR when limit is invalid', async () => {
+    const res = await sessionsGet(new Request('http://localhost/api/sessions?limit=-1'))
     const body = await res.json()
 
     expect(res.status).toBe(400)

@@ -9,7 +9,7 @@ it('GET /api/templates returns success response with data array and requestId', 
   const res = await templatesGET()
   const body = await res.json()
   expect(body.success).toBe(true)
-  expect(Array.isArray(body.data)).toBe(true)
+  expect(Array.isArray(body.data.templates)).toBe(true)
   expect(typeof body.requestId).toBe('string')
 })
 
@@ -17,7 +17,7 @@ it('GET /api/sessions returns success response with data array and requestId', a
   const res = await sessionsGET()
   const body = await res.json()
   expect(body.success).toBe(true)
-  expect(Array.isArray(body.data)).toBe(true)
+  expect(Array.isArray(body.data.sessions)).toBe(true)
   expect(typeof body.requestId).toBe('string')
 })
 
@@ -36,7 +36,7 @@ it('GET /api/llm/providers returns success response with providers array', async
 })
 
 it('GET /api/templates returns 500 with INTERNAL_ERROR when service throws', async () => {
-  vi.spyOn(TemplateService.prototype, 'listTemplates').mockRejectedValueOnce(
+  vi.spyOn(TemplateService.prototype, 'listTemplateSummaries').mockRejectedValueOnce(
     new ServiceError('INTERNAL_ERROR', 'forced failure')
   )
   const res = await templatesGET()

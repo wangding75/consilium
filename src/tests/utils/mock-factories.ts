@@ -1,5 +1,4 @@
 import type { Template, Role, Message, Session, DiscussionState } from '@/types'
-import { threeKingdomsTemplate } from '@/data/templates/three-kingdoms'
 
 export function mockRole(override: Partial<Role> = {}): Role {
   return {
@@ -15,9 +14,16 @@ export function mockRole(override: Partial<Role> = {}): Role {
 
 export function mockTemplate(override: Partial<Template> = {}): Template {
   return {
-    ...threeKingdomsTemplate,
     id: 'mock-template-1',
     name: '测试模板',
+    description: '测试模板描述',
+    worldview: '测试世界观',
+    roles: [mockRole()],
+    events: [],
+    rhythmConfig: {
+      maxTurnsPerStage: {},
+      minTurnsBeforeClimax: 1,
+    },
     ...override,
   }
 }

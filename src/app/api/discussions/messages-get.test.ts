@@ -26,6 +26,7 @@ describe('GET /api/discussions/[sessionId]/messages — Task-07', () => {
     const res = await GET(req as unknown as Request, { params: makeParams('sess-1') })
     expect(res.status).toBe(400)
     const json = await res.json() as ApiResponse<MessageListResult>
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('VALIDATION_ERROR')
   })
 
@@ -34,6 +35,7 @@ describe('GET /api/discussions/[sessionId]/messages — Task-07', () => {
     const res = await GET(req as unknown as Request, { params: makeParams('sess-1') })
     expect(res.status).toBe(400)
     const json = await res.json() as ApiResponse<MessageListResult>
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('VALIDATION_ERROR')
   })
 
@@ -52,6 +54,7 @@ describe('GET /api/discussions/[sessionId]/messages — Task-07', () => {
     const res = await GET(req as unknown as Request, { params: makeParams('sess-1') })
     expect(res.status).toBe(500)
     const json = await res.json() as ApiResponse<MessageListResult>
+    if (json.success) throw new Error('expected error response')
     expect(json.error.code).toBe('INTERNAL_ERROR')
   })
 })

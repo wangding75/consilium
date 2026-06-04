@@ -185,4 +185,46 @@ describe('MockTemplateRepository — updateRoleConfig (Task-03)', () => {
     expect(beforeTemplate!.version).toBe('1.0.0')
     expect(beforeRole!.runtimeConfig).toBeUndefined()
   })
+
+  it('constructor input is isolated from later external mutation', async () => {
+    const store = [makeTemplate()]
+    const repo = createRepo(store)
+
+    store[0].name = 'Mutated Outside'
+    store[0].roles[0].persona = 'Mutated Persona'
+
+    const template = await repo.findById('tpl-1')
+    expect(template).not.toBeNull()
+    expect(template!.name).toBe('Test Template')
+    expect(template!.roles[0].persona).toBe('A test role persona')
+  })
+
+  it('returned template objects cannot mutate repository state', async () => {
+    const repo = createRepo()
+    const template = await repo.findById('tpl-1')
+    expect(template).not.toBeNull()
+
+    template!.name = 'Mutated Result'
+    template!.roles[0].persona = 'Mutated Role'
+
+    const reloaded = await repo.findById('tpl-1')
+    expect(reloaded).not.toBeNull()
+    expect(reloaded!.name).toBe('Test Template')
+    expect(reloaded!.roles[0].persona).toBe('A test role persona')
+  })
+
+  it('caps retained template versions to prevent unbounded growth', async () => {
+    const repo = createRepo([makeTemplate()])
+
+    for (let index = 0; index < 25; index += 1) {
+      await repo.updateRoleConfig('tpl-1', 'role-1', { temperature: 0.1 + index * 0.01 })
+    }
+
+    const templates = await repo.findAll()
+    expect(templates).toHaveLength(1)
+
+    const latest = await repo.findById('tpl-1')
+    expect(latest).not.toBeNull()
+    expect(latest!.version).toBe('1.0.25')
+  })
 })

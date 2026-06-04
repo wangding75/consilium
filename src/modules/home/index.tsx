@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import type { Session } from '@/types'
-import type { CreateSessionParams } from '@/types/api'
-import { MODEL_STRATEGIES, DEFAULT_STRATEGY_ID } from '@/data/model-strategies'
+import type { CreateSessionParams, TemplateSummary } from '@/types/api'
+import type { ModelStrategy } from '@/data/model-strategies'
 
 const QUICK_START_TOPICS = [
   '评估新功能优先级',
@@ -13,18 +13,15 @@ const QUICK_START_TOPICS = [
   '优化定价策略',
 ]
 
-const DEFAULT_TEMPLATE_ID = 'three-kingdoms-advisors'
-const DEFAULT_TEMPLATE_NAME = '三国军师团'
-const TEMPLATE_NAMES: Record<string, string> = {
-  [DEFAULT_TEMPLATE_ID]: DEFAULT_TEMPLATE_NAME,
-}
-
 export function HomeModule() {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   const [topic, setTopic] = useState('')
-  const [selectedTemplateId, setSelectedTemplateId] = useState(DEFAULT_TEMPLATE_ID)
-  const [selectedStrategyId, setSelectedStrategyId] = useState(DEFAULT_STRATEGY_ID)
+  const [templates, setTemplates] = useState<TemplateSummary[]>([])
+  const [strategies, setStrategies] = useState<ModelStrategy[]>([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
+  const [selectedStrategyId, setSelectedStrategyId] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [topicError, setTopicError] = useState('')
   const [isTemplateSheetOpen, setIsTemplateSheetOpen] = useState(false)
@@ -35,8 +32,36 @@ export function HomeModule() {
   const [recentError, setRecentError] = useState('')
 
   useEffect(() => {
+    void loadInitialData()
     void loadRecentSessions()
   }, [])
+
+  async function loadInitialData() {
+    try {
+      const [templatesRes, strategiesRes] = await Promise.all([
+        fetch('/api/templates'),
+        fetch('/api/model-strategies'),
+      ])
+      const templatesJson = await templatesRes.json()
+      const strategiesJson = await strategiesRes.json()
+
+      if (templatesJson.success) {
+        const nextTemplates = templatesJson.data.templates as TemplateSummary[]
+        setTemplates(nextTemplates)
+        const queryTemplateId = searchParams.get('templateId')
+        const preselectedTemplate = nextTemplates.find((template) => template.templateId === queryTemplateId)
+        setSelectedTemplateId(preselectedTemplate?.templateId ?? nextTemplates[0]?.templateId ?? '')
+      }
+
+      if (strategiesJson.success) {
+        const nextStrategies = strategiesJson.data.strategies as ModelStrategy[]
+        setStrategies(nextStrategies)
+        setSelectedStrategyId(strategiesJson.data.defaultModelStrategyId ?? nextStrategies[0]?.id ?? '')
+      }
+    } catch {
+      setTopicError('网络错误，请稍后重试')
+    }
+  }
 
   async function loadRecentSessions() {
     setIsLoadingRecent(true)
@@ -87,7 +112,8 @@ export function HomeModule() {
     }
   }
 
-  const selectedStrategy = MODEL_STRATEGIES.find(s => s.id === selectedStrategyId)
+  const selectedTemplate = templates.find((template) => template.templateId === selectedTemplateId)
+  const selectedStrategy = strategies.find((strategy) => strategy.modelStrategyId === selectedStrategyId)
 
   return (
     <div className="p-4 flex flex-col gap-6">
@@ -123,7 +149,7 @@ export function HomeModule() {
           onClick={() => setIsTemplateSheetOpen(true)}
         >
           <span className="text-xs text-text-muted">模板</span>
-          <span className="text-sm text-text-primary">{TEMPLATE_NAMES[selectedTemplateId] ?? selectedTemplateId}</span>
+          <span className="text-sm text-text-primary">{selectedTemplate?.name ?? selectedTemplateId}</span>
         </button>
 
         <button
@@ -206,24 +232,19 @@ export function HomeModule() {
             onClick={e => e.stopPropagation()}
           >
             <p className="text-sm font-medium text-text-primary">选择模板</p>
-            <button
-              type="button"
-              className={`rounded-xl border p-3 text-left ${selectedTemplateId === DEFAULT_TEMPLATE_ID ? 'border-accent' : 'border-border'}`}
-              onClick={() => {
-                setSelectedTemplateId(DEFAULT_TEMPLATE_ID)
-                setIsTemplateSheetOpen(false)
-              }}
-            >
-              <p className="text-sm text-text-primary">{DEFAULT_TEMPLATE_NAME}</p>
-            </button>
-            {['创业公司董事会', '产品辩论桌'].map(name => (
-              <div
-                key={name}
-                className="rounded-xl border border-border p-3 opacity-40 flex justify-between items-center"
+            {templates.map(template => (
+              <button
+                key={template.templateId}
+                type="button"
+                className={`rounded-xl border p-3 text-left ${selectedTemplateId === template.templateId ? 'border-accent' : 'border-border'}`}
+                onClick={() => {
+                  setSelectedTemplateId(template.templateId)
+                  setIsTemplateSheetOpen(false)
+                }}
               >
-                <p className="text-sm text-text-primary">{name}</p>
-                <span className="text-xs text-text-muted">即将支持</span>
-              </div>
+                <p className="text-sm text-text-primary">{template.name}</p>
+                <p className="text-xs text-text-muted mt-1">{template.description}</p>
+              </button>
             ))}
           </div>
         </div>
@@ -240,18 +261,18 @@ export function HomeModule() {
             onClick={e => e.stopPropagation()}
           >
             <p className="text-sm font-medium text-text-primary">选择模型策略</p>
-            {MODEL_STRATEGIES.map(s => (
+            {strategies.map(strategy => (
               <button
-                key={s.id}
+                key={strategy.modelStrategyId}
                 type="button"
-                className={`rounded-xl border p-3 text-left ${selectedStrategyId === s.id ? 'border-accent' : 'border-border'}`}
+                className={`rounded-xl border p-3 text-left ${selectedStrategyId === strategy.modelStrategyId ? 'border-accent' : 'border-border'}`}
                 onClick={() => {
-                  setSelectedStrategyId(s.id)
+                  setSelectedStrategyId(strategy.modelStrategyId)
                   setIsStrategySheetOpen(false)
                 }}
               >
-                <p className="text-sm text-text-primary">{s.name}</p>
-                <p className="text-xs text-text-muted mt-1">{s.description}</p>
+                <p className="text-sm text-text-primary">{strategy.name}</p>
+                <p className="text-xs text-text-muted mt-1">{strategy.description}</p>
               </button>
             ))}
           </div>

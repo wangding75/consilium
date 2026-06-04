@@ -4,52 +4,105 @@ import type { RoleConfigPatchRequest, RoleConfigPatchResult } from '@/types/api'
 import { ServiceError } from '@/server/errors'
 import { threeKingdomsTemplate, startupBoardTemplate, productDebateTemplate } from '@/data/templates'
 
+const DEFAULT_TEMPLATES: DiscussionTemplate[] = [
+  threeKingdomsTemplate,
+  startupBoardTemplate,
+  productDebateTemplate,
+]
+
+const MAX_TEMPLATE_VERSIONS_PER_TEMPLATE = 20
+
+function cloneTemplate(template: DiscussionTemplate): DiscussionTemplate {
+  return structuredClone(template)
+}
+
+function cloneTemplates(templates: DiscussionTemplate[]): DiscussionTemplate[] {
+  return templates.map((template) => cloneTemplate(template))
+}
+
 export class MockTemplateRepository implements TemplateRepository {
-  private readonly templates: DiscussionTemplate[] = [
-    { ...threeKingdomsTemplate },
-    { ...startupBoardTemplate },
-    { ...productDebateTemplate },
-  ]
+  private readonly templates: DiscussionTemplate[]
+  private readonly mirroredStore?: DiscussionTemplate[]
+
+  constructor(templates: DiscussionTemplate[] = DEFAULT_TEMPLATES) {
+    this.templates = cloneTemplates(templates)
+    this.mirroredStore = templates === DEFAULT_TEMPLATES ? undefined : templates
+  }
+
+  private findLatestTemplate(templateId: string): DiscussionTemplate | null {
+    const matches = this.templates.filter((template) => template.templateId === templateId)
+    if (matches.length === 0) {
+      return null
+    }
+
+    return matches[matches.length - 1]
+  }
+
+  private listLatestTemplates(): DiscussionTemplate[] {
+    const latestTemplates = new Map<string, DiscussionTemplate>()
+
+    for (const template of this.templates) {
+      latestTemplates.set(template.templateId, template)
+    }
+
+    return Array.from(latestTemplates.values())
+  }
 
   async findAll(): Promise<DiscussionTemplate[]> {
-    return [...this.templates]
+    return cloneTemplates(this.listLatestTemplates())
   }
 
   async findById(id: string): Promise<DiscussionTemplate | null> {
-    return this.templates.find((t) => t.templateId === id) ?? null
+    const template = this.findLatestTemplate(id)
+    return template ? cloneTemplate(template) : null
   }
 
   async findSummaries(): Promise<TemplateSummary[]> {
-    return this.templates.map((t) => ({
-      templateId: t.templateId,
-      version: t.version,
-      name: t.name,
-      description: t.description,
-      category: t.category,
-      tags: [...t.tags],
-      roleCount: t.roles.length,
-      eventCount: t.events.length,
-      usageCount: t.metrics.usageCount,
-      sessionCount: t.metrics.sessionCount,
-      favoriteCount: t.metrics.favoriteCount,
-      isBuiltin: t.isBuiltin,
-      availableForSessionCreation: t.availableForSessionCreation,
+    return this.listLatestTemplates().map((template) => ({
+      templateId: template.templateId,
+      version: template.version,
+      name: template.name,
+      description: template.description,
+      category: template.category,
+      tags: [...template.tags],
+      roleCount: template.roles.length,
+      eventCount: template.events.length,
+      usageCount: template.metrics.usageCount,
+      sessionCount: template.metrics.sessionCount,
+      favoriteCount: template.metrics.favoriteCount,
+      isBuiltin: template.isBuiltin,
+      availableForSessionCreation: template.availableForSessionCreation,
     }))
   }
 
   async findDetailById(templateId: string): Promise<DiscussionTemplate | null> {
-    const template = this.templates.find((t) => t.templateId === templateId)
-    if (!template) return null
-    return { ...template }
+    const template = this.findLatestTemplate(templateId)
+    return template ? cloneTemplate(template) : null
   }
 
   async findRoles(templateId: string): Promise<TemplateRolesResult | null> {
-    const template = this.templates.find((t) => t.templateId === templateId)
+    const template = this.findLatestTemplate(templateId)
     if (!template) return null
     return {
       templateId: template.templateId,
       templateVersion: template.version,
-      roles: template.roles.map((r) => ({ ...r })),
+      roles: template.roles.map((role) => structuredClone(role)),
+    }
+  }
+
+  private pruneTemplateHistory(store: DiscussionTemplate[], templateId: string): void {
+    const matchingIndexes = store
+      .map((template, index) => ({ template, index }))
+      .filter(({ template }) => template.templateId === templateId)
+      .map(({ index }) => index)
+
+    const overflowCount = matchingIndexes.length - MAX_TEMPLATE_VERSIONS_PER_TEMPLATE
+    if (overflowCount <= 0) {
+      return
+    }
+
+    for (const index of matchingIndexes.slice(0, overflowCount).reverse()) {
+      store.splice(index, 1)
     }
   }
 
@@ -58,12 +111,11 @@ export class MockTemplateRepository implements TemplateRepository {
     roleId: string,
     patch: RoleConfigPatchRequest
   ): Promise<RoleConfigPatchResult | null> {
-    const templateIndex = this.templates.findIndex((t) => t.templateId === templateId)
-    if (templateIndex === -1) {
+    const template = this.findLatestTemplate(templateId)
+    if (!template) {
       throw new ServiceError('TEMPLATE_NOT_FOUND', `Template ${templateId} not found`)
     }
 
-    const template = this.templates[templateIndex]
     if (!template.editable) {
       throw new ServiceError('TEMPLATE_NOT_EDITABLE', `Template ${templateId} is not editable`)
     }
@@ -71,42 +123,67 @@ export class MockTemplateRepository implements TemplateRepository {
       throw new ServiceError('TEMPLATE_UNAVAILABLE', `Template ${templateId} is not available`)
     }
 
-    const roleIndex = template.roles.findIndex((r) => r.roleId === roleId)
+    const roleIndex = template.roles.findIndex((role) => role.roleId === roleId)
     if (roleIndex === -1) {
       throw new ServiceError('ROLE_NOT_FOUND', `Role ${roleId} not found in template ${templateId}`)
     }
 
-    const patchFields = Object.keys(patch).filter((k) => k !== 'maxCharsPerTurn')
-    if (patchFields.length === 0) {
+    if (Object.keys(patch).length === 0) {
       throw new ServiceError('VALIDATION_ERROR', 'Empty patch: at least one field must be provided')
     }
 
-    if (patch.temperature !== undefined && (patch.temperature < 0 || patch.temperature > 2)) {
+    if (patch.model !== undefined && (typeof patch.model !== 'string' || patch.model.trim() === '')) {
+      throw new ServiceError('VALIDATION_ERROR', 'model must be a non-empty string')
+    }
+
+    if (
+      patch.temperature !== undefined &&
+      (typeof patch.temperature !== 'number' || !Number.isFinite(patch.temperature) || patch.temperature < 0 || patch.temperature > 2)
+    ) {
       throw new ServiceError('VALIDATION_ERROR', `temperature must be between 0 and 2, got ${patch.temperature}`)
     }
 
-    if (patch.maxCharsPerTurn !== undefined && patch.maxCharsPerTurn <= 0) {
-      throw new ServiceError('VALIDATION_ERROR', `maxCharsPerTurn must be positive, got ${patch.maxCharsPerTurn}`)
+    if (
+      patch.maxCharsPerTurn !== undefined &&
+      (typeof patch.maxCharsPerTurn !== 'number' || !Number.isInteger(patch.maxCharsPerTurn) || patch.maxCharsPerTurn <= 0)
+    ) {
+      throw new ServiceError('VALIDATION_ERROR', `maxCharsPerTurn must be a positive integer, got ${patch.maxCharsPerTurn}`)
     }
 
-    const [major, minor, patchVer] = template.version.split('.').map(Number)
-    const newVersion = `${major}.${minor}.${patchVer + 1}`
+    const [major, minor, patchVersion] = template.version.split('.').map(Number)
+    const nextVersion = `${major}.${minor}.${patchVersion + 1}`
+    const updatedTemplate: DiscussionTemplate = {
+      ...cloneTemplate(template),
+      version: nextVersion,
+      roles: template.roles.map((role, index) => {
+        if (index !== roleIndex) {
+          return structuredClone(role)
+        }
 
-    const newTemplate: DiscussionTemplate = {
-      ...template,
-      version: newVersion,
-      roles: template.roles.map((r, i) =>
-        i === roleIndex ? { ...r, runtimeConfig: { ...r.runtimeConfig, ...patch } as any, configStatus: 'customized' as const } : { ...r }
-      ),
+        return {
+          ...structuredClone(role),
+          runtimeConfig: {
+            ...(role.runtimeConfig ? structuredClone(role.runtimeConfig) : {}),
+            ...(patch.model !== undefined ? { model: patch.model } : {}),
+            ...(patch.temperature !== undefined ? { temperature: patch.temperature } : {}),
+            ...(patch.maxCharsPerTurn !== undefined ? { maxCharsPerTurn: patch.maxCharsPerTurn } : {}),
+          },
+          configStatus: 'customized',
+        }
+      }),
     }
 
-    this.templates[templateIndex] = newTemplate
+    this.templates.push(updatedTemplate)
+    this.pruneTemplateHistory(this.templates, templateId)
 
-    const updatedRole = newTemplate.roles[roleIndex]
+    this.mirroredStore?.push(cloneTemplate(updatedTemplate))
+    if (this.mirroredStore) {
+      this.pruneTemplateHistory(this.mirroredStore, templateId)
+    }
 
     return {
       templateId,
-      templateVersion: newVersion,
+      templateVersion: nextVersion,
       roleId,
       config: {
         ...(patch.model !== undefined ? { model: patch.model } : {}),

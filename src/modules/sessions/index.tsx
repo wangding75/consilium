@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Session } from '@/types'
+import type { SessionListItem } from '@/types/api'
 
 type FilterTab = 'running' | 'completed' | 'archived'
 
@@ -21,30 +21,52 @@ const STATUS_LABELS: Record<string, string> = {
 
 export function SessionsModule() {
   const router = useRouter()
-  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessions, setSessions] = useState<SessionListItem[]>([])
   const [activeTab, setActiveTab] = useState<FilterTab>('running')
   const [keyword, setKeyword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const requestIdRef = useRef(0)
 
   useEffect(() => {
     void loadSessions()
   }, [activeTab, keyword])
 
   async function loadSessions() {
+    const requestId = requestIdRef.current + 1
+    requestIdRef.current = requestId
     setIsLoading(true)
+    setLoadError('')
+
     try {
       const params = new URLSearchParams()
       params.set('status', activeTab)
       if (keyword) params.set('keyword', keyword)
       const res = await fetch(`/api/sessions?${params.toString()}`)
       const json = await res.json()
-      if (json.success) {
-        setSessions(json.data)
+
+      if (requestId !== requestIdRef.current) {
+        return
       }
+
+      if (json.success) {
+        setSessions(json.data.sessions)
+        return
+      }
+
+      setSessions([])
+      setLoadError(json.error?.message ?? '加载失败')
     } catch {
-      // silent
+      if (requestId !== requestIdRef.current) {
+        return
+      }
+
+      setSessions([])
+      setLoadError('网络错误，请稍后重试')
     } finally {
-      setIsLoading(false)
+      if (requestId === requestIdRef.current) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -95,6 +117,17 @@ export function SessionsModule() {
             <div key={i} className="h-14 rounded-xl bg-border/30 animate-pulse" />
           ))}
         </div>
+      ) : loadError ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs text-red-500">{loadError}</p>
+          <button
+            type="button"
+            className="w-fit rounded-xl border border-border px-3 py-1.5 text-xs text-text-primary"
+            onClick={() => void loadSessions()}
+          >
+            重试
+          </button>
+        </div>
       ) : sessions.length === 0 ? (
         <div className="flex flex-col gap-2">
           <p className="text-xs text-text-muted">暂无会话</p>
@@ -107,21 +140,28 @@ export function SessionsModule() {
         <div className="flex flex-col gap-2">
           {sessions.map(session => (
             <div
-              key={session.id}
+              key={session.sessionId}
               className="w-full rounded-xl border border-border bg-surface p-3 text-left"
             >
-              <div className="flex justify-between items-start">
+              <div className="flex justify-between items-start gap-2">
                 <button
                   type="button"
                   className="flex-1 text-left"
-                  onClick={() => router.push(`/discussion/${session.id}`)}
+                  onClick={() => router.push(`/discussion/${session.sessionId}`)}
                 >
                   <p className="text-sm text-text-primary truncate">{session.topic}</p>
-                  <p className="text-xs text-text-muted mt-1">
-                    {STATUS_LABELS[session.status] ?? session.status} · {new Date(session.createdAt).toLocaleDateString('zh-CN')}
+                  <p className="mt-1 text-xs text-text-muted">{session.template.name}</p>
+                  <p className="mt-1 text-xs text-text-muted">
+                    {session.roleCount} 角色 · {session.eventCount} 事件 · {session.messageCount} 消息
                   </p>
+                  {session.modelStrategy && (
+                    <p className="mt-1 text-xs text-text-muted">{session.modelStrategy.name}</p>
+                  )}
+                  {!session.template.fromSnapshot && session.template.fallbackReason && (
+                    <p className="mt-1 text-xs text-text-muted">使用兜底模板信息恢复</p>
+                  )}
                 </button>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent ml-2 shrink-0">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent shrink-0">
                   {STATUS_LABELS[session.status] ?? session.status}
                 </span>
               </div>
@@ -130,7 +170,7 @@ export function SessionsModule() {
                   <button
                     type="button"
                     className="text-xs text-text-muted hover:text-text-primary"
-                    onClick={() => void handleAction(session.id, 'archive')}
+                    onClick={() => void handleAction(session.sessionId, 'archive')}
                   >
                     归档
                   </button>
@@ -139,7 +179,7 @@ export function SessionsModule() {
                   <button
                     type="button"
                     className="text-xs text-text-muted hover:text-text-primary"
-                    onClick={() => void handleAction(session.id, 'resume')}
+                    onClick={() => void handleAction(session.sessionId, 'resume')}
                   >
                     恢复
                   </button>

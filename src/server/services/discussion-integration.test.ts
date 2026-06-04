@@ -95,6 +95,43 @@ class NullTemplateRepository {
   }
 }
 
+class LiveTemplateRepository {
+  async findById() {
+    return {
+      ...makeTemplateSnapshot(),
+      name: '被实时模板覆盖的名字',
+      version: '9.9.9',
+      roles: [
+        {
+          ...makeTemplateSnapshot().roles[0],
+          persona: '实时模板 persona',
+          runtimeConfig: {
+            model: 'live-model',
+            temperature: 0.9,
+            maxCharsPerTurn: 999,
+          },
+        },
+      ],
+      modelDefaults: {
+        defaultModel: 'live-default-model',
+        temperature: 0.9,
+        maxTokens: 999,
+      },
+      category: 'live',
+      tags: [],
+      metrics: { usageCount: 0, sessionCount: 0, favoriteCount: 0 },
+      isBuiltin: true,
+      visible: true,
+      availableForSessionCreation: true,
+      editable: false,
+      createdAt: '2026-06-02T00:00:00.000Z',
+      overview: makeTemplateSnapshot().overview,
+      events: [],
+      rhythm: makeTemplateSnapshot().rhythm,
+    }
+  }
+}
+
 describe('integration: snapshot recovery and runtime chain (Task-08)', () => {
   it('sendUserMessage uses session snapshots to build templateName and profiles when live template is unavailable', async () => {
     const sessionRepo = new MockSessionRepository()
@@ -167,6 +204,52 @@ describe('integration: snapshot recovery and runtime chain (Task-08)', () => {
         roleId: 'ceo',
         name: 'CEO',
         model: 'claude-3-5-sonnet',
+      }),
+    ])
+  })
+
+  it('prefers session snapshots over live templates when both exist', async () => {
+    const sessionRepo = new MockSessionRepository()
+    const messageRepo = new MockMessageRepository()
+    const discussionRepo = new MockDiscussionRepository()
+    const orchestrator = {
+      run: vi.fn().mockResolvedValue({
+        agentMessages: [makeAgentMessage('sess-snapshot')],
+        callLogs: [],
+        activeSpeakerId: 'ceo',
+      }),
+    }
+
+    await sessionRepo.save(makeSession())
+
+    const service = new DiscussionService(
+      discussionRepo,
+      sessionRepo,
+      new LiveTemplateRepository() as never,
+      messageRepo,
+      undefined,
+      orchestrator as never,
+    )
+
+    const detail = await service.getSessionDetail('sess-snapshot')
+    await service.sendUserMessage('sess-snapshot', '继续推进')
+
+    expect(detail.template).toEqual({
+      templateId: 'startup-board',
+      name: '创业公司董事会',
+      version: '1.0.0',
+      fromSnapshot: true,
+    })
+
+    const input = orchestrator.run.mock.calls[0][0]
+    expect(input.templateName).toBe('创业公司董事会')
+    expect(input.profiles).toEqual([
+      expect.objectContaining({
+        roleId: 'ceo',
+        persona: '负责综合决策',
+        model: 'claude-3-5-sonnet',
+        temperature: 0.4,
+        maxTokens: 256,
       }),
     ])
   })

@@ -127,8 +127,8 @@ describe('Task-02: 实现服务端模板版本数据源与模板查询能力', (
     const rolesResult = await repo.findRoles('startup-board')
     expect(template).not.toBeNull()
     expect(rolesResult).not.toBeNull()
-    const templateVersion = (template as Record<string, unknown>).version
-    expect(templateVersion).toBe(rolesResult!.templateVersion)
+    if (!template) throw new Error('expected template')
+    expect(template.version).toBe(rolesResult!.templateVersion)
   })
 
   it('MockTemplateRepository uses shared instances (singleton)', () => {
@@ -150,7 +150,7 @@ describe('Task-02: 实现服务端模板版本数据源与模板查询能力', (
   it('GET /api/templates/:id returns TemplateDetailResult envelope', async () => {
     const response = await getTemplateDetail(
       new Request('http://localhost/api/templates/startup-board'),
-      { params: { templateId: 'startup-board' } }
+      { params: Promise.resolve({ templateId: 'startup-board' }) }
     )
     const body = await response.json()
     expect(body).toHaveProperty('success')

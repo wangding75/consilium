@@ -39,7 +39,7 @@ export interface CreateSessionParams {
 export interface CreateSessionResult {
   sessionId: string
   topic: string
-  template: { templateId: string; name: string; version: string }
+  template: { id?: string; templateId: string; name: string; version: string }
   modelStrategy: { modelStrategyId: string; name: string; selectedByDefault: boolean }
   status: SessionLifecycleStatus
   createdAt: number

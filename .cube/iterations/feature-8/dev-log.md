@@ -2,7 +2,7 @@
 
 ## 执行计划（生成时间：2026-06-03 10:54）
 
-整体进度：已完成 0 / 共 11 个任务
+整体进度：已完成 11 / 共 11 个任务
 
 | # | 任务 | 测试文件 | 当前状态 | 变更文件数 |
 |---|------|----------|----------|-----------|
@@ -132,6 +132,7 @@
 - 修改边界：只修改 SessionsModule 的数据加载类型和展示字段；不得改变归档、恢复、完成等状态流转逻辑
 - 禁止行为：不得用最新模板覆盖历史会话摘要；不得因旧会话缺失快照阻断恢复
 - 修改：src/modules/sessions/index.tsx
+- 修改：src/modules/sessions/sessions-module.test.tsx
 
 ---
 
@@ -149,6 +150,90 @@
 - 测试文件：src/data/templates/template-data.test.ts
 - 测试结果：15/15 通过
 - 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, .gitignore, src/app/api/templates/route.ts, src/app/api/templates/[templateId]/route.ts, src/app/api/templates/[templateId]/roles/route.ts, src/data/templates/index.ts, src/data/templates/template-data.test.ts, src/data/templates/three-kingdoms.ts, src/server/repositories/mock/mock-template.repository.ts, src/server/services/template.service.ts]（经用户确认纳入计划外文件）
+- phase：locked → green → done
+
+---
+
+## 任务 3：Task-03：实现模板角色配置版本更新能力（完成时间：2026-06-03 13:52）
+
+- 测试文件：src/server/repositories/mock/mock-template.repository.test.ts、src/app/api/templates/templates-api.test.ts
+- 测试结果：23/23 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/app/api/templates/[templateId]/roles/[roleId]/config/route.ts, src/app/api/templates/templates-api.test.ts, src/server/repositories/mock/mock-template.repository.test.ts, src/server/repositories/mock/mock-template.repository.ts, src/server/services/template.service.ts]
+- 审查补充：补齐 PATCH unknown field / wrong type 的 API 边界测试，以及 MockTemplateRepository constructor input / returned object defensive copy 测试
+- phase：locked → green → done
+
+---
+
+## 任务 4：Task-04：实现模型策略查询 API（完成时间：2026-06-03 13:54）
+
+- 测试文件：src/data/model-strategies.test.ts、src/server/services/model-strategy.service.test.ts（listStrategies）
+- 测试结果：11/11 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/data/model-strategies.ts, src/server/services/model-strategy.service.ts]
+- phase：locked → green → done
+
+---
+
+## 任务 5：Task-05：实现模型策略快照与运行时解析能力（完成时间：2026-06-03 13:56）
+
+- 测试文件：src/server/services/model-strategy.service.test.ts
+- 测试结果：15/15 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/server/repositories/mock/mock-model-strategy.repository.ts, src/server/services/model-strategy.service.ts, src/types/index.ts]
+- phase：locked → green → done
+
+---
+
+## 任务 6：Task-06：实现创建会话保存模板与策略快照（完成时间：2026-06-03 13:58）
+
+- 测试文件：src/server/services/session-service.test.ts（createSession）
+- 测试结果：14/14 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/server/services/session.service.ts, src/types/api.ts]
+- phase：locked → green → done
+
+---
+
+## 任务 7：Task-07：实现会话列表快照摘要 API（完成时间：2026-06-03 14:01）
+
+- 测试文件：src/app/api/sessions/sessions-api.test.ts
+- 测试结果：9/9 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/app/api/sessions/route.ts, src/server/services/session.service.ts]
+- phase：locked → green → done
+
+---
+
+## 任务 8：Task-08：实现讨论恢复与 Agent 运行时使用会话快照（完成时间：2026-06-03 14:08）
+
+- 测试文件：src/server/services/discussion-integration.test.ts
+- 测试结果：3/3 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/server/services/discussion.service.ts, src/engine/agent-runtime.ts, src/types/index.ts]
+- 关键修复：讨论恢复优先使用 session snapshot 构建 templateName / profiles / detail summary，AgentRuntime 透传 maxTokens
+- phase：locked → green → done
+
+---
+
+## 任务 9：Task-09：实现首页模板与模型策略真实数据联动（完成时间：2026-06-03 14:10）
+
+- 测试文件：src/modules/home/home.test.tsx
+- 测试结果：4/4 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/modules/home/index.tsx]
+- phase：locked → green → done
+
+---
+
+## 任务 10：Task-10：实现模板中心真实数据、使用模板、角色详情与角色配置交互（完成时间：2026-06-03 14:11）
+
+- 测试文件：src/modules/templates/templates-module.test.tsx
+- 测试结果：4/4 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/modules/templates/index.tsx]
+- phase：locked → green → done
+
+---
+
+## 任务 11：Task-11：实现会话列表展示模板快照摘要（完成时间：2026-06-03 14:26）
+
+- 测试文件：src/modules/sessions/sessions-module.test.tsx
+- 测试结果：6/6 通过
+- 文件变更：新增 [] / 修改 [.cube/iterations/feature-8/STATUS.yaml, .cube/iterations/feature-8/dev-log.md, .cube/iterations/feature-8/test-output.log, src/modules/sessions/index.tsx, src/modules/sessions/sessions-module.test.tsx]
+- 浏览器验证：`http://127.0.0.1:3001/sessions` 已验证初始加载、摘要字段展示、归档按钮、已归档 Tab 切换与兜底文案；本地数据无 archived session，未实测恢复按钮
 - phase：locked → green → done
 
 ---

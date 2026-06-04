@@ -47,6 +47,21 @@ const BUILTIN_STRATEGIES: ModelStrategy[] = [
     active: true,
     isDefault: false,
   },
+  {
+    modelStrategyId: 'inactive',
+    name: '停用策略',
+    description: '用于验证停用策略不可用',
+    priority: ['quality', 'speed', 'cost'],
+    defaultModel: 'mock',
+    roleOverrides: {},
+    fallbackChain: ['mock'],
+    temperature: 0.7,
+    maxTokens: 512,
+    costPolicy: '停用策略不参与成本路由',
+    speedPolicy: '停用策略不参与速度路由',
+    active: false,
+    isDefault: false,
+  },
 ]
 
 export class MockModelStrategyRepository implements ModelStrategyRepository {

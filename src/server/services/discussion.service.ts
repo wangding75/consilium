@@ -1,6 +1,6 @@
 import type { DefaultStateMachine } from '@/engine/state-machine'
 import type { Director } from '@/engine/director'
-import type { Discussion, AgentCallLog, AgentProfile, IntentResult, EventRecord, DiscussionMessage, VotePayload, AgentOutput, EventPayload } from '@/types'
+import type { Discussion, AgentCallLog, AgentProfile, IntentResult, EventRecord, DiscussionMessage, VotePayload, AgentOutput, EventPayload, Session } from '@/types'
 import type { EventDetector, EventRateLimiter } from '@/engine/events'
 import type { EventRepository } from '@/server/repositories/event.repository'
 import type { VoteRepository } from '@/server/repositories/vote.repository'
@@ -21,6 +21,48 @@ import type { DirectorInput as DirectorInputType, DirectorDecisionRecord, Invita
 const DEFAULT_MODEL = 'claude-3-5-haiku-latest'
 
 export class DiscussionService {
+  private getSessionTemplateSource(session: Session, liveTemplate: any): any {
+    return session.templateSnapshot ?? liveTemplate ?? null
+  }
+
+  private buildProfiles(session: Session, liveTemplate: any): AgentProfile[] {
+    const templateSource = this.getSessionTemplateSource(session, liveTemplate)
+    const strategySnapshot = session.strategySnapshot
+
+    return (templateSource?.roles ?? []).map((role: any) => {
+      const roleOverride = strategySnapshot?.roleOverrides?.[role.roleId]
+      const runtimeConfig = role.runtimeConfig
+      const model = runtimeConfig?.model ?? roleOverride?.model ?? strategySnapshot?.defaultModel ?? templateSource?.modelDefaults?.defaultModel ?? DEFAULT_MODEL
+      const temperature = runtimeConfig?.temperature ?? roleOverride?.temperature ?? strategySnapshot?.temperature ?? templateSource?.modelDefaults?.temperature
+      const maxTokens = roleOverride?.maxTokens ?? strategySnapshot?.maxTokens ?? templateSource?.modelDefaults?.maxTokens
+
+      return {
+        agentId: role.roleId,
+        roleId: role.roleId,
+        agentType: role.agentType ?? (role.isHost ? 'host' : 'expert'),
+        name: role.name,
+        persona: role.persona,
+        systemPrompt: role.systemPrompt,
+        model,
+        ...(temperature !== undefined ? { temperature } : {}),
+        ...(maxTokens !== undefined ? { maxTokens } : {}),
+        visible: role.visible ?? true,
+      }
+    })
+  }
+
+  private buildSessionDetailRoles(session: Session, liveTemplate: any): Array<{ roleId: string; name: string; agentType: any; avatar: string; model: string }> {
+    const templateSource = this.getSessionTemplateSource(session, liveTemplate)
+    const profiles = this.buildProfiles(session, liveTemplate)
+
+    return (templateSource?.roles ?? []).map((role: any, index: number) => ({
+      roleId: role.roleId,
+      name: role.name,
+      agentType: role.agentType,
+      avatar: role.avatarEmoji ?? '',
+      model: profiles[index]?.model ?? DEFAULT_MODEL,
+    }))
+  }
   constructor(
     private readonly discussionRepo: DiscussionRepository,
     private readonly sessionRepo?: SessionRepository,
@@ -180,23 +222,28 @@ export class DiscussionService {
     if (!session) throw new ServiceError('SESSION_NOT_FOUND', `Session ${sessionId} not found`)
 
     const template = await this.templateRepo?.findById(session.templateId)
-
-    const roles = (template?.roles ?? []).map((r) => ({
-      roleId: r.id,
-      name: r.name,
-      agentType: r.agentType ?? (r.isHost ? ('host' as const) : ('expert' as const)),
-      avatar: r.avatarEmoji ?? '',
-      model: DEFAULT_MODEL,
-    }))
+    const templateSource = this.getSessionTemplateSource(session, template)
+    const roles = this.buildSessionDetailRoles(session, template)
 
     return {
       sessionId: session.id,
       topic: session.topic,
       template: {
-        templateId: template?.id ?? session.templateId,
-        name: template?.name ?? '',
-        fromSnapshot: false,
+        templateId: templateSource?.templateId ?? session.templateId,
+        name: templateSource?.name ?? '',
+        ...(templateSource?.version ? { version: templateSource.version } : {}),
+        fromSnapshot: templateSource === session.templateSnapshot,
       },
+      ...(session.strategySnapshot
+        ? {
+            modelStrategy: {
+              modelStrategyId: session.strategySnapshot.modelStrategyId,
+              name: session.strategySnapshot.name,
+              selectedByDefault: session.strategySnapshot.selectedByDefault,
+              fromSnapshot: true,
+            },
+          }
+        : {}),
       status: session.status,
       phase: session.state.stage,
       state: session.state,
@@ -242,7 +289,7 @@ export class DiscussionService {
 
     const template = await this.templateRepo?.findById(session.templateId)
     const roles = (template?.roles ?? []).map((r) => ({
-      roleId: r.id,
+      roleId: r.roleId,
       name: r.name,
       agentType: r.agentType ?? (r.isHost ? ('host' as const) : ('expert' as const)),
       avatar: r.avatarEmoji ?? '',
@@ -250,8 +297,8 @@ export class DiscussionService {
     }))
 
     const profiles: AgentProfile[] = (template?.roles ?? []).map((r) => ({
-      agentId: r.id,
-      roleId: r.id,
+      agentId: r.roleId,
+      roleId: r.roleId,
       agentType: r.agentType ?? (r.isHost ? ('host' as const) : ('expert' as const)),
       name: r.name,
       persona: r.persona,
@@ -316,6 +363,7 @@ export class DiscussionService {
     }
 
     const template = await this.templateRepo?.findById(session.templateId)
+    const templateSource = this.getSessionTemplateSource(session, template)
     const existingMessages = await this.messageRepo?.findBySessionId(sessionId) ?? []
     const isOpening = content.trim() === '' && existingMessages.length === 0
 
@@ -372,16 +420,7 @@ export class DiscussionService {
       }
     }
 
-    const profiles = (template?.roles ?? []).map((r) => ({
-      agentId: r.id,
-      roleId: r.id,
-      agentType: r.agentType ?? (r.isHost ? ('host' as const) : ('expert' as const)),
-      name: r.name,
-      persona: r.persona,
-      systemPrompt: r.systemPrompt,
-      model: DEFAULT_MODEL,
-      visible: true,
-    }))
+    const profiles = this.buildProfiles(session, template)
 
     let orchestratorResult
     try {
@@ -389,7 +428,7 @@ export class DiscussionService {
         sessionId,
         runId,
         topic: session.topic,
-        templateName: template?.name ?? '',
+        templateName: templateSource?.name ?? '',
         profiles,
         messageHistory: [...existingMessages, ...(userMessage ? [userMessage] : [])],
         triggerContent: isOpening ? null : content,

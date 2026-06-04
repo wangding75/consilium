@@ -519,7 +519,6 @@ describe('Task-16: DiscussionService — recentEvents injection into Director', 
       undefined,
       undefined,
       undefined,
-      undefined,
       new MockEventRepository(),
       new MockVoteRepository()
     )

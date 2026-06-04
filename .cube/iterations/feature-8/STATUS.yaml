@@ -26,28 +26,64 @@ tasks:
     test_total: 15
   - task: "Task-03：实现模板角色配置版本更新能力"
     test_file: src/server/repositories/mock/mock-template.repository.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 11:27"
+    completed_at: "2026-06-03 13:52"
+    test_passed: 23
+    test_total: 23
   - task: "Task-04：实现模型策略查询 API"
     test_file: src/data/model-strategies.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 13:53"
+    completed_at: "2026-06-03 13:54"
+    test_passed: 11
+    test_total: 11
   - task: "Task-05：实现模型策略快照与运行时解析能力"
     test_file: src/server/services/model-strategy.service.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 13:54"
+    completed_at: "2026-06-03 13:56"
+    test_passed: 15
+    test_total: 15
   - task: "Task-06：实现创建会话保存模板与策略快照"
     test_file: src/server/services/session-service.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 13:56"
+    completed_at: "2026-06-03 13:58"
+    test_passed: 14
+    test_total: 14
   - task: "Task-07：实现会话列表快照摘要 API"
     test_file: src/app/api/sessions/sessions-api.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 13:58"
+    completed_at: "2026-06-03 14:01"
+    test_passed: 9
+    test_total: 9
   - task: "Task-08：实现讨论恢复与 Agent 运行时使用会话快照"
     test_file: src/server/services/discussion-integration.test.ts
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 14:01"
+    completed_at: "2026-06-03 14:08"
+    test_passed: 3
+    test_total: 3
   - task: "Task-09：实现首页模板与模型策略真实数据联动"
     test_file: src/modules/home/home.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 14:08"
+    completed_at: "2026-06-03 14:10"
+    test_passed: 4
+    test_total: 4
   - task: "Task-10：实现模板中心真实数据、使用模板、角色详情与角色配置交互"
     test_file: src/modules/templates/templates-module.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 14:10"
+    completed_at: "2026-06-03 14:11"
+    test_passed: 4
+    test_total: 4
   - task: "Task-11：实现会话列表展示模板快照摘要"
     test_file: src/modules/sessions/sessions-module.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-06-03 14:12"
+    completed_at: "2026-06-03 14:26"
+    test_passed: 6
+    test_total: 6

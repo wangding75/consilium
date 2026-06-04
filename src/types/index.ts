@@ -220,6 +220,7 @@ export interface AgentProfile {
   systemPrompt: string
   model: string
   temperature?: number
+  maxTokens?: number
   visible: boolean
 }
 
@@ -425,6 +426,7 @@ export interface ModelDefaults {
   defaultModel: string
   temperature?: number
   maxTokens?: number
+  maxCharsPerTurn?: number
 }
 
 export interface RoleRuntimeConfig {
@@ -526,7 +528,8 @@ export interface ResolvedRoleRuntimeConfig {
   temperature: number
   maxTokens: number
   maxCharsPerTurn?: number
-  resolvedModelSource: 'templateDefaults' | 'strategyDefaults' | 'roleOverride' | 'roleConfig' | 'fallback'
+  fallbackChain: string[]
+  resolvedModelSource: 'default' | 'templateDefaults' | 'strategyDefaults' | 'roleOverride' | 'roleConfig' | 'fallback'
   fallbackFrom?: string
 }
 

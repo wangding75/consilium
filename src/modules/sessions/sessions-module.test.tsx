@@ -125,4 +125,98 @@ describe('Task-11: SessionsModule', () => {
       expect(screen.getByText('恢复')).toBeInTheDocument()
     })
   })
+
+  it('shows an error state when a filtered fetch returns unsuccessfully', async () => {
+    fetchMock.mockImplementation(async (input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url === '/api/sessions?status=archived') {
+        return {
+          json: async () => ({
+            success: false,
+            error: { message: '加载失败' },
+          }),
+        }
+      }
+
+      if (url.startsWith('/api/sessions?')) {
+        return { json: async () => sessionListResponse }
+      }
+
+      if (url === '/api/sessions/s2/status') {
+        return { json: async () => ({ success: true, data: null }) }
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`)
+    })
+
+    render(<SessionsModule />)
+
+    await waitFor(() => {
+      expect(screen.getByText('测试会话1')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '已归档' }))
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/sessions?status=archived')
+    })
+
+    await waitFor(() => {
+      expect(screen.queryByText('测试会话1')).not.toBeInTheDocument()
+      expect(screen.getByText('加载失败')).toBeInTheDocument()
+      expect(screen.queryByText('暂无会话')).not.toBeInTheDocument()
+    })
+  })
+
+  it('ignores stale responses from previous filters', async () => {
+    let resolveRunning:
+      | ((value: { json: () => Promise<typeof sessionListResponse> }) => void)
+      | undefined
+
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = typeof input === 'string' ? input : input.toString()
+
+      if (url === '/api/sessions?status=running') {
+        return new Promise(resolve => {
+          resolveRunning = resolve
+        })
+      }
+
+      if (url === '/api/sessions?status=archived') {
+        return Promise.resolve({
+          json: async () => ({
+            success: false,
+            error: { message: '加载失败' },
+          }),
+        })
+      }
+
+      if (url === '/api/sessions/s2/status') {
+        return Promise.resolve({ json: async () => ({ success: true, data: null }) })
+      }
+
+      throw new Error(`Unexpected fetch: ${url}`)
+    })
+
+    render(<SessionsModule />)
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/sessions?status=running')
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: '已归档' }))
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/sessions?status=archived')
+      expect(screen.getByText('加载失败')).toBeInTheDocument()
+    })
+
+    resolveRunning?.({ json: async () => sessionListResponse })
+
+    await waitFor(() => {
+      expect(screen.getByText('加载失败')).toBeInTheDocument()
+      expect(screen.queryByText('测试会话1')).not.toBeInTheDocument()
+    })
+  })
 })

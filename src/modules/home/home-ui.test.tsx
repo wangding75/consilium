@@ -18,14 +18,51 @@ const mockRouterPush = vi.fn()
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockRouterPush }),
+  useSearchParams: () => new URLSearchParams(),
 }))
 
 global.fetch = vi.fn()
 
 beforeEach(() => {
   vi.clearAllMocks()
-  ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
-    json: async () => ({ success: true, data: [] }),
+  ;(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/templates') {
+      return {
+        json: async () => ({ success: true, data: { templates: [] } }),
+      }
+    }
+
+    if (url === '/api/model-strategies') {
+      return {
+        json: async () => ({ success: true, data: { strategies: [], defaultModelStrategyId: '' } }),
+      }
+    }
+
+    if (url === '/api/sessions/recent') {
+      return {
+        json: async () => ({ success: true, data: [] }),
+      }
+    }
+
+    if (url === '/api/sessions') {
+      return {
+        json: async () => ({
+          success: true,
+          data: {
+            sessionId: 'default-session-id',
+            topic: '测试',
+            status: 'running',
+            createdAt: Date.now(),
+            template: { templateId: 't1', name: '三国', version: '1.0.0' },
+            modelStrategy: { modelStrategyId: 'smart', name: '智能平衡', selectedByDefault: true },
+          },
+        }),
+      }
+    }
+
+    throw new Error(`Unexpected fetch: ${url}`)
   })
 })
 
@@ -81,23 +118,56 @@ it('HomeModule renders 暂无最近讨论 when API returns empty array', async (
 })
 
 it('HomeModule renders recent session list when API returns data', async () => {
-  ;(global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
-    json: async () => ({
-      success: true,
-      data: [
-        {
-          id: 'session-1',
-          topic: '近期讨论议题',
-          templateId: 'three-kingdoms-advisors',
-          status: 'active',
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          state: { stage: 'idle', turnCount: 0, lastSpeakerId: null },
-          messages: [],
-        },
-      ],
-    }),
+  ;(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/templates') {
+      return { json: async () => ({ success: true, data: { templates: [] } }) }
+    }
+
+    if (url === '/api/model-strategies') {
+      return { json: async () => ({ success: true, data: { strategies: [], defaultModelStrategyId: '' } }) }
+    }
+
+    if (url === '/api/sessions/recent') {
+      return {
+        json: async () => ({
+          success: true,
+          data: [
+            {
+              id: 'session-1',
+              topic: '近期讨论议题',
+              templateId: 'three-kingdoms-advisors',
+              status: 'active',
+              createdAt: Date.now(),
+              updatedAt: Date.now(),
+              state: { stage: 'idle', turnCount: 0, lastSpeakerId: null },
+              messages: [],
+            },
+          ],
+        }),
+      }
+    }
+
+    if (url === '/api/sessions') {
+      return {
+        json: async () => ({
+          success: true,
+          data: {
+            sessionId: 'default-session-id',
+            topic: '测试',
+            status: 'running',
+            createdAt: Date.now(),
+            template: { templateId: 't1', name: '三国', version: '1.0.0' },
+            modelStrategy: { modelStrategyId: 'smart', name: '智能平衡', selectedByDefault: true },
+          },
+        }),
+      }
+    }
+
+    throw new Error(`Unexpected fetch: ${url}`)
   })
+
   render(<HomeModule />)
   await waitFor(() => {
     expect(screen.getByText('近期讨论议题')).toBeInTheDocument()
@@ -112,14 +182,40 @@ it('topic character counter shows n/100', () => {
 })
 
 it('clicking 开始讨论 with valid topic calls POST /api/sessions', async () => {
-  ;(global.fetch as ReturnType<typeof vi.fn>)
-    .mockResolvedValueOnce({ json: async () => ({ success: true, data: [] }) })
-    .mockResolvedValueOnce({
-      json: async () => ({
-        success: true,
-        data: { sessionId: 'new-session-id', topic: '测试', status: 'active', createdAt: Date.now(), template: { id: 't1', name: '三国' } },
-      }),
-    })
+  ;(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/templates') {
+      return { json: async () => ({ success: true, data: { templates: [] } }) }
+    }
+
+    if (url === '/api/model-strategies') {
+      return { json: async () => ({ success: true, data: { strategies: [], defaultModelStrategyId: '' } }) }
+    }
+
+    if (url === '/api/sessions/recent') {
+      return { json: async () => ({ success: true, data: [] }) }
+    }
+
+    if (url === '/api/sessions') {
+      return {
+        json: async () => ({
+          success: true,
+          data: {
+            sessionId: 'new-session-id',
+            topic: '测试',
+            status: 'running',
+            createdAt: Date.now(),
+            template: { templateId: 't1', name: '三国', version: '1.0.0' },
+            modelStrategy: { modelStrategyId: 'smart', name: '智能平衡', selectedByDefault: true },
+          },
+        }),
+      }
+    }
+
+    throw new Error(`Unexpected fetch: ${url}`)
+  })
+
   render(<HomeModule />)
   const textarea = screen.getByPlaceholderText('输入讨论议题...')
   fireEvent.change(textarea, { target: { value: '如何提高效率' } })
@@ -133,14 +229,40 @@ it('clicking 开始讨论 with valid topic calls POST /api/sessions', async () =
 })
 
 it('clicking 开始讨论 with valid topic navigates to /discussion/[sessionId]', async () => {
-  ;(global.fetch as ReturnType<typeof vi.fn>)
-    .mockResolvedValueOnce({ json: async () => ({ success: true, data: [] }) })
-    .mockResolvedValueOnce({
-      json: async () => ({
-        success: true,
-        data: { sessionId: 'nav-session-id', topic: '测试', status: 'active', createdAt: Date.now(), template: { id: 't1', name: '三国' } },
-      }),
-    })
+  ;(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL) => {
+    const url = typeof input === 'string' ? input : input.toString()
+
+    if (url === '/api/templates') {
+      return { json: async () => ({ success: true, data: { templates: [] } }) }
+    }
+
+    if (url === '/api/model-strategies') {
+      return { json: async () => ({ success: true, data: { strategies: [], defaultModelStrategyId: '' } }) }
+    }
+
+    if (url === '/api/sessions/recent') {
+      return { json: async () => ({ success: true, data: [] }) }
+    }
+
+    if (url === '/api/sessions') {
+      return {
+        json: async () => ({
+          success: true,
+          data: {
+            sessionId: 'nav-session-id',
+            topic: '测试',
+            status: 'running',
+            createdAt: Date.now(),
+            template: { templateId: 't1', name: '三国', version: '1.0.0' },
+            modelStrategy: { modelStrategyId: 'smart', name: '智能平衡', selectedByDefault: true },
+          },
+        }),
+      }
+    }
+
+    throw new Error(`Unexpected fetch: ${url}`)
+  })
+
   render(<HomeModule />)
   const textarea = screen.getByPlaceholderText('输入讨论议题...')
   fireEvent.change(textarea, { target: { value: '如何提高效率' } })
