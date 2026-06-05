@@ -12,13 +12,18 @@ branch: feature/10
 tasks:
   - task: "Task-01：新增 POST /api/settings/clear 路由"
     test_file: clear-api.test.ts
-    phase: green
+    phase: done
     started_at: "2026-06-05 17:48"
+    completed_at: "2026-06-05 17:49"
     test_passed: 11
     test_total: 11
   - task: "Task-02：实现 ConfirmDialog 通用确认弹窗组件"
     test_file: ConfirmDialog.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-06-05 17:51"
+    completed_at: "2026-06-05 17:52"
+    test_passed: 8
+    test_total: 8
   - task: "Task-03：实现 ProviderSheet 组件（表单与校验）"
     test_file: ProviderSheet.test.tsx
     phase: locked
