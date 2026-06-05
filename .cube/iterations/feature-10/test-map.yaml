@@ -1,0 +1,145 @@
+tasks:
+  - task: "Task-01：新增 POST /api/settings/clear 路由"
+    module: app/api/settings/clear
+    task_type: api
+    data_operations:
+      - "调用 SettingsService.clearData() → 写 session/message/event/vote/settings 存储"
+    boundary: "只新增 route.ts 文件，不修改 Service 层"
+    forbidden:
+      - "不得修改 SettingsService；不得修改其他路由文件"
+    test_file: clear-api.test.ts
+    test_cases: 11
+
+  - task: "Task-02：实现 ConfirmDialog 通用确认弹窗组件"
+    module: modules/settings
+    task_type: contract
+    data_operations:
+      - "无"
+    boundary: "只新增 ConfirmDialog.tsx"
+    forbidden:
+      - "不得引入外部依赖；不得在组件内发起 API 调用"
+    test_file: ConfirmDialog.test.tsx
+    test_cases: 8
+
+  - task: "Task-03：实现 ProviderSheet 组件（表单与校验）"
+    module: modules/settings
+    task_type: ui
+    data_operations:
+      - "无（纯 UI 组件，通过回调传递数据）"
+    boundary: "只新增 ProviderSheet.tsx"
+    forbidden:
+      - "不得在组件内直接发起 API 调用（由父组件处理）；不得使用内联样式替代 Tailwind"
+    test_file: ProviderSheet.test.tsx
+    test_cases: 15
+
+  - task: "Task-04：实现 ProviderSheet 保存与连接测试"
+    module: modules/settings
+    task_type: business-implementation
+    data_operations:
+      - "写 PUT /api/llm/providers；读 POST /api/llm/providers/test；按钮进入 Loading 态（UI 状态管理）"
+    boundary: "只填充 ProviderSheet 中的 handleSave/handleTest 方法体"
+    forbidden:
+      - "不得修改 Task-03 的表单结构；不得绕过校验直接提交"
+    test_file: ProviderSheet.integration.test.tsx
+    test_cases: 5
+
+  - task: "Task-05：实现 ModelSheet 组件"
+    module: modules/settings
+    task_type: ui
+    data_operations:
+      - "读 GET /api/llm/providers（获取 enabled Provider 列表）；读 GET /api/settings/model-defaults（初始化默认值）；读 GET /api/settings/role-models（初始化覆盖列表）；读 GET /api/templates（获取角色列表用于展示未覆盖角色）；写 PUT /api/settings/model-defaults；写 PUT /api/settings/role-models"
+    boundary: "只新增 ModelSheet.tsx"
+    forbidden:
+      - "不得修改 model-defaults/role-models 路由；不得在无 enabled Provider 时允许保存"
+    test_file: ModelSheet.test.tsx
+    test_cases: 12
+
+  - task: "Task-06：实现 PromptSheet 组件"
+    module: modules/settings
+    task_type: ui
+    data_operations:
+      - "读 GET /api/settings/prompts；写 PUT /api/settings/prompts"
+    boundary: "只新增 PromptSheet.tsx"
+    forbidden:
+      - "不得跳过二次确认直接保存/恢复；不得修改 prompts 路由"
+    test_file: PromptSheet.test.tsx
+    test_cases: 15
+
+  - task: "Task-07：实现 DataCleanupSheet 组件"
+    module: modules/settings
+    task_type: ui
+    data_operations:
+      - "写 POST /api/settings/clear"
+    boundary: "只新增 DataCleanupSheet.tsx"
+    forbidden:
+      - "不得跳过确认流程直接清理；不得在警告信息未加载时允许操作"
+    test_file: DataCleanupSheet.test.tsx
+    test_cases: 19
+
+  - task: "Task-08：更新 SettingsModule 主组件（Sheet 调度与状态联动）"
+    module: modules/settings
+    task_type: business-implementation
+    data_operations:
+      - "读 GET /api/llm/providers；读 GET /api/settings/model-defaults；读 GET /api/settings/role-models；设置 selectedProviderId/activeSheet 等 Sheet 调度状态（UI 状态管理）"
+    boundary: "只修改 index.tsx 的 state 声明、事件处理函数、JSX 渲染部分；不得删除现有数据加载逻辑"
+    forbidden:
+      - "不得删除现有测试覆盖的渲染结构；不得将 Sheet 逻辑内联到主组件（通过 import 使用）"
+    test_file: settings-module-sheets.test.tsx
+    test_cases: 10
+
+type_tests:
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: clear-api.test.ts
+    resources: []
+    covers:
+      - "Task-01：新增 POST /api/settings/clear 路由"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: ProviderSheet.test.tsx
+    resources: []
+    covers:
+      - "Task-03：实现 ProviderSheet 组件（表单与校验）"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: ModelSheet.test.tsx
+    resources: []
+    covers:
+      - "Task-05：实现 ModelSheet 组件"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: PromptSheet.test.tsx
+    resources: []
+    covers:
+      - "Task-06：实现 PromptSheet 组件"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: DataCleanupSheet.test.tsx
+    resources: []
+    covers:
+      - "Task-07：实现 DataCleanupSheet 组件"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: ConfirmDialog.test.tsx
+    resources: []
+    covers:
+      - "Task-02：实现 ConfirmDialog 通用确认弹窗组件"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: settings-module-sheets.test.tsx
+    resources: []
+    covers:
+      - "Task-08：更新 SettingsModule 主组件（Sheet 调度与状态联动）"
+
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: ProviderSheet.integration.test.tsx
+    resources: []
+    covers:
+      - "Task-04：实现 ProviderSheet 保存与连接测试"
