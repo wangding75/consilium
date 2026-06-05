@@ -1,0 +1,169 @@
+tasks:
+  - task: "Task-01：定义 Settings 核心类型和 API DTOs"
+    module: types
+    task_type: contract
+    data_operations:
+      - 无
+    boundary: "只在 src/types/index.ts 和 src/types/api.ts 末尾追加新类型，不修改已有类型"
+    forbidden:
+      - "不得修改已有类型定义；不得写业务逻辑；不得修改 ResolvedRoleRuntimeConfig"
+    test_file: settings-types.test.ts
+    test_cases: 36
+
+  - task: "Task-02：扩展 Repository 接口并实现 MockSettingsRepository"
+    module: server/repositories
+    task_type: contract
+    data_operations:
+      - "读写 in-memory Map（providerConfigs、modelDefaults、roleModelOverrides、promptConfigs）"
+    boundary: "在 vote.repository.ts、session.repository.ts、message.repository.ts、event.repository.ts 末尾追加方法签名；在对应 Mock 文件末尾追加实现；只新增 settings.repository.ts 和 mock-settings.repository.ts；只在 instances.ts 末尾追加 sharedSettingsRepo 相关代码"
+    forbidden:
+      - "不得删除或修改已有方法签名；不得在 instances.ts 删除或修改已有单例"
+    test_file: mock-settings-repository.test.ts
+    test_cases: 24
+
+  - task: "Task-03：实现 SettingsService（Provider 状态查询和配置）"
+    module: server/services
+    task_type: business-implementation
+    data_operations:
+      - "读 SettingsRepository.getProviderConfigs()；写 SettingsRepository.upsertProviderConfig()"
+    boundary: "只新增 settings.service.ts；不修改已有 services"
+    forbidden:
+      - "不得在日志输出中记录真实 apiKey；不得返回 apiKeyRef 原始值；不得修改 llm.service.ts"
+    test_file: settings-service-provider.test.ts
+    test_cases: 17
+
+  - task: "Task-04：实现 SettingsService（模型配置、Prompt、数据清理）"
+    module: server/services
+    task_type: business-implementation
+    data_operations:
+      - "读写 SettingsRepository 所有集合；clearData 调用 SessionRepository/MessageRepository/EventRepository/VoteRepository/SettingsRepository 的 clearAll()"
+    boundary: "只在 settings.service.ts 末尾追加新方法，不重写已有方法"
+    forbidden:
+      - "不得重写 settings.service.ts；不得角色 Prompt 修改污染模板快照"
+    test_file: settings-service-model-prompt.test.ts
+    test_cases: 21
+
+  - task: "Task-05：实现 ModelConfigResolver"
+    module: server/services
+    task_type: business-implementation
+    data_operations:
+      - "无（纯函数）"
+    boundary: "只新增 model-config-resolver.ts"
+    forbidden:
+      - "不得修改 ModelStrategyService.resolveRoleRuntimeConfig()；不得引入外部状态"
+    test_file: model-config-resolver.test.ts
+    test_cases: 15
+
+  - task: "Task-06：实现 SessionExportService"
+    module: server/services
+    task_type: business-implementation
+    data_operations:
+      - "读 SessionRepository.findById()；读 MessageRepository.findBySessionId()；读 EventRepository.findBySessionId()；读 VoteRepository.findBySessionId()"
+    boundary: "只新增 session-export.service.ts"
+    forbidden:
+      - "不得在 content 中包含任何 ProviderConfig 字段、apiKeyRef、customHeaders 原始值；不得修改已有 Repository 接口"
+    test_file: session-export-service.test.ts
+    test_cases: 12
+
+  - task: "Task-07：实现 Settings API 路由（Provider + Model + Prompt）"
+    module: app/api
+    task_type: api
+    data_operations:
+      - "通过 SettingsService 间接读写 SettingsRepository"
+    boundary: "只修改 api/llm/providers/route.ts（扩展 GET handler，新增 PUT handler）；只新增其余路由文件；不修改其他 API 路由"
+    forbidden:
+      - "不得在路由层写业务逻辑；不得返回 apiKeyRef 原始值"
+    test_file: settings-api.test.ts
+    test_cases: 25
+
+  - task: "Task-08：实现会话导出 API 路由"
+    module: app/api/sessions
+    task_type: api
+    data_operations:
+      - "通过 SessionExportService 间接读多个 Repository"
+    boundary: "只新增 src/app/api/sessions/[sessionId]/export/route.ts"
+    forbidden:
+      - "不得修改已有 session 路由；导出内容中不得含 Provider Secret"
+    test_file: session-export-api.test.ts
+    test_cases: 5
+
+  - task: "Task-09：SessionService 写入 runtimeConfigSnapshot"
+    module: server/services
+    task_type: business-implementation
+    data_operations:
+      - "读 SettingsRepository（通过 SettingsService）；写 SessionRepository（追加 runtimeConfigSnapshot 字段）"
+    boundary: "只修改 session.service.ts 的 createSession() 方法体，追加 snapshot 写入逻辑；不得重写文件"
+    forbidden:
+      - "不得修改 updateStatus/updateState 等其他方法；不得改变 CreateSessionResult 已有字段含义"
+    test_file: session-service-runtime-config.test.ts
+    test_cases: 6
+
+  - task: "Task-10：LLMProvider.testConnection 接口"
+    module: llm/providers
+    task_type: contract
+    data_operations:
+      - "无"
+    boundary: "只在 LLMProvider 接口末尾追加 testConnection?() 可选方法"
+    forbidden:
+      - "不得修改已有 chat() 方法签名；不得实现真实网络调用（骨架阶段只声明接口）"
+    test_file: llm-provider-test-connection.test.ts
+    test_cases: 5
+
+  - task: "Task-11：实现设置页 UI（SettingsModule）"
+    module: modules/settings
+    task_type: ui
+    data_operations:
+      - "通过 fetch 调用 /api/llm/providers、/api/settings/* API"
+    boundary: "只替换 src/modules/settings/index.tsx 全部内容（当前仅为占位代码）"
+    forbidden:
+      - "不得直接调用 Provider API；不得在前端存储明文 API Key；不得硬编码\"全部正常\"状态"
+    test_file: settings-module.test.tsx
+    test_cases: 6
+
+  - task: "Task-12：会话页和讨论详情页导出 UI"
+    module: modules/sessions
+    task_type: ui
+    data_operations:
+      - "通过 fetch 调用 /api/sessions/[sessionId]/export"
+    boundary: "只在 sessions/index.tsx 对应 session 行添加导出按钮和弹窗逻辑；只在 discussion/index.tsx 更多操作菜单追加导出选项；不得重写页面其他功能"
+    forbidden:
+      - "不得修改已有的会话列表加载、状态切换逻辑；不得在前端重组装导出内容（由服务端生成）"
+    test_file: sessions-export-ui.test.tsx
+    test_cases: 2
+
+type_tests:
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: model-config-resolver-integration.test.ts
+    resources: []
+    covers:
+      - "Task-05：实现 ModelConfigResolver"
+
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: session-export-integration.test.ts
+    resources: []
+    covers:
+      - "Task-06：实现 SessionExportService"
+
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: settings-web-e2e.test.ts
+    resources: []
+    covers:
+      - "Task-07：实现 Settings API 路由（Provider + Model + Prompt）"
+      - "Task-08：实现会话导出 API 路由"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: settings-module.test.tsx
+    resources: []
+    covers:
+      - "Task-11：实现设置页 UI（SettingsModule）"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: sessions-export-ui.test.tsx
+    resources: []
+    covers:
+      - "Task-12：会话页和讨论详情页导出 UI"

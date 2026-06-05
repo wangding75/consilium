@@ -1,0 +1,96 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/9
+
+tasks:
+  - task: "Task-01：定义 Settings 核心类型和 API DTOs"
+    test_file: settings-types.test.ts
+    phase: done
+    started_at: "2026-06-04 07:35"
+    completed_at: "2026-06-04 07:35"
+    test_passed: 36
+    test_total: 36
+  - task: "Task-02：扩展 Repository 接口并实现 MockSettingsRepository"
+    test_file: mock-settings-repository.test.ts
+    phase: done
+    started_at: "2026-06-04 07:36"
+    completed_at: "2026-06-04 07:38"
+    test_passed: 24
+    test_total: 24
+  - task: "Task-03：实现 SettingsService（Provider 状态查询和配置）"
+    test_file: settings-service-provider.test.ts
+    phase: done
+    started_at: "2026-06-04 07:42"
+    completed_at: "2026-06-04 07:43"
+    test_passed: 17
+    test_total: 17
+  - task: "Task-04：实现 SettingsService（模型配置、Prompt、数据清理）"
+    test_file: settings-service-model-prompt.test.ts
+    phase: done
+    started_at: "2026-06-04 07:43"
+    completed_at: "2026-06-04 07:44"
+    test_passed: 21
+    test_total: 21
+  - task: "Task-05：实现 ModelConfigResolver"
+    test_file: model-config-resolver.test.ts
+    phase: done
+    started_at: "2026-06-04 07:44"
+    completed_at: "2026-06-04 07:44"
+    test_passed: 15
+    test_total: 15
+  - task: "Task-06：实现 SessionExportService"
+    test_file: session-export-service.test.ts
+    phase: done
+    started_at: "2026-06-04 07:45"
+    completed_at: "2026-06-04 07:45"
+    test_passed: 12
+    test_total: 12
+  - task: "Task-07：实现 Settings API 路由（Provider + Model + Prompt）"
+    test_file: settings-api.test.ts
+    phase: done
+    started_at: "2026-06-04 07:44"
+    completed_at: "2026-06-04 08:08"
+    test_passed: 25
+    test_total: 25
+  - task: "Task-08：实现会话导出 API 路由"
+    test_file: session-export-api.test.ts
+    phase: done
+    started_at: "2026-06-04 08:09"
+    completed_at: "2026-06-04 08:10"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-09：SessionService 写入 runtimeConfigSnapshot"
+    test_file: session-service-runtime-config.test.ts
+    phase: done
+    started_at: "2026-06-04 08:13"
+    completed_at: "2026-06-04 08:14"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-10：LLMProvider.testConnection 接口"
+    test_file: llm-provider-test-connection.test.ts
+    phase: done
+    started_at: "2026-06-04 08:15"
+    completed_at: "2026-06-04 08:15"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-11：实现设置页 UI（SettingsModule）"
+    test_file: settings-module.test.tsx
+    phase: done
+    started_at: "2026-06-04 08:16"
+    completed_at: "2026-06-04 08:17"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-12：会话页和讨论详情页导出 UI"
+    test_file: sessions-export-ui.test.tsx
+    phase: done
+    started_at: "2026-06-04 08:17"
+    completed_at: "2026-06-04 08:18"
+    test_passed: 2
+    test_total: 2

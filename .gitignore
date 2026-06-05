@@ -39,4 +39,7 @@ coverage/
 # Claude workspace
 .claude/
 
+# Cube test output
+test-output.log
+
 

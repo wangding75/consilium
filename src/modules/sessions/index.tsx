@@ -70,6 +70,24 @@ export function SessionsModule() {
     }
   }
 
+  async function handleExport(sessionId: string) {
+    try {
+      const res = await fetch(`/api/sessions/${sessionId}/export`)
+      const json = await res.json()
+      if (json.success) {
+        const blob = new Blob([json.data.content], { type: 'text/markdown' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = json.data.filename
+        a.click()
+        URL.revokeObjectURL(url)
+      }
+    } catch {
+      // silent
+    }
+  }
+
   async function handleAction(sessionId: string, action: 'archive' | 'resume') {
     try {
       const res = await fetch(`/api/sessions/${sessionId}/status`, {
@@ -184,6 +202,13 @@ export function SessionsModule() {
                     恢复
                   </button>
                 )}
+                <button
+                  type="button"
+                  className="text-xs text-text-muted hover:text-text-primary"
+                  onClick={() => void handleExport(session.sessionId)}
+                >
+                  导出
+                </button>
               </div>
             </div>
           ))}

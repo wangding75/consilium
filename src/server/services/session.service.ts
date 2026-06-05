@@ -1,10 +1,10 @@
-import type { Session, SessionLifecycleStatus, SessionStatusAction } from '@/types'
+import type { Session, SessionLifecycleStatus, SessionStatusAction, SessionRuntimeConfigSnapshot } from '@/types'
 import type { CreateSessionParams, CreateSessionResult, ListSessionsQuery, SessionListItem, SessionListResult, SessionStateResult } from '@/types/api'
 import type { SessionRepository } from '@/server/repositories/session.repository'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
 import type { MessageRepository } from '@/server/repositories/message.repository'
 import type { ModelStrategyRepository } from '@/server/repositories/model-strategy.repository'
-import { sharedModelStrategyRepo } from '@/server/repositories/mock/instances'
+import { sharedModelStrategyRepo, sharedSettingsRepo } from '@/server/repositories/mock/instances'
 import { ModelStrategyService } from '@/server/services/model-strategy.service'
 import { ServiceError } from '@/server/errors'
 
@@ -142,6 +142,17 @@ export class SessionService {
       }
       const strategySnapshot = this.modelStrategyService.createStrategySnapshot(strategy, selectedByDefault)
 
+      // Build runtimeConfigSnapshot from current global settings
+      const [globalDefaults, roleOverrides] = await Promise.all([
+        sharedSettingsRepo.getModelDefaults(),
+        sharedSettingsRepo.getRoleModelOverrides(),
+      ])
+      const runtimeConfigSnapshot: SessionRuntimeConfigSnapshot = {
+        globalDefaults: globalDefaults ?? { providerId: '', model: '', temperature: 0.7, maxTokens: 512 },
+        roleOverrides,
+        snapshotAt: snapshotCreatedAt,
+      }
+
       const session = await this.repo.save({
         id: '',
         templateId: params.templateId,
@@ -155,6 +166,7 @@ export class SessionService {
         templateSnapshot,
         strategySnapshot,
         snapshotCreatedAt,
+        runtimeConfigSnapshot,
       })
 
       return {
