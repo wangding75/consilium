@@ -98,13 +98,15 @@
 ## 代码审查
 
 - **时间**: 2026-06-05 22:18
+- **Reviewer Agent**: code-reviewer (ecc:code-reviewer)
+- **Security Review**: 无 CRITICAL 发现 — 无硬编码凭证、无 SQL 注入、无 XSS 向量、clear endpoint 有严格的 scope 白名单校验
 - **审查结果**: 0 CRITICAL, 已修复 2 HIGH + 4 MEDIUM
-- **HIGH 修复**:
+- **Fixes Applied**:
   - PromptSheet `handleSaveConfirm`/`handleRestoreConfirm` — 添加 `res.ok`/`body.success` 检查
   - ModelSheet `handleClearOverride` — 移除乐观更新，改为确认响应成功后再 `setOverrides`
-- **MEDIUM 修复**:
   - ProviderSheet `isSaveDisabled` — 添加 `headersError` 检查
   - index.tsx — 删除未使用的 `configuredProviderIds`
   - DataCleanupSheet — 删除未使用的 `typedWord` 状态
   - ConfirmDialog — 添加 `variant='danger'` 样式支持
-- **测试**: 103/103 通过
+- **Verification Command**: `npx vitest run src/modules/settings/ src/app/api/settings/clear/`
+- **Verification Result**: 103/103 通过 (9 test files)
