@@ -123,7 +123,7 @@ describe('SettingsModule', () => {
     })
   })
 
-  it('shows empty state when no providers configured', async () => {
+  it('shows all five providers even when API returns empty', async () => {
     ;(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL) => {
       const url = typeof input === 'string' ? input : input.toString()
       if (url === '/api/llm/providers') {
@@ -133,9 +133,13 @@ describe('SettingsModule', () => {
     })
 
     render(<SettingsModule />)
-    // Should show "unconfigured" or similar empty state
+    // All five hardcoded provider IDs should be displayed
     await waitFor(() => {
-      expect(screen.getByText(/未配置|暂无|empty|no provider/i)).toBeInTheDocument()
+      expect(screen.getByText(/openai/i)).toBeInTheDocument()
+      expect(screen.getByText(/anthropic/i)).toBeInTheDocument()
+      expect(screen.getByText(/gemini/i)).toBeInTheDocument()
+      expect(screen.getByText(/deepseek/i)).toBeInTheDocument()
+      expect(screen.getByText(/custom/i)).toBeInTheDocument()
     })
   })
 

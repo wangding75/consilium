@@ -20,6 +20,8 @@ export function ConfirmDialog({ isOpen, title, message, confirmText, requireTypi
 
   const isConfirmDisabled = requireTyping ? typedValue !== requireTyping : false
 
+  const variantClass = variant === 'danger' ? 'bg-red-600 text-white' : ''
+
   return (
     <div role="dialog" aria-label={title}>
       <h3>{title}</h3>
@@ -34,6 +36,7 @@ export function ConfirmDialog({ isOpen, title, message, confirmText, requireTypi
       )}
       <button onClick={onCancel}>取消</button>
       <button
+        className={variantClass}
         onClick={onConfirm}
         disabled={isConfirmDisabled}
       >

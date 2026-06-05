@@ -61,4 +61,8 @@ tasks:
     test_total: 19
   - task: "Task-08：更新 SettingsModule 主组件（Sheet 调度与状态联动）"
     test_file: settings-module-sheets.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-06-05 18:16"
+    completed_at: "2026-06-05 18:54"
+    test_passed: 92
+    test_total: 92

@@ -22,7 +22,6 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
 
   // clear-all flow state
   const [clearAllStep, setClearAllStep] = useState(0)
-  const [typedWord, setTypedWord] = useState('')
 
   const [error, setError] = useState('')
 
@@ -56,7 +55,6 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
     setLoading(true)
     setCountsFailed(false)
     setClearAllStep(0)
-    setTypedWord('')
     setError('')
     loadCounts().finally(() => setLoading(false))
   }, [isOpen])
@@ -111,7 +109,6 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
     setShowConfirm(false)
     setClearScope(null)
     setClearAllStep(0)
-    setTypedWord('')
   }
 
   const sessionCountDisplay = sessionCount !== null ? `${sessionCount} 个会话` : ''

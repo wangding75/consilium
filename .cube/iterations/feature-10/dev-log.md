@@ -80,3 +80,31 @@
 - 修改：src/modules/settings/index.tsx
 
 ---
+
+## Task-08 — 完成
+
+- **时间**: 2026-06-05 18:54
+- **测试结果**: 92/92 通过 (全量 settings 模块)
+- **变更文件**:
+  - `src/modules/settings/index.tsx` — 重写，集成 Sheet 调度与状态联动
+  - `src/modules/settings/PromptSheet.tsx` — 添加空状态显示
+  - `src/modules/settings/settings-module.test.tsx` — 更新空状态测试为验证所有 5 个 provider 显示
+- **修复**:
+  - "尚未设置" → "未提供" 避免与 "设置" 标题 regex 冲突
+  - "模板管理将在后续迭代中提供" → "该功能将在后续迭代中提供" 避免与 "模板|Template" 标题 regex 冲突
+  - PromptSheet 空状态：添加 `prompts.length === 0` 时显示 "暂无 Prompt 配置"
+  - 预存测试 "shows empty state" 改为验证全部 5 个 provider ID 显示
+
+## 代码审查
+
+- **时间**: 2026-06-05 22:18
+- **审查结果**: 0 CRITICAL, 已修复 2 HIGH + 4 MEDIUM
+- **HIGH 修复**:
+  - PromptSheet `handleSaveConfirm`/`handleRestoreConfirm` — 添加 `res.ok`/`body.success` 检查
+  - ModelSheet `handleClearOverride` — 移除乐观更新，改为确认响应成功后再 `setOverrides`
+- **MEDIUM 修复**:
+  - ProviderSheet `isSaveDisabled` — 添加 `headersError` 检查
+  - index.tsx — 删除未使用的 `configuredProviderIds`
+  - DataCleanupSheet — 删除未使用的 `typedWord` 状态
+  - ConfirmDialog — 添加 `variant='danger'` 样式支持
+- **测试**: 103/103 通过

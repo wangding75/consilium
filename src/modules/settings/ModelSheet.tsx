@@ -132,14 +132,17 @@ export function ModelSheet({ isOpen, onClose, onSaved }: ModelSheetProps): React
 
   const handleClearOverride = async (roleId: string) => {
     const updated = overrides.filter((o) => o.roleId !== roleId)
-    setOverrides(updated)
     try {
-      await fetch('/api/settings/role-models', {
+      const res = await fetch('/api/settings/role-models', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ overrides: updated }),
       })
-      onSaved()
+      const body = await res.json()
+      if (body.success) {
+        setOverrides(updated)
+        onSaved()
+      }
     } catch {
       // keep state
     }

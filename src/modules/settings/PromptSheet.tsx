@@ -64,13 +64,16 @@ export function PromptSheet({ isOpen, onClose, onSaved }: PromptSheetProps): Rea
     setShowSaveConfirm(false)
     if (!selectedPromptId) return
     try {
-      await fetch('/api/settings/prompts', {
+      const res = await fetch('/api/settings/prompts', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ promptId: selectedPromptId, content: editContent }),
       })
-      await loadPrompts()
-      onSaved()
+      const body = await res.json()
+      if (body.success) {
+        await loadPrompts()
+        onSaved()
+      }
     } catch {
       // keep state
     }
@@ -88,13 +91,16 @@ export function PromptSheet({ isOpen, onClose, onSaved }: PromptSheetProps): Rea
     setShowRestoreConfirm(false)
     if (!selectedPromptId) return
     try {
-      await fetch('/api/settings/prompts', {
+      const res = await fetch('/api/settings/prompts', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ promptId: selectedPromptId, reset: true }),
       })
-      await loadPrompts()
-      onSaved()
+      const body = await res.json()
+      if (body.success) {
+        await loadPrompts()
+        onSaved()
+      }
     } catch {
       // keep state
     }
@@ -111,29 +117,33 @@ export function PromptSheet({ isOpen, onClose, onSaved }: PromptSheetProps): Rea
 
       {loading ? (
         <p>加载中...</p>
-      ) : prompts.length === 0 ? (
-        <p>暂无 Prompt 配置</p>
       ) : (
         <>
           <div>
             <h3>全局 Prompt</h3>
-            {globalPrompts.map((p) => (
-              <div key={p.promptId}>
-                <button onClick={() => handlePromptClick(p)}>{p.promptId}</button>
-                <span>{p.version}</span>
-                <span>{p.updatedAt}</span>
-              </div>
-            ))}
+            {globalPrompts.length === 0 ? (
+              <p>暂无 Prompt 配置</p>
+            ) : (
+              globalPrompts.map((p) => (
+                <div key={p.promptId}>
+                  <button onClick={() => handlePromptClick(p)}>{p.promptId}</button>
+                  <span>{p.version}</span>
+                  <span>{p.updatedAt}</span>
+                </div>
+              ))
+            )}
           </div>
           <div>
             <h3>角色 Prompt</h3>
-            {rolePrompts.map((p) => (
-              <div key={p.promptId}>
-                <button onClick={() => handlePromptClick(p)}>{p.promptId}</button>
-                <span>{p.version}</span>
-                <span>{p.updatedAt}</span>
-              </div>
-            ))}
+            {rolePrompts.length === 0 ? null : (
+              rolePrompts.map((p) => (
+                <div key={p.promptId}>
+                  <button onClick={() => handlePromptClick(p)}>{p.promptId}</button>
+                  <span>{p.version}</span>
+                  <span>{p.updatedAt}</span>
+                </div>
+              ))
+            )}
           </div>
 
           {selectedPromptId && selectedPrompt && (

@@ -51,7 +51,7 @@ export function ProviderSheet({ isOpen, providerId, onClose, onSaved }: Provider
     }
   }
 
-  const isSaveDisabled = !providerId || modelList.trim() === '' || !!baseUrlError || saving
+  const isSaveDisabled = !providerId || modelList.trim() === '' || !!baseUrlError || !!headersError || saving
 
   const handleSave = async () => {
     if (isSaveDisabled || baseUrlError) return
