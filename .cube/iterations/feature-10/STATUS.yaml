@@ -33,7 +33,11 @@ tasks:
     test_total: 15
   - task: "Task-04：实现 ProviderSheet 保存与连接测试"
     test_file: ProviderSheet.integration.test.tsx
-    phase: locked
+    phase: done
+    started_at: "2026-06-05 17:57"
+    completed_at: "2026-06-05 18:00"
+    test_passed: 7
+    test_total: 7
   - task: "Task-05：实现 ModelSheet 组件"
     test_file: ModelSheet.test.tsx
     phase: locked

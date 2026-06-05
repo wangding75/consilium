@@ -9,14 +9,19 @@ export interface ProviderSheetProps {
   onSaved: () => void
 }
 
-export function ProviderSheet({ isOpen, providerId, onClose, onSaved: _onSaved }: ProviderSheetProps): React.ReactElement | null {
-  const [enabled, setEnabled] = useState(false)
+export function ProviderSheet({ isOpen, providerId, onClose, onSaved }: ProviderSheetProps): React.ReactElement | null {
+  const [enabled, setEnabled] = useState(true)
   const [baseUrl, setBaseUrl] = useState('')
   const [apiKey, setApiKey] = useState('')
   const [modelList, setModelList] = useState('')
   const [customHeaders, setCustomHeaders] = useState('')
   const [baseUrlError, setBaseUrlError] = useState('')
   const [headersError, setHeadersError] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [testing, setTesting] = useState(false)
+  const [saveError, setSaveError] = useState('')
+  const [testResult, setTestResult] = useState('')
+  const [testLatency, setTestLatency] = useState('')
 
   if (!isOpen) return null
 
@@ -46,7 +51,69 @@ export function ProviderSheet({ isOpen, providerId, onClose, onSaved: _onSaved }
     }
   }
 
-  const isSaveDisabled = !providerId || modelList.trim() === ''
+  const isSaveDisabled = !providerId || modelList.trim() === '' || !!baseUrlError || saving
+
+  const handleSave = async () => {
+    if (isSaveDisabled || baseUrlError) return
+    setSaving(true)
+    setSaveError('')
+    try {
+      const res = await fetch('/api/llm/providers', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          providerId,
+          enabled,
+          baseUrl,
+          apiKey,
+          modelList: modelList.split(',').map((s) => s.trim()).filter(Boolean),
+          customHeaders: customHeaders ? JSON.parse(customHeaders) : undefined,
+        }),
+      })
+      const body = await res.json()
+      if (body.success) {
+        onSaved()
+      } else {
+        setSaveError('保存失败')
+      }
+    } catch {
+      setSaveError('保存失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleTest = async () => {
+    if (!providerId || !apiKey) return
+    setTesting(true)
+    setTestResult('')
+    setTestLatency('')
+    try {
+      const res = await fetch('/api/llm/providers/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ providerId, apiKey }),
+      })
+      const body = await res.json()
+      if (body.success) {
+        setTestResult('success')
+        setTestLatency(body.data?.latencyMs ? `${body.data.latencyMs}ms` : '')
+      } else {
+        const code = body.error?.code
+        if (code === 'PROVIDER_AUTH_FAILED') {
+          setTestResult('API Key 验证失败')
+        } else if (code === 'PROVIDER_NOT_CONFIGURED') {
+          setTestResult('Provider 尚未配置')
+        } else {
+          setTestResult('操作失败')
+        }
+      }
+    } catch {
+      setTestResult('操作失败')
+    } finally {
+      setTesting(false)
+    }
+  }
 
   return (
     <div role="dialog">
@@ -107,8 +174,11 @@ export function ProviderSheet({ isOpen, providerId, onClose, onSaved: _onSaved }
         {headersError && <p>{headersError}</p>}
       </div>
       <button onClick={onClose} aria-label="关闭">✕</button>
-      <button disabled={isSaveDisabled}>保存</button>
-      <button>测试连接</button>
+      <button disabled={isSaveDisabled} onClick={handleSave}>{saving ? '保存中...' : '保存'}</button>
+      <button disabled={!providerId || !apiKey || testing} onClick={handleTest}>{testing ? '测试中...' : '测试连接'}</button>
+      {saveError && <p>{saveError}</p>}
+      {testResult && <p>{testResult}</p>}
+      {testLatency && <p>{testLatency}</p>}
     </div>
   )
 }
