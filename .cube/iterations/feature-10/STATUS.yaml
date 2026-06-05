@@ -1,0 +1,36 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/10
+
+tasks:
+  - task: "Task-01：新增 POST /api/settings/clear 路由"
+    test_file: clear-api.test.ts
+    phase: locked
+  - task: "Task-02：实现 ConfirmDialog 通用确认弹窗组件"
+    test_file: ConfirmDialog.test.tsx
+    phase: locked
+  - task: "Task-03：实现 ProviderSheet 组件（表单与校验）"
+    test_file: ProviderSheet.test.tsx
+    phase: locked
+  - task: "Task-04：实现 ProviderSheet 保存与连接测试"
+    test_file: ProviderSheet.integration.test.tsx
+    phase: locked
+  - task: "Task-05：实现 ModelSheet 组件"
+    test_file: ModelSheet.test.tsx
+    phase: locked
+  - task: "Task-06：实现 PromptSheet 组件"
+    test_file: PromptSheet.test.tsx
+    phase: locked
+  - task: "Task-07：实现 DataCleanupSheet 组件"
+    test_file: DataCleanupSheet.test.tsx
+    phase: locked
+  - task: "Task-08：更新 SettingsModule 主组件（Sheet 调度与状态联动）"
+    test_file: settings-module-sheets.test.tsx
+    phase: locked
