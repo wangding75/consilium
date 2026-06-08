@@ -1,0 +1,30 @@
+files:
+  - path: src/app/api/settings/clear/route.ts
+    type: class
+    tasks:
+      - "Task-01：新增 POST /api/settings/clear 路由"
+  - path: src/modules/settings/ConfirmDialog.tsx
+    type: class
+    tasks:
+      - "Task-02：实现 ConfirmDialog 通用确认弹窗组件"
+  - path: src/modules/settings/ProviderSheet.tsx
+    type: class
+    tasks:
+      - "Task-03：实现 ProviderSheet 组件（表单与校验）"
+      - "Task-04：实现 ProviderSheet 保存与连接测试"
+  - path: src/modules/settings/ModelSheet.tsx
+    type: class
+    tasks:
+      - "Task-05：实现 ModelSheet 组件"
+  - path: src/modules/settings/PromptSheet.tsx
+    type: class
+    tasks:
+      - "Task-06：实现 PromptSheet 组件"
+  - path: src/modules/settings/DataCleanupSheet.tsx
+    type: class
+    tasks:
+      - "Task-07：实现 DataCleanupSheet 组件"
+  - path: src/modules/settings/index.tsx
+    type: class
+    tasks:
+      - "Task-08：更新 SettingsModule 主组件（Sheet 调度与状态联动）"
