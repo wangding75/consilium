@@ -431,9 +431,67 @@ export interface ModelDefaults {
 }
 
 export interface RoleRuntimeConfig {
+  providerConnectionId?: string
   model?: string
   temperature?: number
+  maxTokens?: number
   maxCharsPerTurn?: number
+  systemPrompt?: string
+  includedInDefaultQueue?: boolean
+}
+
+export type ProviderType = 'openai' | 'anthropic' | 'gemini' | 'deepseek' | 'custom'
+export type ProviderConnectionTestStatus = 'untested' | 'success' | 'failed'
+
+export interface ProviderConnection {
+  id: string
+  providerType: ProviderType
+  displayName: string
+  baseUrl: string
+  apiKeyRef?: string
+  modelList: string[]
+  customHeaders?: Record<string, string>
+  enabled: boolean
+  lastTestStatus: ProviderConnectionTestStatus
+  lastTestAt?: string
+  lastErrorCode?: string
+  lastErrorMessage?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type TemplateDefaultStrategy = 'smart_fallback' | 'quality_first' | 'cost_first'
+
+export interface TemplateRoleRuntimeConfig extends RoleRuntimeConfig {
+  roleId: string
+  providerConnectionId: string
+  model: string
+  systemPrompt: string
+  includedInDefaultQueue: boolean
+}
+
+export interface TemplateRuntimeConfig {
+  templateId: string
+  defaultStrategy: TemplateDefaultStrategy
+  fallbackProviderConnectionId?: string
+  fallbackModel?: string
+  roleConfigs: TemplateRoleRuntimeConfig[]
+}
+
+export interface SettingsExportBundle {
+  version: string
+  exportedAt: string
+  includePrompts: boolean
+  providerConnections: ProviderConnection[]
+  templateRuntimeConfigs: TemplateRuntimeConfig[]
+  prompts: PromptConfig[]
+}
+
+export interface SettingsImportPreview {
+  additions: string[]
+  updates: string[]
+  conflicts: string[]
+  invalidItems: string[]
 }
 
 export interface TemplateMetrics {
@@ -452,7 +510,7 @@ export interface TemplateRole {
   avatarEmoji?: string
   visible: boolean
   runtimeConfig?: RoleRuntimeConfig
-  configStatus: 'default' | 'customized'
+  configStatus?: 'default' | 'customized'
 }
 
 export interface DiscussionTemplate {

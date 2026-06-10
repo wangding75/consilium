@@ -3,11 +3,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { NextRequest } from 'next/server'
 import { ProviderSheet } from '@/modules/settings/ProviderSheet'
-import { PUT as saveProviderRoute } from '@/app/api/llm/providers/route'
-import { POST as testProviderRoute } from '@/app/api/llm/providers/test/route'
+import { GET as listConnectionsRoute, POST as createConnectionRoute } from '@/app/api/settings/provider-connections/route'
+import { PATCH as updateConnectionRoute } from '@/app/api/settings/provider-connections/[connectionId]/route'
+import { POST as testProviderRoute } from '@/app/api/settings/provider-connections/test/route'
 import { sharedSettingsRepo } from '@/server/repositories/mock/instances'
-import { ServiceError } from '@/server/errors'
-import { SettingsService } from '@/server/services/settings.service'
 
 function fillValidProviderForm(apiKey = 'sk-test-key'): void {
   fireEvent.change(screen.getByLabelText(/base.*url|Base.*URL|地址/i), {
@@ -35,11 +34,22 @@ function installRouteBackedFetch(): void {
     const method = init?.method ?? 'GET'
     const body = init?.body ? JSON.parse(init.body as string) : undefined
 
-    if (url === '/api/llm/providers' && method === 'PUT') {
-      return saveProviderRoute(createJsonRequest(url, method, body))
+    if (url === '/api/settings/provider-connections' && method === 'GET') {
+      return listConnectionsRoute()
     }
 
-    if (url === '/api/llm/providers/test' && method === 'POST') {
+    if (url === '/api/settings/provider-connections' && method === 'POST') {
+      return createConnectionRoute(createJsonRequest(url, method, body))
+    }
+
+    if (url.startsWith('/api/settings/provider-connections/') && !url.endsWith('/test') && method === 'PATCH') {
+      const connectionId = url.split('/').pop() ?? ''
+      return updateConnectionRoute(createJsonRequest(url, method, body), {
+        params: Promise.resolve({ connectionId }),
+      })
+    }
+
+    if (url === '/api/settings/provider-connections/test' && method === 'POST') {
       return testProviderRoute(createJsonRequest(url, method, body))
     }
 
@@ -54,7 +64,7 @@ describe('ProviderSheet API integration', () => {
     installRouteBackedFetch()
   })
 
-  it('persists provider config through PUT /api/llm/providers and masks secrets in the response', async () => {
+  it('persists provider connection through POST /api/settings/provider-connections and masks secrets in the response', async () => {
     const onSaved = vi.fn()
 
     render(
@@ -66,21 +76,24 @@ describe('ProviderSheet API integration', () => {
       />
     )
 
+    fireEvent.click(screen.getByRole('button', { name: /\+|新增|添加|add/i }))
+    fireEvent.change(screen.getByLabelText(/连接名称/i), { target: { value: 'OpenAI Primary' } })
     fillValidProviderForm('sk-live-secret')
     fireEvent.click(screen.getByRole('button', { name: /保存|save/i }))
 
     await waitFor(async () => {
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/llm/providers',
+        '/api/settings/provider-connections',
         expect.objectContaining({
-          method: 'PUT',
+          method: 'POST',
           headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
         })
       )
       expect(onSaved).toHaveBeenCalled()
-      await expect(sharedSettingsRepo.getProviderConfigs()).resolves.toEqual([
+      await expect(sharedSettingsRepo.getProviderConnections()).resolves.toEqual([
         expect.objectContaining({
-          providerId: 'openai',
+          providerType: 'openai',
+          displayName: 'OpenAI Primary',
           enabled: true,
           baseUrl: 'https://api.openai.com/v1',
           apiKeyRef: 'sk-live-secret',
@@ -100,6 +113,8 @@ describe('ProviderSheet API integration', () => {
       />
     )
 
+    fireEvent.click(screen.getByRole('button', { name: /\+|新增|添加|add/i }))
+    fireEvent.change(screen.getByLabelText(/连接名称/i), { target: { value: 'OpenAI Primary' } })
     fireEvent.change(screen.getByLabelText(/base.*url|Base.*URL|地址/i), {
       target: { value: 'invalid-url' },
     })
@@ -113,16 +128,35 @@ describe('ProviderSheet API integration', () => {
     fireEvent.click(screen.getByRole('button', { name: /保存|save/i }))
 
     const saveCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
-      ([url, requestInit]) => url === '/api/llm/providers' && (requestInit as RequestInit | undefined)?.method === 'PUT'
+      ([url, requestInit]) => url === '/api/settings/provider-connections' && (requestInit as RequestInit | undefined)?.method === 'POST'
     )
     expect(saveCalls).toHaveLength(0)
-    await expect(sharedSettingsRepo.getProviderConfigs()).resolves.toEqual([])
+    await expect(sharedSettingsRepo.getProviderConnections()).resolves.toEqual([])
   })
 
   it('surfaces route-level save failures without persisting partial state', async () => {
-    vi.spyOn(SettingsService.prototype, 'upsertProviderConfig').mockRejectedValueOnce(
-      new ServiceError('INTERNAL_ERROR', 'Save failed')
-    )
+    global.fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input.toString()
+      const method = init?.method ?? 'GET'
+
+      if (url === '/api/settings/provider-connections' && method === 'GET') {
+        return listConnectionsRoute()
+      }
+
+      if (url === '/api/settings/provider-connections' && method === 'POST') {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            data: null,
+            error: { code: 'INTERNAL_ERROR', message: 'Save failed' },
+            requestId: 'req-save-fail',
+          }),
+          { status: 500, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+
+      throw new Error(`Unhandled fetch call: ${method} ${url}`)
+    }) as typeof fetch
 
     render(
       <ProviderSheet
@@ -133,21 +167,23 @@ describe('ProviderSheet API integration', () => {
       />
     )
 
+    fireEvent.click(screen.getByRole('button', { name: /\+|新增|添加|add/i }))
+    fireEvent.change(screen.getByLabelText(/连接名称/i), { target: { value: 'OpenAI Primary' } })
     fillValidProviderForm()
     fireEvent.click(screen.getByRole('button', { name: /保存|save/i }))
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/llm/providers',
-        expect.objectContaining({ method: 'PUT' })
+        '/api/settings/provider-connections',
+        expect.objectContaining({ method: 'POST' })
       )
       expect(screen.getByText(/save.*fail|保存.*失败|error/i)).toBeInTheDocument()
     })
 
-    await expect(sharedSettingsRepo.getProviderConfigs()).resolves.toEqual([])
+    await expect(sharedSettingsRepo.getProviderConnections()).resolves.toEqual([])
   })
 
-  it('sends provider test requests through POST /api/llm/providers/test and shows the returned result', async () => {
+  it('sends provider test requests through POST /api/settings/provider-connections/test and shows the returned result', async () => {
     render(
       <ProviderSheet
         isOpen={true}
@@ -157,12 +193,13 @@ describe('ProviderSheet API integration', () => {
       />
     )
 
+    fireEvent.click(screen.getByRole('button', { name: /\+|新增|添加|add/i }))
     fillValidProviderForm('sk-valid')
     fireEvent.click(screen.getByText(/测试|test.*(连接|connection)/i))
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/llm/providers/test',
+        '/api/settings/provider-connections/test',
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
@@ -186,12 +223,13 @@ describe('ProviderSheet API integration', () => {
       />
     )
 
+    fireEvent.click(screen.getByRole('button', { name: /\+|新增|添加|add/i }))
     fillValidProviderForm(apiKey)
     fireEvent.click(screen.getByText(/测试|test.*(连接|connection)/i))
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        '/api/llm/providers/test',
+        '/api/settings/provider-connections/test',
         expect.objectContaining({ method: 'POST' })
       )
       expect(screen.getByText(expectedText)).toBeInTheDocument()
@@ -210,7 +248,7 @@ describe('ProviderSheet API integration', () => {
     )
 
     const testCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter(
-      ([url, requestInit]) => url === '/api/llm/providers/test' && (requestInit as RequestInit | undefined)?.method === 'POST'
+      ([url, requestInit]) => url === '/api/settings/provider-connections/test' && (requestInit as RequestInit | undefined)?.method === 'POST'
     )
     const testButton = screen.getByText(/测试|test.*(连接|connection)/i)
     expect(testButton.closest('button')).toBeDisabled()

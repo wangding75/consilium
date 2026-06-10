@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 import type { ApiResponse, ModelDefaultsDTO } from '@/types/api'
 import { SettingsService } from '@/server/services/settings.service'
 import { sharedSettingsRepo, sharedSessionRepo, sharedMessageRepo, sharedEventRepo, sharedVoteRepo } from '@/server/repositories/mock/instances'
@@ -29,7 +28,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<ModelDefaultsDTO |
   }
 }
 
-export async function PUT(req: NextRequest): Promise<NextResponse<ApiResponse<ModelDefaultsDTO>>> {
+export async function PUT(req: Request): Promise<NextResponse<ApiResponse<ModelDefaultsDTO>>> {
   const requestId = crypto.randomUUID()
   try {
     const raw = await req.json()

@@ -5,7 +5,7 @@ import { MockSessionRepository } from '@/server/repositories/mock/mock-session.r
 import { MockMessageRepository } from '@/server/repositories/mock/mock-message.repository'
 import { MockEventRepository } from '@/server/repositories/mock/mock-event.repository'
 import { MockVoteRepository } from '@/server/repositories/mock/mock-vote.repository'
-import type { ProviderConfig } from '@/types'
+import type { UpsertProviderConfigRequest } from '@/types/api'
 
 function makeRepo() {
   return new MockSettingsRepository()
@@ -22,7 +22,7 @@ function makeService(repo?: MockSettingsRepository) {
   )
 }
 
-async function seedProvider(svc: SettingsService, overrides?: Partial<ProviderConfig>) {
+async function seedProvider(svc: SettingsService, overrides?: Partial<UpsertProviderConfigRequest>) {
   return svc.upsertProviderConfig({
     providerId: 'openai',
     enabled: true,
@@ -124,7 +124,6 @@ describe('SettingsService.upsertProviderConfig', () => {
 
     const [dto] = await svc.listProviders()
     expect(dto.enabled).toBe(false)
-    // masked key reflects new key
     expect(dto.maskedKey).toContain('bcdef')
   })
 
@@ -149,8 +148,6 @@ describe('SettingsService.upsertProviderConfig', () => {
 describe('SettingsService.testProvider (contract)', () => {
   it('accepts ProviderTestRequest with required fields', async () => {
     const svc = makeService()
-    // Contract: should return ProviderTestResult, not throw
-    // RED phase: this will FAIL because skeleton throws "not implemented"
     const result = await svc.testProvider({
       providerId: 'openai',
       baseUrl: 'https://api.openai.com/v1',

@@ -23,10 +23,10 @@ function mockCountsApi(): void {
       }
     }
 
-    if (url === '/api/llm/providers') {
+    if (url === '/api/settings/provider-connections') {
       return {
         ok: true,
-        json: async () => ({ success: true, data: [{ providerId: 'openai' }, { providerId: 'anthropic' }], requestId: 'providers-1' }),
+        json: async () => ({ success: true, data: { connections: [{ id: 'c1', providerType: 'openai' }, { id: 'c2', providerType: 'anthropic' }] }, requestId: 'conns-1' }),
       }
     }
 
@@ -56,29 +56,29 @@ describe('DataCleanupSheet', () => {
 
   it('renders nothing when isOpen is false', () => {
     render(<DataCleanupSheet isOpen={false} onClose={vi.fn()} />)
-    expect(screen.queryByText(/清理|clean|数据/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/数据安全设置/)).not.toBeInTheDocument()
   })
 
   it('renders cleanup sheet with title when open', () => {
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    expect(screen.getByText(/数据.*安全|data.*security|清理/i)).toBeInTheDocument()
+    expect(screen.getByText('数据安全设置')).toBeInTheDocument()
   })
 
   it('shows three cleanup options', () => {
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    expect(screen.getByText(/清理.*会话|clean.*session/i)).toBeInTheDocument()
-    expect(screen.getByText(/清理.*设置|clean.*setting/i)).toBeInTheDocument()
-    expect(screen.getByText(/清理.*全部|clean.*all/i)).toBeInTheDocument()
+    expect(screen.getByText('clean session')).toBeInTheDocument()
+    expect(screen.getByText('clean settings')).toBeInTheDocument()
+    expect(screen.getByText('clean all')).toBeInTheDocument()
   })
 
-  it('loads counts from sessions, providers and prompts APIs', async () => {
+  it('loads counts from sessions, provider-connections and prompts APIs', async () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/sessions')
-      expect(global.fetch).toHaveBeenCalledWith('/api/llm/providers')
+      expect(global.fetch).toHaveBeenCalledWith('/api/settings/provider-connections')
       expect(global.fetch).toHaveBeenCalledWith('/api/settings/prompts')
     })
   })
@@ -90,6 +90,7 @@ describe('DataCleanupSheet', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/2.*会话|会话.*2|2.*session|session.*2/i)).toBeInTheDocument()
+      expect(screen.getByText(/2.*Provider|Provider.*2/i)).toBeInTheDocument()
       expect(screen.getByText(/1.*prompt|prompt.*1|1.*提示词|提示词.*1/i)).toBeInTheDocument()
     })
   })
@@ -104,25 +105,25 @@ describe('DataCleanupSheet', () => {
     })
   })
 
-  it('shows confirmation dialog when clicking 清理会话', async () => {
+  it('shows confirmation dialog when clicking clean session', async () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*会话|clean.*session/i))
+    fireEvent.click(screen.getByText('clean session'))
 
     await waitFor(() => {
-      expect(screen.getByText(/确认|confirm/i)).toBeInTheDocument()
+      expect(screen.getByText('确定要清理所有会话数据吗？')).toBeInTheDocument()
     })
   })
 
-  it('shows confirmation dialog when clicking 清理设置', async () => {
+  it('shows confirmation dialog when clicking clean settings', async () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*设置|clean.*setting/i))
+    fireEvent.click(screen.getByText('clean settings'))
 
     await waitFor(() => {
-      expect(screen.getByText(/确认|confirm/i)).toBeInTheDocument()
+      expect(screen.getByText('Provider 将不可用，需要重新配置')).toBeInTheDocument()
     })
   })
 
@@ -130,10 +131,10 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*设置|clean.*setting/i))
+    fireEvent.click(screen.getByText('clean settings'))
 
     await waitFor(() => {
-      expect(screen.getByText(/provider.*不可用|provider.*unavailable|重新配置|reconfigure/i)).toBeInTheDocument()
+      expect(screen.getByText('Provider 将不可用，需要重新配置')).toBeInTheDocument()
     })
   })
 
@@ -141,10 +142,10 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*全部|clean.*all/i))
+    fireEvent.click(screen.getByText('clean all'))
 
     await waitFor(() => {
-      expect(screen.getByText(/provider.*不可用|provider.*unavailable|重新配置|reconfigure/i)).toBeInTheDocument()
+      expect(screen.getByText(/影响.*范围|清理全部数据将导致.*Provider.*不可用/i)).toBeInTheDocument()
     })
   })
 
@@ -152,10 +153,10 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*全部|clean.*all/i))
+    fireEvent.click(screen.getByText('clean all'))
 
     await waitFor(() => {
-      expect(screen.getByText(/影响.*范围|impact.*scope|步骤.*1|step.*1/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: /下一步|继续|next|continue/i })).toBeInTheDocument()
     })
   })
 
@@ -163,7 +164,7 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*全部|clean.*all/i))
+    fireEvent.click(screen.getByText('clean all'))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /下一步|继续|next|continue/i })).toBeInTheDocument()
@@ -180,12 +181,12 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*会话|clean.*session/i))
+    fireEvent.click(screen.getByText('clean session'))
 
     await waitFor(() => {
-      expect(screen.getByText(/确认|confirm/i)).toBeInTheDocument()
+      expect(screen.getByText('确定要清理所有会话数据吗？')).toBeInTheDocument()
     })
-    fireEvent.click(screen.getByText(/确认|confirm/i))
+    fireEvent.click(screen.getByRole('button', { name: '确认' }))
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
@@ -203,12 +204,12 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*设置|clean.*setting/i))
+    fireEvent.click(screen.getByText('clean settings'))
 
     await waitFor(() => {
-      expect(screen.getByText(/确认|confirm/i)).toBeInTheDocument()
+      expect(screen.getByText('Provider 将不可用，需要重新配置')).toBeInTheDocument()
     })
-    fireEvent.click(screen.getByText(/确认|confirm/i))
+    fireEvent.click(screen.getByRole('button', { name: '确认' }))
 
     await waitFor(() => {
       const clearCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.find((call) => call[0] === '/api/settings/clear')
@@ -221,7 +222,7 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*全部|clean.*all/i))
+    fireEvent.click(screen.getByText('clean all'))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /下一步|继续|next|continue/i })).toBeInTheDocument()
@@ -233,9 +234,9 @@ describe('DataCleanupSheet', () => {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '确认删除' } })
     fireEvent.click(screen.getByRole('button', { name: /下一步|继续|next|continue/i }))
     await waitFor(() => {
-      expect(screen.getByText(/确认|confirm/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '确认' })).toBeInTheDocument()
     })
-    fireEvent.click(screen.getByText(/确认|confirm/i))
+    fireEvent.click(screen.getByRole('button', { name: '确认' }))
 
     await waitFor(() => {
       const clearCall = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.find((call) => call[0] === '/api/settings/clear')
@@ -248,12 +249,12 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*会话|clean.*session/i))
+    fireEvent.click(screen.getByText('clean session'))
 
     await waitFor(() => {
-      expect(screen.getByText(/取消|cancel/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '取消' })).toBeInTheDocument()
     })
-    fireEvent.click(screen.getByText(/取消|cancel/i))
+    fireEvent.click(screen.getByRole('button', { name: '取消' }))
 
     const clearCalls = (global.fetch as ReturnType<typeof vi.fn>).mock.calls.filter((call) => call[0] === '/api/settings/clear')
     expect(clearCalls).toHaveLength(0)
@@ -264,7 +265,7 @@ describe('DataCleanupSheet', () => {
     mockCountsApi()
 
     render(<DataCleanupSheet isOpen={true} onClose={onClose} />)
-    fireEvent.click(screen.getByText(/清理.*全部|clean.*all/i))
+    fireEvent.click(screen.getByText('clean all'))
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: /下一步|继续|next|continue/i })).toBeInTheDocument()
@@ -276,9 +277,9 @@ describe('DataCleanupSheet', () => {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '确认删除' } })
     fireEvent.click(screen.getByRole('button', { name: /下一步|继续|next|continue/i }))
     await waitFor(() => {
-      expect(screen.getByText(/确认|confirm/i)).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '确认' })).toBeInTheDocument()
     })
-    fireEvent.click(screen.getByText(/确认|confirm/i))
+    fireEvent.click(screen.getByRole('button', { name: '确认' }))
 
     await waitFor(() => {
       expect(onClose).toHaveBeenCalled()
@@ -291,8 +292,8 @@ describe('DataCleanupSheet', () => {
       if (url === '/api/sessions') {
         return { ok: true, json: async () => ({ success: true, data: { sessions: [] }, requestId: 'sessions-1' }) }
       }
-      if (url === '/api/llm/providers') {
-        return { ok: true, json: async () => ({ success: true, data: [], requestId: 'providers-1' }) }
+      if (url === '/api/settings/provider-connections') {
+        return { ok: true, json: async () => ({ success: true, data: { connections: [] }, requestId: 'conns-1' }) }
       }
       if (url === '/api/settings/prompts') {
         return { ok: true, json: async () => ({ success: true, data: [], requestId: 'prompts-1' }) }
@@ -307,12 +308,12 @@ describe('DataCleanupSheet', () => {
     })
 
     render(<DataCleanupSheet isOpen={true} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByText(/清理.*会话|clean.*session/i))
+    fireEvent.click(screen.getByText('clean session'))
 
     await waitFor(() => {
-      expect(screen.getByText(/确认|confirm/i)).toBeInTheDocument()
+      expect(screen.getByText('确定要清理所有会话数据吗？')).toBeInTheDocument()
     })
-    fireEvent.click(screen.getByText(/确认|confirm/i))
+    fireEvent.click(screen.getByRole('button', { name: '确认' }))
 
     await waitFor(() => {
       expect(screen.getByText(/失败|error|failed/i)).toBeInTheDocument()

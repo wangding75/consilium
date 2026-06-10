@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 import type { ApiResponse, ProviderTestRequest, ProviderTestResult } from '@/types/api'
 import { SettingsService } from '@/server/services/settings.service'
 import { sharedSettingsRepo, sharedSessionRepo, sharedMessageRepo, sharedEventRepo, sharedVoteRepo } from '@/server/repositories/mock/instances'
@@ -15,7 +14,7 @@ function getService(): SettingsService {
   )
 }
 
-export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<ProviderTestResult>>> {
+export async function POST(req: Request): Promise<NextResponse<ApiResponse<ProviderTestResult>>> {
   const requestId = crypto.randomUUID()
   try {
     let raw: unknown

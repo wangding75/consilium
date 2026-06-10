@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 import type { ApiResponse, SessionExportResult } from '@/types/api'
 import { SessionExportService } from '@/server/services/session-export.service'
 import { sharedSessionRepo, sharedMessageRepo, sharedEventRepo, sharedVoteRepo } from '@/server/repositories/mock/instances'
@@ -15,7 +14,7 @@ function getService(): SessionExportService {
 }
 
 export async function GET(
-  _req: NextRequest,
+  _req: Request,
   { params }: { params: Promise<{ sessionId: string }> }
 ): Promise<NextResponse<ApiResponse<SessionExportResult>>> {
   const requestId = crypto.randomUUID()

@@ -1,7 +1,18 @@
 import type { DiscussionTemplate, TemplateSnapshot, TemplateRolesResult } from '@/types'
 import type { TemplateRepository } from '@/server/repositories/template.repository'
 import type { ModelStrategyRepository } from '@/server/repositories/model-strategy.repository'
-import type { RoleConfigPatchRequest, RoleConfigPatchResult, TemplateListResult, TemplateDetailResult } from '@/types/api'
+import type {
+  CreateTemplateRequest,
+  CreateTemplateRoleRequest,
+  RoleConfigPatchRequest,
+  RoleConfigPatchResult,
+  TemplateDetailResult,
+  TemplateListResult,
+  TemplateListSettingsResult,
+  UpdateTemplateRequest,
+  UpdateTemplateRoleRequest,
+  DeleteTemplateRoleResult,
+} from '@/types/api'
 import { sharedModelStrategyRepo } from '@/server/repositories/mock/instances'
 import { ServiceError } from '@/server/errors'
 
@@ -73,6 +84,35 @@ export class TemplateService {
       }
     } catch (err) {
       throw new ServiceError('TEMPLATE_LIST_FAILED', 'Failed to list template summaries', err)
+    }
+  }
+
+  async listTemplateSummariesForSettings(): Promise<TemplateListSettingsResult> {
+    try {
+      const templates = await this.repo.findAll()
+      return {
+        templates: templates
+          .filter((template) => template.visible)
+          .map((template) => ({
+            templateId: template.templateId,
+            version: template.version,
+            name: template.name,
+            description: template.description,
+            category: template.category,
+            tags: [...template.tags],
+            roleCount: template.roles.length,
+            eventCount: template.events.length,
+            usageCount: template.metrics.usageCount,
+            sessionCount: template.metrics.sessionCount,
+            favoriteCount: template.metrics.favoriteCount,
+            isBuiltin: template.isBuiltin,
+            availableForSessionCreation: template.availableForSessionCreation,
+            defaultStrategy: 'smart_fallback',
+            configStatus: template.roles.some((role) => role.configStatus === 'customized') ? 'customized' : 'default',
+          })),
+      }
+    } catch (err) {
+      throw new ServiceError('TEMPLATE_LIST_FAILED', 'Failed to list settings template summaries', err)
     }
   }
 
@@ -184,7 +224,84 @@ export class TemplateService {
     }
   }
 
+  async createTemplate(_input: CreateTemplateRequest): Promise<TemplateDetailResult> {
+    throw new ServiceError('NOT_IMPLEMENTED', 'Template creation skeleton is not implemented yet')
+  }
+
+  async updateTemplateMeta(_templateId: string, _patch: UpdateTemplateRequest): Promise<TemplateDetailResult> {
+    throw new ServiceError('NOT_IMPLEMENTED', 'Template metadata update skeleton is not implemented yet')
+  }
+
+  async createRole(templateId: string, input: CreateTemplateRoleRequest): Promise<TemplateRolesResult> {
+    if (typeof input !== 'object' || input === null) {
+      throw new ServiceError('VALIDATION_ERROR', 'Role request must be an object')
+    }
+
+    if (typeof input.name !== 'string' || input.name.trim() === '') {
+      throw new ServiceError('VALIDATION_ERROR', 'name is required')
+    }
+    if (typeof input.persona !== 'string' || input.persona.trim() === '') {
+      throw new ServiceError('VALIDATION_ERROR', 'persona is required')
+    }
+    if (typeof input.systemPrompt !== 'string' || input.systemPrompt.trim() === '') {
+      throw new ServiceError('VALIDATION_ERROR', 'systemPrompt is required')
+    }
+    if (typeof input.providerConnectionId !== 'string' || input.providerConnectionId.trim() === '') {
+      throw new ServiceError('VALIDATION_ERROR', 'providerConnectionId is required')
+    }
+    if (typeof input.model !== 'string' || input.model.trim() === '') {
+      throw new ServiceError('VALIDATION_ERROR', 'model is required')
+    }
+
+    try {
+      const result = await this.repo.createRole(templateId, {
+        ...input,
+        name: input.name.trim(),
+        persona: input.persona.trim(),
+        systemPrompt: input.systemPrompt.trim(),
+        providerConnectionId: input.providerConnectionId.trim(),
+        model: input.model.trim(),
+      })
+      if (!result) {
+        throw new ServiceError('ROLE_CREATE_FAILED', 'Failed to create role')
+      }
+      return result
+    } catch (err) {
+      if (err instanceof ServiceError) {
+        throw err
+      }
+      throw new ServiceError('ROLE_CREATE_FAILED', 'Failed to create role', err)
+    }
+  }
+
+  async updateRole(_templateId: string, _roleId: string, _patch: UpdateTemplateRoleRequest): Promise<TemplateRolesResult> {
+    throw new ServiceError('NOT_IMPLEMENTED', 'Template role update skeleton is not implemented yet')
+  }
+
+  async deleteRole(templateId: string, roleId: string): Promise<DeleteTemplateRoleResult> {
+    if (typeof roleId !== 'string' || roleId.trim() === '') {
+      throw new ServiceError('VALIDATION_ERROR', 'roleId is required')
+    }
+
+    try {
+      const result = await this.repo.deleteRole(templateId, roleId)
+      if (!result) {
+        throw new ServiceError('ROLE_DELETE_FAILED', 'Failed to delete role')
+      }
+      return result
+    } catch (err) {
+      if (err instanceof ServiceError) {
+        throw err
+      }
+      throw new ServiceError('ROLE_DELETE_FAILED', 'Failed to delete role', err)
+    }
+  }
+
+  async copyRole(_templateId: string, _roleId: string): Promise<TemplateRolesResult> {
+    throw new ServiceError('NOT_IMPLEMENTED', 'Template role copy skeleton is not implemented yet')
+  }
+
   createTemplateSnapshot(template: DiscussionTemplate): TemplateSnapshot {
-    throw new Error('not implemented')
+    throw new Error(`not implemented: snapshot creation for ${template.templateId}`)
   }
 }

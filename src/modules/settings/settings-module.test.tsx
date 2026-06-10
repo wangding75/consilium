@@ -2,7 +2,7 @@
  * SettingsModule frontend-ui tests (Task-11)
  *
  * Standard: standards/testing/frontend-ui.md
- * These tests verify the SettingsModule renders the five sections and handles
+ * These tests verify the SettingsModule renders the three-entry navigation and handles
  * user interactions. Full browser roundtrip verification deferred to stage 05.
  */
 
@@ -22,65 +22,6 @@ global.fetch = vi.fn()
 
 beforeEach(() => {
   vi.clearAllMocks()
-  ;(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL) => {
-    const url = typeof input === 'string' ? input : input.toString()
-
-    if (url === '/api/llm/providers') {
-      return {
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: [
-            {
-              providerId: 'openai',
-              enabled: true,
-              baseUrl: 'https://api.openai.com/v1',
-              maskedKey: 'sk-***1234',
-              modelList: ['gpt-4o', 'gpt-4o-mini'],
-              maskedHeaders: {},
-              lastTestStatus: 'success',
-              lastTestedAt: '2026-06-04T06:00:00.000Z',
-            },
-            {
-              providerId: 'anthropic',
-              enabled: true,
-              baseUrl: 'https://api.anthropic.com',
-              maskedKey: 'sk-***abcd',
-              modelList: ['claude-sonnet-4-6'],
-              maskedHeaders: {},
-              lastTestStatus: 'untested',
-            },
-          ],
-        }),
-      }
-    }
-
-    if (url === '/api/settings/model-defaults') {
-      return {
-        ok: true,
-        json: async () => ({
-          success: true,
-          data: { providerId: 'openai', model: 'gpt-4o-mini', temperature: 0.7, maxTokens: 512 },
-        }),
-      }
-    }
-
-    if (url === '/api/settings/role-models') {
-      return {
-        ok: true,
-        json: async () => ({ success: true, data: [] }),
-      }
-    }
-
-    if (url === '/api/settings/prompts') {
-      return {
-        ok: true,
-        json: async () => ({ success: true, data: [] }),
-      }
-    }
-
-    return { ok: true, json: async () => ({ success: true, data: null }) }
-  })
 })
 
 // ─── Task-11: SettingsModule UI ──────────────────────────────────────────────
@@ -88,68 +29,73 @@ beforeEach(() => {
 describe('SettingsModule', () => {
   it('renders the settings page', async () => {
     render(<SettingsModule />)
-    // Settings page should render something
     const heading = await screen.findByText(/设置/i)
     expect(heading).toBeInTheDocument()
   })
 
-  it('renders five setting sections', async () => {
+  it('renders three entry cards on home', async () => {
     render(<SettingsModule />)
-    // Provider section
-    expect(await screen.findByText(/Provider|模型供应商/i)).toBeInTheDocument()
-    // Model section
-    expect(await screen.findByText(/模型|Model/i)).toBeInTheDocument()
-    // Template section (placeholder)
-    expect(await screen.findByText(/模板|Template/i)).toBeInTheDocument()
-    // Prompt section
-    expect(await screen.findByText(/Prompt|提示词/i)).toBeInTheDocument()
-    // Data section
-    expect(await screen.findByText(/数据|Data|安全|Security/i)).toBeInTheDocument()
+    expect(await screen.findByText(/厂商配置/i)).toBeInTheDocument()
+    expect(await screen.findByText(/模板配置/i)).toBeInTheDocument()
+    expect(await screen.findByText(/数据安全/i)).toBeInTheDocument()
   })
 
-  it('loads and displays provider status from API', async () => {
+  it('navigates to provider view when clicking provider card', async () => {
     render(<SettingsModule />)
 
+    fireEvent.click(await screen.findByText(/厂商配置/i))
+
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/llm/providers')
+      expect(screen.getByText('选择要管理的 Provider 类型。')).toBeInTheDocument()
     })
   })
 
-  it('loads model defaults from API', async () => {
+  it('navigates to template view when clicking template card', async () => {
     render(<SettingsModule />)
 
+    fireEvent.click(await screen.findByText(/模板配置/i))
+
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/settings/model-defaults')
+      expect(screen.getByText('返回')).toBeInTheDocument()
     })
   })
 
-  it('shows all five providers even when API returns empty', async () => {
-    ;(global.fetch as ReturnType<typeof vi.fn>).mockImplementation(async (input: RequestInfo | URL) => {
-      const url = typeof input === 'string' ? input : input.toString()
-      if (url === '/api/llm/providers') {
-        return { ok: true, json: async () => ({ success: true, data: [] }) }
-      }
-      return { ok: true, json: async () => ({ success: true, data: null }) }
-    })
-
+  it('navigates to data-security view when clicking data security card', async () => {
     render(<SettingsModule />)
-    // All five hardcoded provider IDs should be displayed
+
+    fireEvent.click(await screen.findByText(/数据安全/i))
+
     await waitFor(() => {
-      expect(screen.getByText(/openai/i)).toBeInTheDocument()
-      expect(screen.getByText(/anthropic/i)).toBeInTheDocument()
-      expect(screen.getByText(/gemini/i)).toBeInTheDocument()
-      expect(screen.getByText(/deepseek/i)).toBeInTheDocument()
-      expect(screen.getByText(/custom/i)).toBeInTheDocument()
+      expect(screen.getByText('数据安全设置')).toBeInTheDocument()
     })
   })
 
-  it('shows provider connection status', async () => {
+  it('returns to home from provider view via back button', async () => {
     render(<SettingsModule />)
 
+    fireEvent.click(await screen.findByText(/厂商配置/i))
     await waitFor(() => {
-      // Should show openai and anthropic providers
-      expect(screen.getByText(/openai/i)).toBeInTheDocument()
-      expect(screen.getByText(/anthropic/i)).toBeInTheDocument()
+      expect(screen.getByText('选择要管理的 Provider 类型。')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('返回'))
+    await waitFor(() => {
+      expect(screen.getByText(/厂商配置/i)).toBeInTheDocument()
+      expect(screen.getByText(/模板配置/i)).toBeInTheDocument()
+    })
+  })
+
+  it('shows provider type switcher buttons in provider view', async () => {
+    render(<SettingsModule />)
+
+    fireEvent.click(await screen.findByText(/厂商配置/i))
+
+    await waitFor(() => {
+      expect(screen.getByText('openai')).toBeInTheDocument()
+      expect(screen.getByText('anthropic')).toBeInTheDocument()
+      expect(screen.getByText('gemini')).toBeInTheDocument()
+      expect(screen.getByText('deepseek')).toBeInTheDocument()
+      expect(screen.getByText('custom')).toBeInTheDocument()
     })
   })
 })
