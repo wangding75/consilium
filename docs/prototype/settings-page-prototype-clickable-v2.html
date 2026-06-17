@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>智囊团 · 设置页原型（含卡片编辑交互）</title>
+  <style>
+    :root {
+      --bg:#f5f7fb; --phone:#fff; --text:#0f172a; --muted:#64748b; --sub:#94a3b8;
+      --line:#e5eaf2; --soft:#f8fafc; --primary:#1062ff; --primary-soft:#eaf2ff;
+      --green:#16a34a; --red:#ef4444; --amber:#f59e0b; --purple:#7c3aed; --nav-h:72px;
+      --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,"PingFang SC","Microsoft YaHei",sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;background:linear-gradient(180deg,#f8fbff,var(--bg));font-family:var(--font);color:var(--text);padding:20px}
+    .phone{width:390px;height:844px;max-width:100vw;max-height:100vh;background:var(--phone);border:1px solid rgba(148,163,184,.28);border-radius:30px;overflow:hidden;box-shadow:0 24px 80px rgba(15,23,42,.14);position:relative}
+    .status{height:40px;padding:12px 18px 0;display:flex;justify-content:space-between;font-size:13px;font-weight:800}
+    .app{height:calc(100% - 40px);position:relative;background:#fff}
+    .page{position:absolute;inset:0 0 var(--nav-h);display:none;flex-direction:column;background:#fff}
+    .page.active{display:flex}
+    .content{flex:1;overflow-y:auto;padding:16px}
+    .content::-webkit-scrollbar{display:none}
+
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;margin-bottom:12px}
+    .title{font-size:22px;font-weight:850;letter-spacing:-.3px}
+    .subtitle{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.5}
+    .back,.icon{border:1px solid var(--line);background:#fff;width:36px;height:36px;border-radius:999px;display:grid;place-items:center;cursor:pointer}
+    .back{font-size:26px;border-color:transparent}
+    .icon{font-size:20px;color:var(--primary);font-weight:800}
+    .text-btn{border:0;background:transparent;color:var(--primary);font-weight:800;font-size:13px;cursor:pointer}
+
+    .big-menu{display:grid;gap:14px;margin-top:18px}
+    .big-card,.list-card,.info-card{width:100%;border:1px solid var(--line);background:#fff;border-radius:20px;padding:16px;text-align:left;box-shadow:0 10px 26px rgba(15,23,42,.04);cursor:pointer}
+    .big-card{display:flex;align-items:center;gap:14px}
+    .big-card:active,.list-card:active,.btn:active,.mini-btn:active{transform:scale(.985)}
+    .big-icon{width:48px;height:48px;border-radius:16px;background:var(--primary-soft);display:grid;place-items:center;color:var(--primary);font-size:25px;flex:0 0 auto}
+    .big-title{font-size:17px;font-weight:850}
+    .big-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-top:5px}
+    .chev{margin-left:auto;color:var(--sub);font-size:24px;font-weight:900}
+    .note{margin-top:18px;border:1px dashed #cbd5e1;background:#f8fbff;border-radius:16px;padding:12px;color:#334155;font-size:12px;line-height:1.6}
+
+    .section-head{display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px;gap:10px}
+    .section{font-size:13px;font-weight:850}
+    .list{display:grid;gap:10px}
+    .list-card{padding:13px;display:block;font:inherit;color:inherit}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .name{font-size:15px;font-weight:850}
+    .meta{font-size:11px;color:var(--muted);line-height:1.5;margin-top:5px}
+    .tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:#f1f5f9;color:#64748b;font-size:11px;font-weight:750;white-space:nowrap}
+    .tag.ok{background:#eaf9ef;color:var(--green)}
+    .tag.warn{background:#fff7ed;color:#d97706}
+    .tag.purple{background:#f5f3ff;color:var(--purple)}
+    .mini{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+    .pill{font-size:11px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:999px;padding:4px 8px}
+    .hint-link{margin-top:8px;font-size:11px;color:var(--primary);font-weight:700}
+
+    .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+    .summary-item{border:1px solid var(--line);border-radius:16px;padding:12px;background:var(--soft)}
+    .summary-label{font-size:11px;color:var(--muted)}
+    .summary-value{margin-top:6px;font-size:15px;font-weight:850}
+
+    .form{display:grid;gap:12px}
+    .field label{display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:6px}
+    .field input,.field select,.field textarea{width:100%;border:1px solid #dfe7f2;border-radius:13px;min-height:44px;padding:10px 12px;font:inherit;outline:0;background:#fff}
+    .field textarea{min-height:86px;resize:none}
+    .hint{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px}
+    .inline-check{display:flex;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:13px;padding:11px 12px;font-size:13px;font-weight:750;background:#fff}
+    .switch{width:42px;height:24px;border-radius:999px;background:var(--primary);position:relative}
+    .switch.off{background:#cbd5e1}
+    .switch:after{content:"";position:absolute;width:18px;height:18px;right:3px;top:3px;border-radius:50%;background:#fff}
+    .switch.off:after{left:3px;right:auto}
+    .toolbar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+    .toolbar-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:4px}
+    .btn,.mini-btn{border:0;border-radius:13px;min-height:44px;padding:0 14px;font-weight:800;font-family:var(--font);cursor:pointer}
+    .mini-btn{min-height:34px;font-size:12px;border:1px solid var(--line);background:#fff;color:#334155}
+    .primary{background:var(--primary);color:#fff}
+    .ghost{background:#fff;border:1px solid var(--line);color:#334155}
+    .danger{background:#fff1f2;color:#be123c;border:1px solid #fecdd3}
+    .soft{background:#eef4ff;color:var(--primary);border:1px solid #dbe7ff}
+
+    .role-card{display:flex;align-items:flex-start;gap:10px}
+    .avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff;flex:0 0 auto}
+    .avatar.host{background:linear-gradient(145deg,#f59e0b,#854d0e)}
+    .avatar.zgl{background:linear-gradient(145deg,#10b981,#166534)}
+    .avatar.cc{background:linear-gradient(145deg,#f97316,#7f1d1d)}
+    .avatar.new{background:linear-gradient(145deg,#60a5fa,#7c3aed)}
+    .grow{flex:1;min-width:0}
+
+    .bottom-nav{position:absolute;left:0;right:0;bottom:0;height:var(--nav-h);display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #e8eef6;background:#fff;padding:7px 8px}
+    .nav{border:0;background:transparent;color:#64748b;border-radius:12px;font-size:10px;font-weight:700;display:grid;place-items:center;gap:3px}.nav.active{color:var(--primary)}.nav span:first-child{font-size:20px}
+
+    @media(max-width:480px){body{padding:0;background:#fff}.phone{width:100vw;height:100vh;border-radius:0;border:0;box-shadow:none}}
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <div class="status"><span>9:41</span><span>▮▮▮ 5G 🔋</span></div>
+    <div class="app">
+      <section class="page active" id="settings-home">
+        <div class="content">
+          <header class="topbar">
+            <div>
+              <div class="title">设置</div>
+              <div class="subtitle">只保留高频配置入口，复杂配置进入二级页完成</div>
+            </div>
+          </header>
+          <div class="big-menu">
+            <button class="big-card" data-page-target="providers" onclick="showPage('providers')">
+              <span class="big-icon">⚡</span>
+              <span>
+                <div class="big-title">厂商配置</div>
+                <div class="big-desc">管理 OpenAI、Anthropic、Gemini、DeepSeek、Custom 等连接，可为同一厂商配置多个链接</div>
+              </span>
+              <span class="chev">›</span>
+            </button>
+            <button class="big-card" data-page-target="templates" onclick="showPage('templates')">
+              <span class="big-icon">▣</span>
+              <span>
+                <div class="big-title">模板配置</div>
+                <div class="big-desc">模板、角色、模型、提示词统一在这里配置；模型和 Prompt 不再作为设置页独立入口</div>
+              </span>
+              <span class="chev">›</span>
+            </button>
+            <button class="big-card" data-page-target="security" onclick="showPage('security')">
+              <span class="big-icon">♧</span>
+              <span>
+                <div class="big-title">数据安全</div>
+                <div class="big-desc">会话导出、设置导入导出、本地数据清理、API Key 保存策略与隐私说明</div>
+              </span>
+              <span class="chev">›</span>
+            </button>
+          </div>
+          <div class="note"><b>补充交互：</b>本版原型已补齐卡片点击后的编辑流程：点击 <b>OpenAI · 官方接口</b> 可进入编辑页；点击模板中的角色卡片可进入角色编辑页；点击右上角 “＋” 可进入新增厂商、新增角色页面。</div>
+        </div>
+      </section>
+
+      <section class="page" id="providers">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('settings-home')">‹</button>
+            <div style="flex:1">
+              <div class="title">厂商配置</div>
+              <div class="subtitle">先展示连接列表；点卡片进入编辑，点右上角 “＋” 新增连接</div>
+            </div>
+            <button class="icon" onclick="showPage('provider-new')">＋</button>
+          </header>
+
+          <div class="list">
+            <button type="button" class="list-card" data-page-target="provider-edit-openai-main" onclick="showPage('provider-edit-openai-main')">
+              <div class="row">
+                <div>
+                  <div class="name">OpenAI · 官方接口</div>
+                  <div class="meta">https://api.openai.com/v1 · 12 个模型 · 最近测试 2 分钟前</div>
+                </div>
+                <span class="tag ok">已启用</span>
+              </div>
+              <div class="mini"><span class="pill">gpt-4.1-mini</span><span class="pill">gpt-4.1</span><span class="pill">o4-mini</span><span class="pill">点此编辑 ›</span></div>
+              <div class="hint-link">点击整张卡片进入编辑页面</div>
+            </button>
+
+            <button type="button" class="list-card" data-page-target="provider-edit-openai-proxy" onclick="showPage('provider-edit-openai-proxy')">
+              <div class="row">
+                <div>
+                  <div class="name">OpenAI · 中转线路 A</div>
+                  <div class="meta">https://proxy.example.com/v1 · 8 个模型 · 可作为 fallback</div>
+                </div>
+                <span class="tag ok">已启用</span>
+              </div>
+              <div class="mini"><span class="pill">自定义 Header</span><span class="pill">连接已测试</span><span class="pill">点此编辑 ›</span></div>
+            </button>
+
+            <button type="button" class="list-card" data-page-target="provider-edit-anthropic" onclick="showPage('provider-edit-anthropic')">
+              <div class="row">
+                <div>
+                  <div class="name">Anthropic · 主账号</div>
+                  <div class="meta">https://api.anthropic.com · 5 个模型 · 需测试</div>
+                </div>
+                <span class="tag warn">未测试</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="provider-edit-openai-main">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('providers')">‹</button>
+            <div style="flex:1">
+              <div class="title">编辑厂商连接</div>
+              <div class="subtitle">OpenAI · 官方接口</div>
+            </div>
+            <button class="text-btn" onclick="showPage('providers')">完成</button>
+          </header>
+          <form class="form">
+            <div class="field"><label>厂商类型</label><select><option selected>OpenAI</option><option>Anthropic</option><option>Gemini</option><option>DeepSeek</option><option>Custom</option></select></div>
+            <div class="field"><label>连接名称</label><input value="OpenAI · 官方接口" /></div>
+            <div class="field"><label>Base URL</label><input value="https://api.openai.com/v1" /></div>
+            <div class="field"><label>API Key</label><input value="sk-••••••••••••1234" /><div class="hint">编辑页仅展示脱敏值；重新保存前可覆盖更新。</div></div>
+            <div class="field"><label>Model 列表</label><textarea>gpt-4.1-mini
+gpt-4.1
+o4-mini
+o3-mini</textarea></div>
+            <div class="field"><label>Custom Header</label><textarea>{}</textarea></div>
+            <div class="inline-check"><span>启用该连接</span><span class="switch"></span></div>
+            <div class="toolbar-3">
+              <button type="button" class="mini-btn">删除</button>
+              <button type="button" class="mini-btn soft">测试连接</button>
+              <button type="button" class="btn primary" onclick="showPage('providers')">保存</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="provider-edit-openai-proxy">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('providers')">‹</button>
+            <div style="flex:1">
+              <div class="title">编辑厂商连接</div>
+              <div class="subtitle">OpenAI · 中转线路 A</div>
+            </div>
+            <button class="text-btn" onclick="showPage('providers')">完成</button>
+          </header>
+          <form class="form">
+            <div class="field"><label>厂商类型</label><select><option selected>OpenAI</option><option>Anthropic</option><option>Gemini</option><option>DeepSeek</option><option>Custom</option></select></div>
+            <div class="field"><label>连接名称</label><input value="OpenAI · 中转线路 A" /></div>
+            <div class="field"><label>Base URL</label><input value="https://proxy.example.com/v1" /></div>
+            <div class="field"><label>API Key</label><input value="sk-proxy-••••5678" /></div>
+            <div class="field"><label>Model 列表</label><textarea>gpt-4.1-mini
+gpt-4.1
+o4-mini</textarea></div>
+            <div class="field"><label>Custom Header</label><textarea>{"X-App-Channel":"fallback-a"}</textarea></div>
+            <div class="inline-check"><span>启用该连接</span><span class="switch"></span></div>
+            <div class="toolbar-3"><button type="button" class="mini-btn">删除</button><button type="button" class="mini-btn soft">测试连接</button><button type="button" class="btn primary" onclick="showPage('providers')">保存</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="provider-edit-anthropic">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('providers')">‹</button>
+            <div style="flex:1">
+              <div class="title">编辑厂商连接</div>
+              <div class="subtitle">Anthropic · 主账号</div>
+            </div>
+            <button class="text-btn" onclick="showPage('providers')">完成</button>
+          </header>
+          <form class="form">
+            <div class="field"><label>厂商类型</label><select><option>OpenAI</option><option selected>Anthropic</option><option>Gemini</option><option>DeepSeek</option><option>Custom</option></select></div>
+            <div class="field"><label>连接名称</label><input value="Anthropic · 主账号" /></div>
+            <div class="field"><label>Base URL</label><input value="https://api.anthropic.com" /></div>
+            <div class="field"><label>API Key</label><input value="sk-ant-••••••••9102" /></div>
+            <div class="field"><label>Model 列表</label><textarea>claude-sonnet-4.6
+claude-haiku-4.5</textarea></div>
+            <div class="inline-check"><span>启用该连接</span><span class="switch off"></span></div>
+            <div class="toolbar-3"><button type="button" class="mini-btn">删除</button><button type="button" class="mini-btn soft">测试连接</button><button type="button" class="btn primary" onclick="showPage('providers')">保存</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="provider-new">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('providers')">‹</button>
+            <div style="flex:1">
+              <div class="title">新增厂商连接</div>
+              <div class="subtitle">点击右上角 “＋” 进入；支持同一厂商多个连接</div>
+            </div>
+          </header>
+          <form class="form">
+            <div class="field"><label>厂商类型</label><select><option selected>OpenAI</option><option>Anthropic</option><option>Gemini</option><option>DeepSeek</option><option>Custom</option></select></div>
+            <div class="field"><label>连接名称</label><input value="OpenAI · 中转线路 B" /></div>
+            <div class="field"><label>Base URL</label><input value="https://api.example.com/v1" /></div>
+            <div class="field"><label>API Key</label><input value="sk-••••••••••••••" /><div class="hint">新增时允许空白起步；保存后默认脱敏展示。</div></div>
+            <div class="field"><label>Model 列表</label><textarea>gpt-4.1-mini
+gpt-4.1
+o4-mini</textarea></div>
+            <div class="field"><label>Custom Header</label><textarea>{"HTTP-Referer":"https://zhinang.app"}</textarea></div>
+            <div class="inline-check"><span>启用该连接</span><span class="switch"></span></div>
+            <div class="toolbar"><button type="button" class="btn ghost">测试连接</button><button type="button" class="btn primary" onclick="showPage('providers')">保存新增</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="templates">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('settings-home')">‹</button>
+            <div style="flex:1">
+              <div class="title">模板配置</div>
+              <div class="subtitle">点模板卡片进入详情；角色、模型、Prompt 在模板内部维护</div>
+            </div>
+            <button class="icon" onclick="showPage('template-new')">＋</button>
+          </header>
+
+          <div class="list">
+            <button type="button" class="list-card" data-page-target="template-detail-sanguo" onclick="showPage('template-detail-sanguo')">
+              <div class="row">
+                <div>
+                  <div class="name">三国军师团</div>
+                  <div class="meta">5 个角色 · 3 个事件 · 默认策略：智能 fallback</div>
+                </div>
+                <span class="tag ok">默认</span>
+              </div>
+              <div class="mini"><span class="pill">诸葛亮：gpt-4.1-mini</span><span class="pill">曹操：deepseek-chat</span><span class="pill">Prompt 已配置</span><span class="pill">点此进入详情 ›</span></div>
+              <div class="hint-link">点击整张卡片进入模板详情</div>
+            </button>
+
+            <article class="list-card">
+              <div class="row">
+                <div>
+                  <div class="name">创业公司董事会</div>
+                  <div class="meta">6 个角色 · 2 个事件 · 草稿</div>
+                </div>
+                <span class="tag warn">待完善</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="template-detail-sanguo">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('templates')">‹</button>
+            <div style="flex:1">
+              <div class="title">三国军师团</div>
+              <div class="subtitle">模板详情：点击角色卡片进入角色编辑；点 “＋ 新增角色” 进入新增角色页</div>
+            </div>
+            <button class="text-btn">保存</button>
+          </header>
+
+          <div class="summary-grid">
+            <div class="summary-item"><div class="summary-label">默认模型策略</div><div class="summary-value">智能 fallback</div></div>
+            <div class="summary-item"><div class="summary-label">角色数量</div><div class="summary-value">5 个角色</div></div>
+          </div>
+
+          <div class="section-head"><div class="section">模板基础配置</div><button class="mini-btn">编辑基础信息</button></div>
+          <div class="info-card">
+            <div class="row"><div><div class="name">策略与节奏</div><div class="meta">质量与成本平衡；高潮阶段允许更长输出</div></div><span class="tag purple">已配置</span></div>
+            <div class="mini"><span class="pill">fallback：OpenAI 中转线路 A</span><span class="pill">事件：3</span><span class="pill">节奏规则：1 套</span></div>
+          </div>
+
+          <div class="section-head"><div class="section">角色配置</div><button class="mini-btn soft" data-page-target="role-new" onclick="showPage('role-new')">＋ 新增角色</button></div>
+          <div class="list">
+            <button type="button" class="list-card" data-page-target="role-edit-zgl" onclick="showPage('role-edit-zgl')">
+              <div class="role-card">
+                <div class="avatar zgl">亮</div>
+                <div class="grow">
+                  <div class="row"><div class="name">诸葛亮</div><span class="tag ok">已配置</span></div>
+                  <div class="meta">模型：OpenAI · 官方接口 / gpt-4.1-mini</div>
+                  <div class="mini"><span class="pill">temperature 0.7</span><span class="pill">Prompt 已配置</span></div>
+                  <div class="hint-link">点击整张角色卡进入角色编辑页</div>
+                </div>
+              </div>
+            </button>
+
+            <button type="button" class="list-card" data-page-target="role-edit-caocao" onclick="showPage('role-edit-caocao')">
+              <div class="role-card">
+                <div class="avatar cc">操</div>
+                <div class="grow">
+                  <div class="row"><div class="name">曹操</div><span class="tag ok">已配置</span></div>
+                  <div class="meta">模型：DeepSeek · 主账号 / deepseek-chat</div>
+                  <div class="mini"><span class="pill">temperature 0.8</span><span class="pill">Prompt 已配置</span><span class="pill">点此编辑 ›</span></div>
+                </div>
+              </div>
+            </button>
+
+            <article class="list-card">
+              <div class="role-card">
+                <div class="avatar host">主</div>
+                <div class="grow">
+                  <div class="row"><div class="name">主持人</div><span class="tag">主控</span></div>
+                  <div class="meta">模型：OpenAI · 官方接口 / gpt-4.1-mini</div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" id="role-edit-zgl">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('template-detail-sanguo')">‹</button>
+            <div style="flex:1">
+              <div class="title">编辑角色</div>
+              <div class="subtitle">诸葛亮 · 三国军师团</div>
+            </div>
+            <button class="text-btn" onclick="showPage('template-detail-sanguo')">完成</button>
+          </header>
+          <form class="form">
+            <div class="field"><label>角色名称</label><input value="诸葛亮" /></div>
+            <div class="field"><label>角色定位</label><input value="谋略家 / 长期主义 / 风险平衡" /></div>
+            <div class="field"><label>连接来源</label><select><option selected>OpenAI · 官方接口</option><option>OpenAI · 中转线路 A</option><option>Anthropic · 主账号</option></select></div>
+            <div class="field"><label>模型</label><select><option selected>gpt-4.1-mini</option><option>gpt-4.1</option><option>o4-mini</option></select></div>
+            <div class="field"><label>Temperature</label><input value="0.7" /></div>
+            <div class="field"><label>Max Tokens</label><input value="800" /></div>
+            <div class="field"><label>System Prompt</label><textarea>以谋略家视角分析机会、风险和长期路径，语言克制，优先给出结构化判断，再补充策略建议。</textarea></div>
+            <div class="inline-check"><span>是否参与默认发言队列</span><span class="switch"></span></div>
+            <div class="toolbar-3"><button type="button" class="mini-btn">复制角色</button><button type="button" class="mini-btn">删除角色</button><button type="button" class="btn primary" onclick="showPage('template-detail-sanguo')">保存角色</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="role-edit-caocao">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('template-detail-sanguo')">‹</button>
+            <div style="flex:1">
+              <div class="title">编辑角色</div>
+              <div class="subtitle">曹操 · 三国军师团</div>
+            </div>
+            <button class="text-btn" onclick="showPage('template-detail-sanguo')">完成</button>
+          </header>
+          <form class="form">
+            <div class="field"><label>角色名称</label><input value="曹操" /></div>
+            <div class="field"><label>角色定位</label><input value="现实主义 / 效率优先 / 执行导向" /></div>
+            <div class="field"><label>连接来源</label><select><option>OpenAI · 官方接口</option><option selected>DeepSeek · 主账号</option><option>OpenAI · 中转线路 A</option></select></div>
+            <div class="field"><label>模型</label><select><option selected>deepseek-chat</option><option>deepseek-reasoner</option></select></div>
+            <div class="field"><label>System Prompt</label><textarea>以强执行、高效率和资源整合视角判断问题，优先输出最短路径与最具胜率的行动方案。</textarea></div>
+            <div class="toolbar-3"><button type="button" class="mini-btn">复制角色</button><button type="button" class="mini-btn">删除角色</button><button type="button" class="btn primary" onclick="showPage('template-detail-sanguo')">保存角色</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="role-new">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('template-detail-sanguo')">‹</button>
+            <div style="flex:1">
+              <div class="title">新增角色</div>
+              <div class="subtitle">从模板详情右上方 “＋ 新增角色” 进入</div>
+            </div>
+          </header>
+          <form class="form">
+            <div class="field"><label>角色名称</label><input value="周瑜" /></div>
+            <div class="field"><label>角色定位</label><input value="战略统筹 / 节奏把控 / 对抗思维" /></div>
+            <div class="field"><label>连接来源</label><select><option selected>OpenAI · 官方接口</option><option>OpenAI · 中转线路 A</option><option>Anthropic · 主账号</option></select></div>
+            <div class="field"><label>模型</label><select><option selected>gpt-4.1-mini</option><option>gpt-4.1</option><option>o4-mini</option></select></div>
+            <div class="field"><label>Temperature</label><input value="0.75" /></div>
+            <div class="field"><label>System Prompt</label><textarea>你是周瑜，擅长从进攻节奏、资源配置和对手心理预判三个方面审视方案，并主动提出可执行反制路径。</textarea></div>
+            <div class="inline-check"><span>创建后立即启用</span><span class="switch"></span></div>
+            <div class="toolbar"><button type="button" class="btn ghost">保存为草稿</button><button type="button" class="btn primary" onclick="showPage('template-detail-sanguo')">保存新增</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="template-new">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('templates')">‹</button>
+            <div style="flex:1">
+              <div class="title">新增模板</div>
+              <div class="subtitle">新增模板后，可继续进入模板详情配置角色和 Prompt</div>
+            </div>
+          </header>
+          <form class="form">
+            <div class="field"><label>模板名称</label><input value="海外增长顾问团" /></div>
+            <div class="field"><label>模板描述</label><textarea>围绕出海产品增长、渠道、品牌与本地化策略展开讨论。</textarea></div>
+            <div class="field"><label>默认模型策略</label><select><option selected>智能 fallback</option><option>质量优先</option><option>成本优先</option></select></div>
+            <div class="toolbar"><button type="button" class="btn ghost">取消</button><button type="button" class="btn primary" onclick="showPage('templates')">保存模板</button></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="page" id="security">
+        <div class="content">
+          <header class="topbar">
+            <button class="back" onclick="showPage('settings-home')">‹</button>
+            <div style="flex:1">
+              <div class="title">数据安全</div>
+              <div class="subtitle">本地数据、导入导出、隐私与清理</div>
+            </div>
+          </header>
+          <div class="list">
+            <article class="list-card"><div class="name">导出设置 JSON</div><div class="meta">导出厂商连接脱敏信息、模板配置、数据偏好，不包含 API Key 明文</div></article>
+            <article class="list-card"><div class="name">导入设置 JSON</div><div class="meta">从本地文件恢复设置，导入前展示覆盖确认</div></article>
+            <article class="list-card"><div class="name">导出全部会话 Markdown</div><div class="meta">会话导出不包含 API Key，不改变单会话导出能力</div></article>
+            <article class="list-card"><div class="row"><div><div class="name">清理本地数据</div><div class="meta">清理前必须二次确认，可选择只清缓存或清空会话 / 设置</div></div><button class="btn danger">清理</button></div></article>
+          </div>
+          <div class="note"><b>说明：</b>数据安全页本次不新增可编辑实体，因此不提供 “＋” 新建入口；重点是导入导出和清理确认流程。</div>
+        </div>
+      </section>
+
+      <nav class="bottom-nav">
+        <button class="nav"><span>⌂</span><span>首页</span></button>
+        <button class="nav"><span>▣</span><span>会话</span></button>
+        <button class="nav"><span>▦</span><span>模板</span></button>
+        <button class="nav active"><span>⚙</span><span>设置</span></button>
+      </nav>
+    </div>
+  </main>
+  <script>
+    function showPage(id){
+      const page = document.getElementById(id);
+      if(!page){ return; }
+      document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+      page.classList.add('active');
+      const content = page.querySelector('.content');
+      if(content){ content.scrollTop = 0; }
+    }
+    document.addEventListener('click', function(e){
+      const el = e.target.closest('[data-page-target]');
+      if(!el){ return; }
+      e.preventDefault();
+      showPage(el.getAttribute('data-page-target'));
+    });
+  </script>
+</body>
+</html>

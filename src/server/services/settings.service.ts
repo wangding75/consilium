@@ -32,6 +32,7 @@ import type { SessionRepository } from '@/server/repositories/session.repository
 import type { MessageRepository } from '@/server/repositories/message.repository'
 import type { EventRepository } from '@/server/repositories/event.repository'
 import type { VoteRepository } from '@/server/repositories/vote.repository'
+import { exec } from 'child_process'
 
 function maskApiKey(key: string | undefined): string | undefined {
   if (!key) return undefined
@@ -314,15 +315,88 @@ export class SettingsService {
       }
     }
 
+    if (!params.baseUrl) {
+      return {
+        providerId: params.providerId,
+        status: 'failed',
+        latencyMs: 0,
+        checkedAt,
+        availableModels: [],
+        maskedKey,
+        errorCode: 'MISSING_BASE_URL',
+        errorMessage: 'Base URL is required to test provider connection',
+      }
+    }
+
+    if (!params.apiKey) {
+      return {
+        providerId: params.providerId,
+        status: 'failed',
+        latencyMs: 0,
+        checkedAt,
+        availableModels: [],
+        maskedKey,
+        errorCode: 'MISSING_API_KEY',
+        errorMessage: 'API key is required to test provider connection',
+      }
+    }
+
+    const modelsUrl = params.baseUrl.endsWith('/')
+      ? `${params.baseUrl}models`
+      : `${params.baseUrl}/models`
+
+    const curlHeaders = { Authorization: `Bearer ${params.apiKey}`, ...params.headers }
+    const headerArgs = Object.entries(curlHeaders).map(([k, v]) => `-H '${k}: ${v}'`).join(' ')
+    const command = `curl -s -w "\\nHTTP_CODE:%{http_code}" --max-time 8 --connect-timeout 5 ${headerArgs} '${modelsUrl}'`
+
+    const start = Date.now()
+    let body = ''
+    let status = 0
+    try {
+      const result = await new Promise<string>((resolve) => {
+        exec(command, { timeout: 15000 }, (_, stdout, stderr) => resolve((stdout || '') + (stderr || '')))
+      })
+      const codeMatch = result.match(/HTTP_CODE:(\d+)$/)
+      if (codeMatch) {
+        status = Number.parseInt(codeMatch[1], 10)
+        body = result.slice(0, -codeMatch[0].length).trim()
+      }
+    } catch {
+      // exec error, return below
+    }
+
+    const latencyMs = Date.now() - start
+
+    if (status !== 200) {
+      return {
+        providerId: params.providerId,
+        status: 'failed',
+        latencyMs,
+        checkedAt,
+        availableModels: [],
+        maskedKey,
+        errorCode: status ? `HTTP_${status}` : 'PROVIDER_CONNECTION_ERROR',
+        errorMessage: body || 'Provider connection failed',
+      }
+    }
+
+    let availableModels: string[] = []
+    try {
+      const data = JSON.parse(body) as { data?: Array<{ id: string }> }
+      if (Array.isArray(data.data)) {
+        availableModels = data.data.map((m) => m.id).filter(Boolean)
+      }
+    } catch {
+      // ignore non-standard response bodies
+    }
+
     return {
       providerId: params.providerId,
-      status: 'failed',
-      latencyMs: 0,
+      status: 'success',
+      latencyMs,
       checkedAt,
-      availableModels: [],
+      availableModels,
       maskedKey,
-      errorCode: 'PROVIDER_NOT_CONFIGURED',
-      errorMessage: 'Provider connection test not available',
     }
   }
 

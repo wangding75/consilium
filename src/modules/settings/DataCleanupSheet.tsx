@@ -20,7 +20,14 @@ interface ImportPreviewState {
   invalidItems: string[]
 }
 
-const DEFAULT_IMPORT_OVERWRITE = false
+const listCard = 'w-full border border-[#e5eaf2] bg-white rounded-[20px] p-[13px] text-left shadow-[0_10px_26px_rgba(15,23,42,.04)]'
+const cardName = 'text-[15px] font-extrabold text-text-primary'
+const cardMeta = 'text-[11px] text-text-muted leading-relaxed mt-[5px]'
+const noteStyle = 'mt-[18px] border border-dashed border-[#cbd5e1] bg-[#f8fbff] rounded-2xl p-3 text-xs leading-relaxed text-[#334155]'
+const btnBase = 'min-h-[34px] rounded-[13px] px-[14px] text-xs font-extrabold'
+const btnPrimary = `${btnBase} bg-primary text-white disabled:opacity-50`
+const btnGhost = `${btnBase} border border-[#e5eaf2] bg-white text-[#334155]`
+const btnDanger = `${btnBase} bg-[#fff1f2] text-[#be123c] border border-[#fecdd3]`
 
 export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): React.ReactElement | null {
   const [sessionCount, setSessionCount] = useState<number | null>(null)
@@ -37,7 +44,7 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
   const [selectedFileName, setSelectedFileName] = useState('')
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
-  const [importOverwrite, setImportOverwrite] = useState(DEFAULT_IMPORT_OVERWRITE)
+  const [importOverwrite, setImportOverwrite] = useState(false)
 
   const loadCounts = async () => {
     try {
@@ -50,15 +57,9 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
       const providersBody = await providersRes.json()
       const promptsBody = await promptsRes.json()
 
-      if (sessionsBody.success) {
-        setSessionCount(sessionsBody.data?.sessions?.length ?? 0)
-      }
-      if (providersBody.success) {
-        setProviderCount(Array.isArray(providersBody.data?.connections) ? providersBody.data.connections.length : 0)
-      }
-      if (promptsBody.success) {
-        setPromptCount(Array.isArray(promptsBody.data) ? promptsBody.data.length : 0)
-      }
+      if (sessionsBody.success) setSessionCount(sessionsBody.data?.sessions?.length ?? 0)
+      if (providersBody.success) setProviderCount(Array.isArray(providersBody.data?.connections) ? providersBody.data.connections.length : 0)
+      if (promptsBody.success) setPromptCount(Array.isArray(promptsBody.data) ? promptsBody.data.length : 0)
     } catch {
       setCountsFailed(true)
     }
@@ -72,7 +73,7 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
     setFeedback('')
     setImportPreview(null)
     setImportBundle(null)
-    setImportOverwrite(DEFAULT_IMPORT_OVERWRITE)
+    setImportOverwrite(false)
     void loadCounts().finally(() => setLoading(false))
   }, [isOpen])
 
@@ -89,12 +90,8 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
   }
 
   const handleClearAllNext = () => {
-    if (clearAllStep === 1) {
-      setClearAllStep(2)
-    } else if (clearAllStep === 2) {
-      setClearAllStep(3)
-      setShowConfirm(true)
-    }
+    if (clearAllStep === 1) { setClearAllStep(2) }
+    else if (clearAllStep === 2) { setClearAllStep(3); setShowConfirm(true) }
   }
 
   const handleConfirm = async () => {
@@ -155,22 +152,15 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
 
   const handleImportFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (!file) {
-      return
-    }
-
+    if (!file) return
     setSelectedFileName(file.name)
     setFeedback('')
     setImportPreview(null)
     setImportBundle(null)
-
     try {
       const text = await file.text()
       const bundle = JSON.parse(text) as SettingsExportBundle
-      const request: SettingsImportPreviewRequest = {
-        bundle,
-        fileName: file.name,
-      }
+      const request: SettingsImportPreviewRequest = { bundle, fileName: file.name }
       const res = await fetch('/api/settings/import/preview', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -189,13 +179,9 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
   }
 
   const handleImportCommit = async () => {
-    if (!importPreview || !importBundle) {
-      return
-    }
-
+    if (!importPreview || !importBundle) return
     setImporting(true)
     setFeedback('')
-
     try {
       const res = await fetch('/api/settings/import', {
         method: 'POST',
@@ -207,11 +193,8 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
         }),
       })
       const body = await res.json()
-      if (body.success) {
-        setFeedback('导入成功')
-      } else {
-        setFeedback('导入失败')
-      }
+      if (body.success) setFeedback('导入成功')
+      else setFeedback('导入失败')
     } catch {
       setFeedback('导入失败')
     } finally {
@@ -219,147 +202,126 @@ export function DataCleanupSheet({ isOpen, onClose }: DataCleanupSheetProps): Re
     }
   }
 
-  const sessionCountDisplay = sessionCount !== null ? `${sessionCount} 个会话` : ''
-  const promptCountDisplay = promptCount !== null ? `${promptCount} 个提示词` : ''
-  const providerCountDisplay = providerCount !== null ? `${providerCount} 个 Provider` : ''
+  const totalsDisplay = [sessionCount !== null ? `${sessionCount} 个会话` : '', promptCount !== null ? `${promptCount} 个提示词` : '', providerCount !== null ? `${providerCount} 个 Provider` : ''].filter(Boolean).join(' · ')
 
   return (
-    <div role="dialog" className="space-y-4 rounded-xl border border-border bg-surface p-4">
-      <div className="flex items-center justify-between">
-        <h2>数据安全设置</h2>
-        <button onClick={onClose} aria-label="关闭">✕</button>
-      </div>
-
+    <div>
       {loading ? (
-        <p>加载中...</p>
+        <p className="text-sm text-text-muted mb-4">统计中...</p>
       ) : countsFailed ? (
-        <p>暂无法统计</p>
+        <p className="text-sm text-text-muted mb-4">暂无法统计</p>
       ) : (
-        <p>{[sessionCountDisplay, promptCountDisplay, providerCountDisplay].filter(Boolean).join(' · ')}</p>
+        <p className="text-[11px] text-text-muted mb-4">{totalsDisplay}</p>
       )}
 
-      <section className="space-y-2">
-        <h3>导出</h3>
-        <p className="text-sm text-text-secondary">导出当前设置快照，便于备份和迁移。</p>
-        <button type="button" onClick={handleExport} disabled={exporting}>
-          {exporting ? '导出中...' : '导出设置'}
-        </button>
-      </section>
-
-      <section className="space-y-2">
-        <h3>导入</h3>
-        <label>
-          导入文件
-          <input aria-label="导入文件" type="file" accept="application/json" onChange={handleImportFileChange} />
-        </label>
-        {selectedFileName ? <p>已选择：{selectedFileName}</p> : null}
-        {importPreview ? (
-          <div className="rounded-lg border border-border p-3 text-sm">
-            <p>预检查 Token：{importPreview.previewToken}</p>
-            <p>新增：{importPreview.additions.length}</p>
-            <p>更新：{importPreview.updates.length}</p>
-            <p>冲突：{importPreview.conflicts.length}</p>
-            <p>无效项：{importPreview.invalidItems.length}</p>
-            {importPreview.conflicts.length > 0 ? (
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={importOverwrite}
-                  onChange={(event) => setImportOverwrite(event.target.checked)}
-                />
-                允许覆盖冲突项
-              </label>
-            ) : null}
-            <button
-              type="button"
-              onClick={handleImportCommit}
-              disabled={importing || (importPreview.conflicts.length > 0 && !importOverwrite)}
-            >
-              {importing ? '导入中...' : '确认导入'}
+      <div className="grid gap-[10px]">
+        <div className={listCard}>
+          <div className={cardName}>导出设置 JSON</div>
+          <div className={cardMeta}>导出厂商连接脱敏信息、模板配置、数据偏好，不包含 API Key 明文</div>
+          <div className="mt-[10px]">
+            <button type="button" onClick={handleExport} disabled={exporting} className={btnPrimary}>
+              {exporting ? '导出中...' : '导出'}
             </button>
           </div>
-        ) : null}
-      </section>
-
-      <section className="space-y-2">
-        <h3>清理数据</h3>
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => handleClearClick('cache')}>clean cache</button>
-          <button onClick={() => handleClearClick('sessions')}>clean session</button>
-          <button onClick={() => handleClearClick('settings')}>clean settings</button>
-          <button onClick={() => handleClearClick('all')}>clean all</button>
         </div>
-      </section>
 
-      <section className="rounded-lg border border-border border-dashed p-3 text-sm text-text-secondary">
-        <h3 className="mb-2 text-text-primary">数据处理说明</h3>
-        <p>敏感信息不会在页面中明文展示；导入导出和清理操作都应在确认后执行。</p>
-      </section>
+        <div className={listCard}>
+          <div className={cardName}>导入设置 JSON</div>
+          <div className={cardMeta}>从本地文件恢复设置，导入前展示覆盖确认</div>
+          <div className="mt-[10px]">
+            <label className={`${btnGhost} inline-flex items-center cursor-pointer active:scale-[0.98]`}>
+              {selectedFileName ? `已选择：${selectedFileName}` : '选择文件'}
+              <input type="file" accept="application/json" onChange={handleImportFileChange} className="hidden" />
+            </label>
+            {importPreview && (
+              <div className="mt-3 rounded-[13px] border border-[#e5eaf2] bg-[#f8fafc] p-3 text-[11px] leading-relaxed">
+                <p className="text-xs font-extrabold mb-2">预检查结果</p>
+                <p className="text-text-muted">新增：{importPreview.additions.length} · 更新：{importPreview.updates.length} · 冲突：{importPreview.conflicts.length} · 无效：{importPreview.invalidItems.length}</p>
+                {importPreview.conflicts.length > 0 ? (
+                  <label className="flex items-center gap-2 mt-2 text-xs">
+                    <input type="checkbox" checked={importOverwrite} onChange={(e) => setImportOverwrite(e.target.checked)} />
+                    允许覆盖冲突项
+                  </label>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={handleImportCommit}
+                  disabled={importing || (importPreview.conflicts.length > 0 && !importOverwrite)}
+                  className={`${btnPrimary} mt-2`}
+                >
+                  {importing ? '导入中...' : '确认导入'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
 
-      {feedback ? <p>{feedback}</p> : null}
+        <div className={listCard}>
+          <div className={cardName}>导出全部会话 Markdown</div>
+          <div className={cardMeta}>会话导出不包含 API Key，不改变单会话导出能力</div>
+        </div>
 
-      {clearAllStep >= 1 && clearScope === 'all' && (
+        <div className={listCard}>
+          <div className="flex items-center justify-between gap-[10px]">
+            <div>
+              <div className={cardName}>清理本地数据</div>
+              <div className={cardMeta}>清理前必须二次确认，可选择只清缓存或清空会话 / 设置</div>
+            </div>
+            <button type="button" onClick={() => handleClearClick('all')} className={btnDanger}>
+              清理
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className={noteStyle}>
+        <b className="text-[#1e40af]">说明：</b>数据安全页本次不新增可编辑实体，因此不提供 "＋" 新建入口；重点是导入导出和清理确认流程。
+      </div>
+
+      {feedback && <p className="mt-3 text-xs text-green">{feedback}</p>}
+
+      {/* confirm dialogs */}
+      {clearAllStep >= 1 && clearScope === 'all' && clearAllStep === 1 && (
         <ConfirmDialog
-          isOpen={clearAllStep === 1}
+          isOpen
           title="清理全部"
           message="步骤 1 - 影响范围：清理全部数据将导致 Provider 不可用，需要重新配置"
           confirmText="下一步"
+          variant="danger"
           onConfirm={handleClearAllNext}
           onCancel={handleCancel}
         />
       )}
-
       {clearAllStep === 2 && clearScope === 'all' && (
         <ConfirmDialog
-          isOpen={true}
+          isOpen
           title="清理全部"
-          message="确认删除"
+          message="步骤 2 - 确认删除"
           confirmText="下一步"
+          variant="danger"
           requireTyping="确认删除"
           onConfirm={handleClearAllNext}
           onCancel={handleCancel}
         />
       )}
-
       {clearAllStep === 3 && clearScope === 'all' && (
         <ConfirmDialog
           isOpen={showConfirm}
           title="清理全部"
           message="最后一步，确定要清理全部数据吗？"
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
-      )}
-
-      {clearScope === 'cache' && (
-        <ConfirmDialog
-          isOpen={showConfirm}
-          title="缓存清理"
-          message="确定要清理缓存吗？"
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
-      )}
-
-      {clearScope === 'sessions' && (
-        <ConfirmDialog
-          isOpen={showConfirm}
-          title="会话清理"
-          message="确定要清理所有会话数据吗？"
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
-      )}
-
-      {clearScope === 'settings' && (
-        <ConfirmDialog
-          isOpen={showConfirm}
-          title="设置清理"
-          message="Provider 将不可用，需要重新配置"
           variant="danger"
           onConfirm={handleConfirm}
           onCancel={handleCancel}
         />
+      )}
+      {clearScope === 'cache' && (
+        <ConfirmDialog isOpen={showConfirm} title="缓存清理" message="确定要清理缓存吗？" onConfirm={handleConfirm} onCancel={handleCancel} />
+      )}
+      {clearScope === 'sessions' && (
+        <ConfirmDialog isOpen={showConfirm} title="会话清理" message="确定要清理所有会话数据吗？" onConfirm={handleConfirm} onCancel={handleCancel} />
+      )}
+      {clearScope === 'settings' && (
+        <ConfirmDialog isOpen={showConfirm} title="设置清理" message="Provider 将不可用，需要重新配置" variant="danger" onConfirm={handleConfirm} onCancel={handleCancel} />
       )}
     </div>
   )
