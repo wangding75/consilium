@@ -36,7 +36,7 @@ it('GET /api/llm/providers returns success response with providers array', async
 })
 
 it('GET /api/templates returns 500 with INTERNAL_ERROR when service throws', async () => {
-  vi.spyOn(TemplateService.prototype, 'listTemplateSummaries').mockRejectedValueOnce(
+  vi.spyOn(TemplateService.prototype, 'listTemplateSummariesForSettings').mockRejectedValueOnce(
     new ServiceError('INTERNAL_ERROR', 'forced failure')
   )
   const res = await templatesGET()

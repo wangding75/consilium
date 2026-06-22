@@ -1,0 +1,110 @@
+# STATUS.yaml — Per-task TDD development progress
+# AI reads this file at session start to recover context
+# Update phase after completing each task
+#
+# phase values: locked | green | done
+# tracking fields (added during execution): started_at, completed_at, test_passed, test_total
+
+stage: 04-development
+project: consilium
+branch: feature/11
+
+tasks:
+  - task: "Task-01：定义多连接厂商、模板运行配置与设置导入导出契约"
+    test_file: settings-iteration-11-types.test.ts
+    phase: done
+    started_at: "2026-06-09 09:55"
+    completed_at: "2026-06-09 09:59"
+    test_passed: 46
+    test_total: 46
+  - task: "Task-02：扩展设置仓储与服务接口以支持多连接、导入导出和删除前引用检查"
+    test_file: settings-service-iteration-11.test.ts
+    phase: done
+    started_at: "2026-06-09 09:59"
+    completed_at: "2026-06-09 10:00"
+    test_passed: 28
+    test_total: 28
+  - task: "Task-03：扩展模板仓储与服务接口以支持模板和角色管理写操作"
+    test_file: template-service-iteration-11.test.ts
+    phase: done
+    started_at: "2026-06-09 10:00"
+    completed_at: "2026-06-09 10:01"
+    test_passed: 19
+    test_total: 19
+  - task: "Task-04：实现多连接设置仓储与模板管理仓储的写入骨架"
+    test_file: mock-settings-repository-iteration-11.test.ts,mock-template-repository-iteration-11.test.ts
+    phase: done
+    started_at: "2026-06-09 10:01"
+    completed_at: "2026-06-09 10:02"
+    test_passed: 31
+    test_total: 31
+  - task: "Task-05：实现 provider connection 持久化、校验与测试业务逻辑"
+    test_file: settings-service-provider-iteration-11.test.ts
+    phase: done
+    started_at: "2026-06-09 10:02"
+    completed_at: "2026-06-09 10:03"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-06：实现模板管理与角色运行配置业务逻辑"
+    test_file: template-service-business-iteration-11.test.ts
+    phase: done
+    started_at: "2026-06-09 10:03"
+    completed_at: "2026-06-09 10:04"
+    test_passed: 18
+    test_total: 18
+  - task: "Task-07：实现设置导入导出、预检查令牌、会话批量导出与清理业务逻辑"
+    test_file: settings-service-data-security-iteration-11.test.ts
+    phase: done
+    started_at: "2026-06-09 10:04"
+    completed_at: "2026-06-09 10:05"
+    test_passed: 12
+    test_total: 12
+  - task: "Task-08：实现厂商连接管理 API 入口"
+    test_file: provider-connections-web-e2e.test.ts
+    phase: done
+    started_at: "2026-06-09 10:05"
+    completed_at: "2026-06-09 10:06"
+    test_passed: 10
+    test_total: 10
+  - task: "Task-09：实现模板配置管理 API 入口"
+    test_file: templates-web-e2e.test.ts
+    phase: done
+    started_at: "2026-06-09 10:06"
+    completed_at: "2026-06-09 10:06"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-10：实现数据安全管理 API 入口"
+    test_file: data-security-web-e2e.test.ts
+    phase: done
+    started_at: "2026-06-09 10:06"
+    completed_at: "2026-06-09 10:08"
+    test_passed: 11
+    test_total: 11
+  - task: "Task-11：更新设置首页为三入口导航并承载二级视图切换"
+    test_file: settings-module-iteration-11.test.tsx
+    phase: done
+    started_at: "2026-06-09 10:08"
+    completed_at: "2026-06-09 10:16"
+    test_passed: 5
+    test_total: 5
+  - task: "Task-12：实现厂商连接列表与编辑交互"
+    test_file: ProviderSheet-iteration-11.test.tsx
+    phase: done
+    started_at: "2026-06-09 10:16"
+    completed_at: "2026-06-09 10:21"
+    test_passed: 6
+    test_total: 6
+  - task: "Task-13：复用模板模块承载模板配置、角色配置与新增角色交互"
+    test_file: TemplateConfig-iteration-11.test.tsx
+    phase: done
+    started_at: "2026-06-09 10:21"
+    completed_at: "2026-06-09 10:23"
+    test_passed: 7
+    test_total: 7
+  - task: "Task-14：实现数据安全页的导入导出、清理与隐私说明交互"
+    test_file: DataSecurity-iteration-11.test.tsx
+    phase: done
+    started_at: "2026-06-09 10:23"
+    completed_at: "2026-06-09 10:30"
+    test_passed: 8
+    test_total: 8

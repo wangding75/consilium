@@ -19,8 +19,13 @@ import type {
   TemplateRole,
   ModelStrategy,
   GlobalModelDefaults,
+  ProviderConnection,
+  ProviderType,
   RoleModelOverride,
   PromptConfig,
+  SettingsExportBundle,
+  SettingsImportPreview,
+  TemplateDefaultStrategy,
 } from '@/types'
 
 export interface ApiError {
@@ -361,4 +366,156 @@ export interface SessionExportResult {
   content: string
   generatedAt: string
   sanitized: true
+}
+
+// ─── Settings API DTOs (iteration 11) ───────────────────────────────────────
+
+export interface ProviderConnectionDTO {
+  id: string
+  providerType: ProviderType
+  displayName: string
+  baseUrl: string
+  modelList: string[]
+  enabled: boolean
+  lastTestStatus: 'untested' | 'success' | 'failed'
+  lastTestAt?: string
+  lastErrorCode?: string
+  lastErrorMessage?: string
+  maskedKey?: string
+  maskedHeaders: Record<string, string>
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateProviderConnectionRequest {
+  providerType: ProviderType
+  displayName: string
+  baseUrl: string
+  apiKey?: string
+  modelList: string[]
+  customHeaders?: Record<string, string>
+  enabled: boolean
+}
+
+export interface UpdateProviderConnectionRequest {
+  displayName?: string
+  baseUrl?: string
+  apiKey?: string
+  modelList?: string[]
+  customHeaders?: Record<string, string>
+  enabled?: boolean
+}
+
+export interface ProviderConnectionTestRequest {
+  providerType: ProviderType
+  baseUrl?: string
+  apiKey?: string
+  model?: string
+  customHeaders?: Record<string, string>
+}
+
+export interface ProviderConnectionTestResult {
+  status: 'success' | 'failed'
+  latencyMs: number
+  checkedAt: string
+  availableModels: string[]
+  maskedKey?: string
+  errorCode?: string
+  errorMessage?: string
+}
+
+export interface ProviderConnectionDeleteResult {
+  deletedConnectionId: string
+}
+
+export interface ProviderConnectionListResult {
+  connections: ProviderConnectionDTO[]
+}
+
+export interface TemplateSummarySettingsFields {
+  defaultStrategy: TemplateDefaultStrategy
+  configStatus: 'default' | 'customized'
+}
+
+export interface CreateTemplateRequest {
+  name: string
+  description: string
+  category?: string
+  defaultStrategy: TemplateDefaultStrategy
+}
+
+export interface UpdateTemplateRequest {
+  name?: string
+  description?: string
+  defaultStrategy?: TemplateDefaultStrategy
+  fallbackProviderConnectionId?: string
+  fallbackModel?: string
+}
+
+export interface CreateTemplateRoleRequest {
+  name: string
+  persona: string
+  systemPrompt: string
+  providerConnectionId: string
+  model: string
+  temperature?: number
+  maxTokens?: number
+  includedInDefaultQueue?: boolean
+  enabled?: boolean
+}
+
+export interface UpdateTemplateRoleRequest {
+  name?: string
+  persona?: string
+  systemPrompt?: string
+  providerConnectionId?: string
+  model?: string
+  temperature?: number
+  maxTokens?: number
+  includedInDefaultQueue?: boolean
+  enabled?: boolean
+}
+
+export interface DeleteTemplateRoleResult {
+  deletedRoleId: string
+}
+
+export interface SettingsImportPreviewRequest {
+  bundle: SettingsExportBundle
+  fileName?: string
+}
+
+export interface SettingsImportPreviewResult extends SettingsImportPreview {
+  previewToken: string
+}
+
+export interface SettingsImportCommitRequest {
+  bundle: SettingsExportBundle
+  previewToken: string
+  overwrite: boolean
+}
+
+export interface SettingsImportCommitResult {
+  importedConnections: number
+  importedTemplates: number
+  importedPrompts: number
+}
+
+export interface SettingsSessionsExportResult {
+  filename: string
+  content: string
+  sessionCount: number
+  sanitized: true
+}
+
+export interface TemplateRoleListResult {
+  templateId: string
+  templateVersion: string
+  roles: TemplateRole[]
+}
+
+export type ClearScope = 'cache' | 'sessions' | 'settings' | 'all'
+
+export interface TemplateListSettingsResult {
+  templates: Array<TemplateSummary & TemplateSummarySettingsFields>
 }

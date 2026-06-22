@@ -1,0 +1,112 @@
+files:
+  - path: src/types/index.ts
+    type: shared-type
+    tasks:
+      - "Task-01：定义多连接厂商、模板运行配置与设置导入导出契约"
+  - path: src/types/api.ts
+    type: shared-type
+    tasks:
+      - "Task-01：定义多连接厂商、模板运行配置与设置导入导出契约"
+  - path: src/server/repositories/settings.repository.ts
+    type: interface
+    tasks:
+      - "Task-02：扩展设置仓储与服务接口以支持多连接、导入导出和删除前引用检查"
+  - path: src/server/services/settings.service.ts
+    type: class
+    tasks:
+      - "Task-02：扩展设置仓储与服务接口以支持多连接、导入导出和删除前引用检查"
+      - "Task-05：实现 provider connection 持久化、校验与测试业务逻辑"
+      - "Task-07：实现设置导入导出、预检查令牌、会话批量导出与清理业务逻辑"
+  - path: src/server/repositories/template.repository.ts
+    type: interface
+    tasks:
+      - "Task-03：扩展模板仓储与服务接口以支持模板和角色管理写操作"
+  - path: src/server/services/template.service.ts
+    type: class
+    tasks:
+      - "Task-03：扩展模板仓储与服务接口以支持模板和角色管理写操作"
+      - "Task-06：实现模板管理与角色运行配置业务逻辑"
+  - path: src/server/repositories/mock/mock-settings.repository.ts
+    type: class
+    tasks:
+      - "Task-04：实现多连接设置仓储与模板管理仓储的写入骨架"
+      - "Task-05：实现 provider connection 持久化、校验与测试业务逻辑"
+      - "Task-07：实现设置导入导出、预检查令牌、会话批量导出与清理业务逻辑"
+  - path: src/server/repositories/mock/mock-template.repository.ts
+    type: class
+    tasks:
+      - "Task-04：实现多连接设置仓储与模板管理仓储的写入骨架"
+      - "Task-06：实现模板管理与角色运行配置业务逻辑"
+  - path: src/app/api/settings/provider-connections/route.ts
+    type: route
+    tasks:
+      - "Task-08：实现厂商连接管理 API 入口"
+  - path: src/app/api/settings/provider-connections/[connectionId]/route.ts
+    type: route
+    tasks:
+      - "Task-08：实现厂商连接管理 API 入口"
+  - path: src/app/api/settings/provider-connections/test/route.ts
+    type: route
+    tasks:
+      - "Task-08：实现厂商连接管理 API 入口"
+  - path: src/app/api/settings/provider-connections/[connectionId]/test/route.ts
+    type: route
+    tasks:
+      - "Task-08：实现厂商连接管理 API 入口"
+  - path: src/app/api/settings/templates/route.ts
+    type: route
+    tasks:
+      - "Task-09：实现模板配置管理 API 入口"
+  - path: src/app/api/settings/templates/[templateId]/route.ts
+    type: route
+    tasks:
+      - "Task-09：实现模板配置管理 API 入口"
+  - path: src/app/api/settings/templates/[templateId]/roles/route.ts
+    type: route
+    tasks:
+      - "Task-09：实现模板配置管理 API 入口"
+  - path: src/app/api/settings/templates/[templateId]/roles/[roleId]/route.ts
+    type: route
+    tasks:
+      - "Task-09：实现模板配置管理 API 入口"
+  - path: src/app/api/settings/templates/[templateId]/roles/[roleId]/copy/route.ts
+    type: route
+    tasks:
+      - "Task-09：实现模板配置管理 API 入口"
+  - path: src/app/api/settings/export/route.ts
+    type: route
+    tasks:
+      - "Task-10：实现数据安全管理 API 入口"
+  - path: src/app/api/settings/export/sessions/route.ts
+    type: route
+    tasks:
+      - "Task-10：实现数据安全管理 API 入口"
+  - path: src/app/api/settings/import/preview/route.ts
+    type: route
+    tasks:
+      - "Task-10：实现数据安全管理 API 入口"
+  - path: src/app/api/settings/import/route.ts
+    type: route
+    tasks:
+      - "Task-10：实现数据安全管理 API 入口"
+  - path: src/app/api/settings/clear/route.ts
+    type: route
+    tasks:
+      - "Task-10：实现数据安全管理 API 入口"
+  - path: src/modules/settings/index.tsx
+    type: class
+    tasks:
+      - "Task-11：更新设置首页为三入口导航并承载二级视图切换"
+      - "Task-14：实现数据安全页的导入导出、清理与隐私说明交互"
+  - path: src/modules/settings/ProviderSheet.tsx
+    type: class
+    tasks:
+      - "Task-12：实现厂商连接列表与编辑交互"
+  - path: src/modules/templates/index.tsx
+    type: class
+    tasks:
+      - "Task-13：复用模板模块承载模板配置、角色配置与新增角色交互"
+  - path: src/app/api/templates/route.ts
+    type: route
+    tasks:
+      - "Task-06：实现模板管理与角色运行配置业务逻辑"

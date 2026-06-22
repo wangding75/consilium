@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 import type { ApiResponse, RoleModelOverrideDTO, SaveRoleModelOverridesRequest } from '@/types/api'
 import { SettingsService } from '@/server/services/settings.service'
 import { sharedSettingsRepo, sharedSessionRepo, sharedMessageRepo, sharedEventRepo, sharedVoteRepo } from '@/server/repositories/mock/instances'
@@ -29,7 +28,7 @@ export async function GET(): Promise<NextResponse<ApiResponse<RoleModelOverrideD
   }
 }
 
-export async function PUT(req: NextRequest): Promise<NextResponse<ApiResponse<RoleModelOverrideDTO[]>>> {
+export async function PUT(req: Request): Promise<NextResponse<ApiResponse<RoleModelOverrideDTO[]>>> {
   const requestId = crypto.randomUUID()
   try {
     const body = (await req.json()) as SaveRoleModelOverridesRequest

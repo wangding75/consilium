@@ -1,6 +1,14 @@
 import type { DiscussionTemplate, TemplateSummary, TemplateRolesResult } from '@/types'
+import type {
+  CreateTemplateRequest,
+  CreateTemplateRoleRequest,
+  DeleteTemplateRoleResult,
+  RoleConfigPatchRequest,
+  RoleConfigPatchResult,
+  UpdateTemplateRequest,
+  UpdateTemplateRoleRequest,
+} from '@/types/api'
 import type { TemplateRepository } from '../template.repository'
-import type { RoleConfigPatchRequest, RoleConfigPatchResult } from '@/types/api'
 import { ServiceError } from '@/server/errors'
 import { threeKingdomsTemplate, startupBoardTemplate, productDebateTemplate } from '@/data/templates'
 
@@ -14,6 +22,14 @@ const MAX_TEMPLATE_VERSIONS_PER_TEMPLATE = 20
 
 function cloneTemplate(template: DiscussionTemplate): DiscussionTemplate {
   return structuredClone(template)
+}
+
+function toRoleId(name: string): string {
+  return name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || `role-${crypto.randomUUID().slice(0, 8)}`
 }
 
 function cloneTemplates(templates: DiscussionTemplate[]): DiscussionTemplate[] {
@@ -192,5 +208,121 @@ export class MockTemplateRepository implements TemplateRepository {
       },
       effectScope: 'future_sessions_only',
     }
+  }
+
+  async createTemplate(_input: CreateTemplateRequest): Promise<DiscussionTemplate> {
+    throw new ServiceError('NOT_IMPLEMENTED', 'Template creation skeleton is not implemented yet')
+  }
+
+  async updateTemplate(_templateId: string, _patch: UpdateTemplateRequest): Promise<DiscussionTemplate | null> {
+    throw new ServiceError('NOT_IMPLEMENTED', 'Template update skeleton is not implemented yet')
+  }
+
+  async createRole(templateId: string, input: CreateTemplateRoleRequest): Promise<TemplateRolesResult | null> {
+    const template = this.findLatestTemplate(templateId)
+    if (!template) {
+      throw new ServiceError('TEMPLATE_NOT_FOUND', `Template ${templateId} not found`)
+    }
+
+    if (!template.editable) {
+      throw new ServiceError('TEMPLATE_NOT_EDITABLE', `Template ${templateId} is not editable`)
+    }
+
+    if (!template.availableForSessionCreation) {
+      throw new ServiceError('TEMPLATE_UNAVAILABLE', `Template ${templateId} is not available`)
+    }
+
+    const roleId = toRoleId(input.name)
+    if (template.roles.some((role) => role.roleId === roleId)) {
+      throw new ServiceError('VALIDATION_ERROR', `Role ${roleId} already exists in template ${templateId}`)
+    }
+
+    const [major, minor, patchVersion] = template.version.split('.').map(Number)
+    const nextVersion = `${major}.${minor}.${patchVersion + 1}`
+    const nextRole = {
+      roleId,
+      name: input.name,
+      persona: input.persona,
+      isHost: false,
+      agentType: 'expert' as const,
+      systemPrompt: input.systemPrompt,
+      visible: input.enabled ?? true,
+      runtimeConfig: {
+        providerConnectionId: input.providerConnectionId,
+        model: input.model,
+        systemPrompt: input.systemPrompt,
+        includedInDefaultQueue: input.includedInDefaultQueue ?? true,
+        ...(input.temperature !== undefined ? { temperature: input.temperature } : {}),
+        ...(input.maxTokens !== undefined ? { maxTokens: input.maxTokens } : {}),
+      },
+      configStatus: 'customized' as const,
+    }
+
+    const updatedTemplate: DiscussionTemplate = {
+      ...cloneTemplate(template),
+      version: nextVersion,
+      roles: [...template.roles.map((role) => structuredClone(role)), nextRole],
+    }
+
+    this.templates.push(updatedTemplate)
+    this.pruneTemplateHistory(this.templates, templateId)
+
+    this.mirroredStore?.push(cloneTemplate(updatedTemplate))
+    if (this.mirroredStore) {
+      this.pruneTemplateHistory(this.mirroredStore, templateId)
+    }
+
+    return {
+      templateId,
+      templateVersion: nextVersion,
+      roles: updatedTemplate.roles.map((role) => structuredClone(role)),
+    }
+  }
+
+  async updateRole(_templateId: string, _roleId: string, _patch: UpdateTemplateRoleRequest): Promise<TemplateRolesResult | null> {
+    throw new ServiceError('NOT_IMPLEMENTED', 'Template role update skeleton is not implemented yet')
+  }
+
+  async deleteRole(templateId: string, roleId: string): Promise<DeleteTemplateRoleResult | null> {
+    const template = this.findLatestTemplate(templateId)
+    if (!template) {
+      throw new ServiceError('TEMPLATE_NOT_FOUND', `Template ${templateId} not found`)
+    }
+
+    if (!template.editable) {
+      throw new ServiceError('TEMPLATE_NOT_EDITABLE', `Template ${templateId} is not editable`)
+    }
+
+    if (!template.availableForSessionCreation) {
+      throw new ServiceError('TEMPLATE_UNAVAILABLE', `Template ${templateId} is not available`)
+    }
+
+    if (!template.roles.some((role) => role.roleId === roleId)) {
+      throw new ServiceError('ROLE_NOT_FOUND', `Role ${roleId} not found in template ${templateId}`)
+    }
+
+    const [major, minor, patchVersion] = template.version.split('.').map(Number)
+    const nextVersion = `${major}.${minor}.${patchVersion + 1}`
+    const updatedTemplate: DiscussionTemplate = {
+      ...cloneTemplate(template),
+      version: nextVersion,
+      roles: template.roles.filter((role) => role.roleId !== roleId).map((role) => structuredClone(role)),
+    }
+
+    this.templates.push(updatedTemplate)
+    this.pruneTemplateHistory(this.templates, templateId)
+
+    this.mirroredStore?.push(cloneTemplate(updatedTemplate))
+    if (this.mirroredStore) {
+      this.pruneTemplateHistory(this.mirroredStore, templateId)
+    }
+
+    return {
+      deletedRoleId: roleId,
+    }
+  }
+
+  async copyRole(_templateId: string, _roleId: string): Promise<TemplateRolesResult | null> {
+    throw new ServiceError('NOT_IMPLEMENTED', 'Template role copy skeleton is not implemented yet')
   }
 }

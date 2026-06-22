@@ -1,0 +1,178 @@
+tasks:
+  - task: "Task-01：定义多连接厂商、模板运行配置与设置导入导出契约"
+    module: shared-types/settings
+    task_type: contract
+    data_operations: 无
+    boundary: "只修改 `src/types/index.ts` 与 `src/types/api.ts` 中的类型声明；不得写业务逻辑"
+    forbidden: "不得删除现有旧 DTO；不得在类型文件中写运行时流程"
+    test_file: settings-iteration-11-types.test.ts
+    test_cases: 46
+
+  - task: "Task-02：扩展设置仓储与服务接口以支持多连接、导入导出和删除前引用检查"
+    module: server/settings
+    task_type: contract
+    data_operations: "读写 settings 存储；读取模板角色引用关系；读取 sessions/messages/events/votes 导出数据"
+    boundary: "只修改 `src/server/repositories/settings.repository.ts`、`src/server/services/settings.service.ts` 的接口与空实现位置；不得重写整个 service 文件"
+    forbidden: "不得删除现有旧 settings 方法；不得在 02 阶段写完整业务实现"
+    test_file: settings-service-iteration-11.test.ts
+    test_cases: 28
+
+  - task: "Task-03：扩展模板仓储与服务接口以支持模板和角色管理写操作"
+    module: server/templates
+    task_type: contract
+    data_operations: "读写 template 存储；读取 settings 中的 provider connection 用于合法性校验"
+    boundary: "只修改 `src/server/repositories/template.repository.ts` 与 `src/server/services/template.service.ts` 的接口及空实现位置"
+    forbidden: "不得修改现有 `/api/templates` 读取返回结构；不得删除已有 `updateRoleConfig()` 兼容入口"
+    test_file: template-service-iteration-11.test.ts
+    test_cases: 19
+
+  - task: "Task-04：实现多连接设置仓储与模板管理仓储的写入骨架"
+    module: server/repositories/mock
+    task_type: contract
+    data_operations: "读写内存 settings/template 存储结构；保留旧 provider 数据兼容映射入口"
+    boundary: "只修改 `src/server/repositories/mock/mock-settings.repository.ts` 与 `src/server/repositories/mock/mock-template.repository.ts`；不得改写 shared instances 组合方式"
+    forbidden: "不得在 02 阶段写完整业务校验；不得删除现有已被读取链路依赖的方法"
+    test_file: mock-settings-repository-iteration-11.test.ts,mock-template-repository-iteration-11.test.ts
+    test_cases: 31
+
+  - task: "Task-05：实现 provider connection 持久化、校验与测试业务逻辑"
+    module: server/settings
+    task_type: business-implementation
+    data_operations: "读写 settings 存储；读取 template 角色引用；调用 provider test adapter 或其占位实现"
+    boundary: "只填充 `src/server/services/settings.service.ts` 中连接相关空实现，并补齐 `src/server/repositories/mock/mock-settings.repository.ts` 中对应存储逻辑"
+    forbidden: "不得在返回值或错误信息中暴露明文 key/header；不得删除旧 `/api/llm/providers` 兼容方法"
+    test_file: settings-service-provider-iteration-11.test.ts
+    test_cases: 6
+
+  - task: "Task-06：实现模板管理与角色运行配置业务逻辑"
+    module: server/templates
+    task_type: business-implementation
+    data_operations: "读写 template 存储；读取 settings 中启用连接与模型列表；更新角色 runtimeConfig 与 enabled 状态"
+    boundary: "只填充 `src/server/services/template.service.ts` 与 `src/server/repositories/mock/mock-template.repository.ts` 中模板管理相关空实现，并最小修改模板摘要读取逻辑"
+    forbidden: "不得破坏现有 `/api/templates` 读取兼容性；不得删除已有 `updateRoleConfig()` 兼容入口"
+    test_file: template-service-business-iteration-11.test.ts
+    test_cases: 18
+
+  - task: "Task-07：实现设置导入导出、预检查令牌、会话批量导出与清理业务逻辑"
+    module: server/settings
+    task_type: business-implementation
+    data_operations: "读取 settings/template/session/message/event/vote 存储；写入 settings/template 配置；清理本地数据；保存导入预检查令牌"
+    boundary: "只填充 `src/server/services/settings.service.ts` 与 `src/server/repositories/mock/mock-settings.repository.ts` 中数据安全相关空实现，并最小修改 `src/app/api/settings/clear/route.ts` 对 scope 的校验枚举"
+    forbidden: "不得在导出或错误信息中输出敏感值；不得允许绕过 previewToken 直接导入"
+    test_file: settings-service-data-security-iteration-11.test.ts
+    test_cases: 12
+
+  - task: "Task-08：实现厂商连接管理 API 入口"
+    module: api-server/settings
+    task_type: api
+    data_operations: "调用 SettingsService 读写 settings 存储与连接测试链路"
+    boundary: "只新增 `src/app/api/settings/provider-connections/**` 路由文件；不得改写现有 `/api/llm/providers` 路由"
+    forbidden: "不得在路由里直接访问 repository；不得绕过 Service 层做引用检查"
+    test_file: provider-connections-web-e2e.test.ts
+    test_cases: 10
+
+  - task: "Task-09：实现模板配置管理 API 入口"
+    module: api-server/settings
+    task_type: api
+    data_operations: "调用 TemplateService 读写 template 存储，并读取 settings 中 provider connection 进行校验"
+    boundary: "只新增 `src/app/api/settings/templates/**` 路由文件；不得修改现有 `/api/templates` 读取路由"
+    forbidden: "不得删除现有带 header 授权的模板 PATCH 路由；不得在路由内复制业务校验逻辑"
+    test_file: templates-web-e2e.test.ts
+    test_cases: 6
+
+  - task: "Task-10：实现数据安全管理 API 入口"
+    module: api-server/settings
+    task_type: api
+    data_operations: "读取 settings/template/session/message/event/vote 存储；写入 settings/template 配置；清理本地数据"
+    boundary: "只新增 `src/app/api/settings/export/**`、`src/app/api/settings/import/**`，并最小修改 `src/app/api/settings/clear/route.ts`"
+    forbidden: "不得在导出接口返回明文 key；不得在 preview 路由写入数据"
+    test_file: data-security-web-e2e.test.ts
+    test_cases: 11
+
+  - task: "Task-11：更新设置首页为三入口导航并承载二级视图切换"
+    module: settings
+    task_type: ui
+    data_operations: 无
+    boundary: "只修改 `src/modules/settings/index.tsx` 的状态与渲染结构；不得在首页继续渲染旧模型/Prompt 入口"
+    forbidden: "不得新增新的顶层 settings page 文件；不得把二级页逻辑塞到路由层"
+    test_file: settings-module-iteration-11.test.tsx
+    test_cases: 5
+
+  - task: "Task-12：实现厂商连接列表与编辑交互"
+    module: settings
+    task_type: ui
+    data_operations: "读写 `/api/settings/provider-connections`；调用 `/api/settings/provider-connections/test`；调用 `/api/settings/provider-connections/[connectionId]/test`；调用删除接口"
+    boundary: "只修改 `src/modules/settings/ProviderSheet.tsx` 与 `src/modules/settings/index.tsx` 中的连接视图联动位置"
+    forbidden: "不得在 UI 中展示明文 key；不得把引用检查逻辑硬编码在前端"
+    test_file: ProviderSheet-iteration-11.test.tsx
+    test_cases: 6
+
+  - task: "Task-13：复用模板模块承载模板配置、角色配置与新增角色交互"
+    module: settings
+    task_type: business-implementation
+    data_operations: "读 `/api/templates*`；写 `/api/settings/templates*`"
+    boundary: "只修改 `src/modules/templates/index.tsx`；不得新建第二套模板读取模块"
+    forbidden: "不得把模型/Prompt 再拆回 settings 首页独立入口；不得改坏现有模板只读入口"
+    test_file: TemplateConfig-iteration-11.test.tsx
+    test_cases: 7
+
+  - task: "Task-14：实现数据安全页的导入导出、清理与隐私说明交互"
+    module: settings
+    task_type: business-implementation
+    data_operations: "读 `/api/settings/export`、`/api/settings/export/sessions`；写 `/api/settings/import/preview`、`/api/settings/import`、`/api/settings/clear`"
+    boundary: "只修改 `src/modules/settings/index.tsx` 中的数据安全视图与事件处理；不得重写现有 clear API 契约"
+    forbidden: "不得跳过导入预检查直接导入；不得在错误提示中展示敏感值"
+    test_file: DataSecurity-iteration-11.test.tsx
+    test_cases: 8
+
+type_tests:
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: provider-connections-web-e2e.test.ts
+    covers:
+      - "Task-08：实现厂商连接管理 API 入口"
+
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: templates-web-e2e.test.ts
+    covers:
+      - "Task-09：实现模板配置管理 API 入口"
+
+  - type: web-e2e
+    standard: standards/testing/web-e2e.md
+    test_file: data-security-web-e2e.test.ts
+    covers:
+      - "Task-10：实现数据安全管理 API 入口"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: settings-module-iteration-11.test.tsx
+    covers:
+      - "Task-11：更新设置首页为三入口导航并承载二级视图切换"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: ProviderSheet-iteration-11.test.tsx
+    covers:
+      - "Task-12：实现厂商连接列表与编辑交互"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: TemplateConfig-iteration-11.test.tsx
+    covers:
+      - "Task-13：复用模板模块承载模板配置、角色配置与新增角色交互"
+
+  - type: frontend-ui
+    standard: standards/testing/frontend-ui.md
+    test_file: DataSecurity-iteration-11.test.tsx
+    covers:
+      - "Task-14：实现数据安全页的导入导出、清理与隐私说明交互"
+
+  - type: integration
+    standard: standards/testing/integration.md
+    test_file: settings-template-integration-iteration-11.test.ts
+    covers:
+      - "Task-02：扩展设置仓储与服务接口以支持多连接、导入导出和删除前引用检查"
+      - "Task-05：实现 provider connection 持久化、校验与测试业务逻辑"
+      - "Task-06：实现模板管理与角色运行配置业务逻辑"
+      - "Task-07：实现设置导入导出、预检查令牌、会话批量导出与清理业务逻辑"

@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import type { ApiResponse } from '@/types/api'
+import type { ApiResponse, ClearScope } from '@/types/api'
 import { SettingsService } from '@/server/services/settings.service'
 import { sharedSettingsRepo, sharedSessionRepo, sharedMessageRepo, sharedEventRepo, sharedVoteRepo } from '@/server/repositories/mock/instances'
 import { ServiceError } from '@/server/errors'
+
+const ALLOWED_SCOPES: ClearScope[] = ['cache', 'sessions', 'settings', 'all']
 
 function getService(): SettingsService {
   return new SettingsService(
@@ -15,7 +16,7 @@ function getService(): SettingsService {
   )
 }
 
-export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<null>>> {
+export async function POST(req: Request): Promise<NextResponse<ApiResponse<null>>> {
   const requestId = crypto.randomUUID()
   try {
     let body: unknown
@@ -36,14 +37,14 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<n
     }
 
     const { scope } = body as Record<string, unknown>
-    if (typeof scope !== 'string' || !['sessions', 'settings', 'all'].includes(scope)) {
+    if (typeof scope !== 'string' || !ALLOWED_SCOPES.includes(scope as ClearScope)) {
       return NextResponse.json(
-        { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'scope must be sessions, settings, or all' }, requestId },
+        { success: false, data: null, error: { code: 'VALIDATION_ERROR', message: 'scope must be cache, sessions, settings, or all' }, requestId },
         { status: 400 }
       )
     }
 
-    await getService().clearData(scope as 'sessions' | 'settings' | 'all')
+    await getService().clearData(scope as ClearScope)
     return NextResponse.json({ success: true, data: null, requestId })
   } catch (err) {
     const code = err instanceof ServiceError ? err.code : 'INTERNAL_ERROR'
